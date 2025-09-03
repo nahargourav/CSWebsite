@@ -145,6 +145,6 @@ gunicorn -w 4 -b 0.0.0.0:8000 run:app
 
 ## Contact
 
-For questions about this repository or the product, contact the development team at `gouravnahar3008@gmail.com` (replace with the real contact email).
+For questions about this repository or the product, contact the development team at `gouravnahar3008@gmail.com`.
 
 ---
