@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Owner - View Products</title>
+  <title>View Products</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='owner/view_products.css') }}">
@@ -172,7 +172,7 @@
 
             <div class="mt-3 d-grid">
               <button type="submit" class="btn btn-primary">Apply Filters</button>
-              <a href="{{ url_for('main.view_owner_products') }}" class="btn btn-link mt-2">Reset</a>
+              <a href="{{ url_for('main.place_order') }}" class="btn btn-link mt-2">Reset</a>
             </div>
           </form>
         </div>
@@ -215,7 +215,7 @@
             {% for product in products %}
             <div class="col-md-4">
               <div class="card product-card h-100">
-                <a href="{{ url_for('main.view_product_detail', product_id=product.product_id) }}">
+                <a href="{{ url_for('main.view_prod_detail', product_id=product.product_id) }}">
                   <img src="{{ url_for('static', filename=(product.image_path or 'uploads/placeholder.png')) }}" class="card-img-top" style="height:220px; object-fit:contain; background:#fff;">
                 </a>
                 <div class="card-body">

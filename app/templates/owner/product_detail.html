@@ -1,182 +1,466 @@
+<!-- templates/owner/view_product.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>{{ product.name }} — Details</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+  <title>{{ product.name }} — Owner — Details</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
-    .variant-btn { padding: 8px 12px; margin: 4px; border-radius: 18px; }
-    .variant-btn.active { background-color: #0d6efd; color: #fff; border-color: #0d6efd; }
-    .status-badge { padding: 6px 12px; border-radius: 14px; font-weight:600; }
-    .image-area { position: relative; border-radius: 8px; overflow: hidden; background:#fff; }
-    #current-image { width:100%; height:420px; object-fit:contain; background:#fff; display:block; }
-    .nav-arrows { position:absolute; top:50%; transform:translateY(-50%); width:100%; padding:0 8px; display:flex; justify-content:space-between; pointer-events:none; }
-    .nav-arrows button { pointer-events:auto; background:rgba(255,255,255,0.85); border:none; padding:8px 12px; border-radius:50%; cursor:pointer; }
-    .badge-out { background:#dc3545; color:#fff; padding:6px 10px; border-radius:8px; font-weight:700; }
-    .badge-in { background:#28a745; color:#fff; padding:6px 10px; border-radius:8px; font-weight:700; }
+    :root{
+      --primary:#0d6efd;
+      --muted:#6c757d;
+      --card-radius:12px;
+    }
+    body { background: #f7f9fc; }
+    .container { max-width:1200px; }
+
+    /* image panel (customer-like UI) */
+    .image-area {
+      position: relative;
+      border-radius: var(--card-radius);
+      overflow: hidden;
+      background: #fff;
+      min-height: 420px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    img.main-image {
+      max-width: 72%;
+      max-height: 72vh;
+      object-fit: contain;
+      display:block;
+      transition: opacity .28s ease, transform .28s ease;
+      cursor: zoom-in;
+    }
+    .image-nav {
+      position:absolute;
+      left:0; right:0; top:50%;
+      transform:translateY(-50%);
+      display:flex;
+      justify-content:space-between;
+      padding:0 8px;
+      pointer-events:none;
+    }
+    .image-nav button {
+      pointer-events:auto;
+      border: none;
+      width:42px;
+      height:42px;
+      border-radius:10px;
+      background: rgba(20,20,20,0.06);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition: transform .12s ease, background .12s ease;
+      font-size:18px;
+      color: #111;
+    }
+    .thumb-strip { display:flex; gap:10px; margin-top:12px; align-items:center; overflow:auto; padding-bottom:6px; }
+    .thumb-strip img { width:92px; height:92px; object-fit:cover; border-radius:12px; border:1px solid #e9ecef; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; cursor:pointer; }
+    .thumb-strip img.selected { border-color: var(--primary); box-shadow:0 20px 40px rgba(13,110,253,.10); transform: translateY(-6px); }
+
+    .variant-list { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px; }
+    .variant-btn { display:flex; align-items:center; gap:10px; padding:8px 14px; border-radius:999px; border:1px solid #e9ecef; background:#fff; cursor:pointer; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; min-height:56px; }
+    .variant-btn:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(2,6,23,0.06); }
+    .variant-btn.active { border-color: var(--primary); background: linear-gradient(90deg,#f0f6ff,#ffffff); box-shadow:0 18px 40px rgba(13,110,253,0.08); }
+    .variant-thumb { width:56px; height:56px; object-fit:cover; border-radius:50%; border:2px solid #fff; box-shadow:0 6px 12px rgba(2,6,23,0.06); }
+
+    .top-action { border: 1px solid #e9eef6; background: #fff; padding: 12px; border-radius: 12px; box-shadow: 0 6px 20px rgba(2,6,23,0.04); margin-bottom: 14px; }
+    .specs { border: 1px solid #eef3fb; padding:12px; border-radius:8px; background:#fff; }
+    .specs dl { display:grid; grid-template-columns: 1fr 1fr; gap:8px 20px; }
+    .specs dt { color:var(--muted); font-size:.9rem; }
+    .specs dd { margin:0; font-weight:600; }
+
+    .reviews-card { border-radius:12px; padding:14px; background:#fff; box-shadow:0 8px 24px rgba(2,6,23,0.04); border:1px solid #eef3fb; }
+    .avg-rating { display:flex; gap:12px; align-items:center; }
+    .star { color: #f6c84c; font-size:18px; margin-right:2px; }
+
+    .section-sep { margin:18px 0; height:1px; background:linear-gradient(90deg, transparent, #eef3fb, transparent); border-radius:2px; }
+
+    .owner-controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    @media (max-width:768px){ .thumb-strip img{ width:64px; height:64px } .variant-thumb{ width:44px;height:44px } .image-area{min-height:280px;padding:8px} }
+    .existing-image { display:inline-flex; flex-direction:column; gap:6px; align-items:center; margin:6px; }
+    .existing-image img { width:84px; height:84px; object-fit:cover; border-radius:8px; border:1px solid #e9ecef; }
+    .existing-image .delete-now { font-size:12px; }
   </style>
 </head>
 <body>
   {% include 'owner/owner_layout.html' %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="container mt-3">
+      {% for category, message in messages %}
+        {% set alert_class = 'info' %}
+        {% if category in ['success','warning','danger','info'] %}
+          {% set alert_class = category %}
+        {% endif %}
+        <div class="alert alert-{{ alert_class }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+
   <div class="container mt-5">
     <div class="row gx-4">
-      <div class="col-md-6">
-        <div class="card p-3">
-          <div class="image-area">
-            <img id="current-image" src="{{ url_for('static', filename=product_images[0].path if product_images else (variant_images[variants[0].variant_id][0].path if variants and variants|length and variant_images.get(variants[0].variant_id) else 'uploads/placeholder.png')) }}" alt="{{ product.name }}">
-            <div class="nav-arrows">
-              <button id="prev-image">◀</button>
-              <button id="next-image">▶</button>
+      <!-- left: images & variants -->
+      <div class="col-lg-7">
+        <div class="card p-3" style="border-radius:12px;">
+          <div id="imagePanel" class="image-area">
+            <img id="mainImage" class="main-image"
+                 src="{{ url_for('static', filename=(product_images[0].path if product_images else ( variant_images[variants[0].variant_id][0].path if variants and variants|length and variant_images.get(variants[0].variant_id) else 'uploads/placeholder.png' )) ) }}"
+                 alt="{{ product.name }}">
+            <div class="image-nav" aria-hidden="true">
+              <button id="imgPrev" type="button" title="Previous image" aria-label="Previous image">‹</button>
+              <button id="imgNext" type="button" title="Next image" aria-label="Next image">›</button>
             </div>
           </div>
 
-          <div class="mt-3">
-            <div class="small text-muted">Explore other variants</div>
-            <div id="variant-buttons" class="mt-2">
-              {% for v in variants %}
-                <button type="button" class="btn btn-outline-primary variant-btn {% if v.is_default %}active{% endif %}"
-                        data-variant-id="{{ v.variant_id }}" data-stock="{{ v.stock_count }}" data-sku="{{ v.sku or '' }}">
-                  <strong>{{ v.sku or 'SKU' }}</strong>
-                  {% if v.size or v.color %} — <small>{{ (v.size ~ (' / ' ~ v.color) ) if (v.size and v.color) else (v.size or v.color) }}</small>{% endif %}
-                </button>
-              {% endfor %}
+          <div id="thumbStrip" class="thumb-strip mt-2" aria-hidden="true"></div>
+
+          <div class="section-sep"></div>
+
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div style="font-size:1.12rem;font-weight:700;">Explore other variants</div>
+              <div class="small text-muted">Tap a variant to switch. Variant previews show a small image and basic info.</div>
             </div>
+            <div class="owner-controls">
+              <button id="btnAddVariant" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addVariantModal">+ Add Variant</button>
+              <!-- the product edit/delete have been moved to product details (right column) -->
+            </div>
+          </div>
+
+          <div id="variantList" class="variant-list mt-3">
+            {% for v in variants %}
+              <div class="variant-btn {% if v.is_default %}active{% endif %}" role="button" tabindex="0"
+                   data-variant-id="{{ v.variant_id }}"
+                   data-sku="{{ v.sku or '' }}"
+                   data-price="{{ '%.2f'|format(v.price) }}"
+                   data-stock="{{ v.stock_count }}"
+                   data-size="{{ v.size or '' }}"
+                   data-color="{{ v.color or '' }}"
+                   data-color-hex="{{ v.color_hex or '' }}"
+                   data-thumb="{{ v.thumb }}">
+                <img class="variant-thumb" src="{{ url_for('static', filename=v.thumb) }}" alt="thumb">
+                <div>
+                  <div style="font-weight:700;font-size:.98rem;">{{ v.sku or 'SKU' }}</div>
+                  <div class="small text-muted">{{ (v.size or 'N/A') }} &nbsp;•&nbsp; {{ (v.color or 'N/A') }}</div>
+                </div>
+              </div>
+            {% endfor %}
           </div>
         </div>
       </div>
 
-      <div class="col-md-6">
-        <h3>{{ product.name }}</h3>
-        <p class="text-muted mb-1">{{ product.brand or '—' }} • {{ product.category or '—' }}</p>
+      <!-- right: product info + owner actions -->
+      <div class="col-lg-5">
+        <div class="top-action">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h3 class="mb-1">{{ product.name }}</h3>
+              <div class="text-muted mb-1">{{ product.brand or 'N/A' }} • {{ product.category or 'N/A' }}</div>
+              <div class="text-muted small">SKU: <span id="topSku">—</span></div>
 
-        <div class="mt-2 d-flex align-items-center gap-3">
-          <div id="returnable-badge" class="status-badge {{ 'bg-success text-white' if product.is_returnable else 'bg-danger text-white' }}">
-            {{ 'Returnable' if product.is_returnable else 'Non-Returnable' }}
+              <div class="small text-muted mt-1">
+                Size: <span id="variantSize">—</span>
+                &nbsp;•&nbsp;
+                Color: <span id="variantColor">—</span>
+                <span id="variantSwatch" style="display:none;width:14px;height:14px;border-radius:3px;margin-left:8px;border:1px solid #e9ecef;vertical-align:middle;"></span>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div id="returnBadge" class="badge {{ 'bg-success text-white' if product.is_returnable else 'bg-danger text-white' }}">{{ 'Returnable' if product.is_returnable else 'Non-Returnable' }}</div>
+              <div id="topPrice" style="font-size:1.25rem;font-weight:800;margin-top:8px;">₹—</div>
+            </div>
           </div>
-          <div id="stock-status" aria-live="polite"></div>
-        </div>
 
-        <div class="mt-4">
-          <h5>Product Details</h5>
-          <p>{{ product.short_description or '' }}</p>
-          <p class="text-muted">{{ product.description or '' }}</p>
-        </div>
+          <div class="mt-2 d-flex gap-2 align-items-center">
+            <div id="stockTop" class="text-muted"></div>
+          </div>
 
-        <div class="mt-4">
-          <h5>Specifications</h5>
-          <div class="row">
-            {% if product.material %}
-            <div class="col-md-6"><small class="text-muted">Material</small><div>{{ product.material }}</div></div>
-            {% endif %}
-            {% if product.fit %}
-            <div class="col-md-6"><small class="text-muted">Fit</small><div>{{ product.fit }}</div></div>
-            {% endif %}
-            {% if product.pattern %}
-            <div class="col-md-6"><small class="text-muted">Pattern</small><div>{{ product.pattern }}</div></div>
-            {% endif %}
-            {% if product.occasion %}
-            <div class="col-md-6"><small class="text-muted">Occasion</small><div>{{ product.occasion }}</div></div>
-            {% endif %}
-            {% if product.season %}
-            <div class="col-md-6"><small class="text-muted">Season</small><div>{{ product.season }}</div></div>
-            {% endif %}
+          <div class="mt-3 d-flex gap-2 align-items-center">
+            <div style="margin-left:auto;">
+              <button id="btnEditVariant" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#editVariantModal" disabled>Edit Variant</button>
+              <form id="deleteVariantForm" method="POST" action="" style="display:inline;" onsubmit="return confirm('Delete this variant and its images? This cannot be undone.');">
+                {% if csrf_token is defined %}
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {% endif %}
+                <button id="btnDeleteVariant" type="submit" class="btn btn-danger btn-sm" disabled>Delete Variant</button>
+              </form>
+            </div>
           </div>
         </div>
 
-        <div class="mt-4">
-          <h5>Available Variants</h5>
-          <div id="variant-details">
-            {% for v in variants %}
-            <div class="card mb-3 variant-details" id="variant-{{ v.variant_id }}" style="display: {% if v.is_default %}block{% else %}none{% endif %};">
-              <div class="card-body">
-                <div class="row">
-                  <div class="col-md-6"><small class="text-muted">SKU</small><div>{{ v.sku or '—' }}</div></div>
-                  <div class="col-md-6"><small class="text-muted">Price</small><div class="text-primary">₹{{ '%.2f' % v.price }}</div></div>
-                  <div class="col-md-6"><small class="text-muted">Size</small><div>{{ v.size or '—' }}</div></div>
-                  <div class="col-md-6"><small class="text-muted">Color</small><div>{{ v.color or '—' }}</div></div>
-                  <div class="col-md-6"><small class="text-muted">Stock</small><div>{{ v.stock_count }} units</div></div>
-                </div>
+        <div class="section-sep"></div>
 
-                <div class="mt-3 d-flex gap-2">
-                  <!-- Delete variant form -->
-                  <form method="POST" action="{{ url_for('main.delete_variant', product_id=product.product_id, variant_id=v.variant_id) }}" onsubmit="return confirm('Delete this variant and its images?');">
-                    <button type="submit" class="btn btn-danger btn-sm">Delete Variant</button>
-                  </form>
+        <div class="specs mb-3">
+          <h6 class="mb-2">Product Details</h6>
+          <div style="font-weight:700">{{ product.short_description or 'N/A' }}</div>
+          <div class="text-muted">{{ product.description_html | safe }}</div>
 
-                  <!-- You might add an "Edit variant" button here later -->
+          <!-- moved product-level edit/delete controls here -->
+          <div class="mt-3 owner-controls">
+            <button class="btn btn-secondary btn-sm" id="openEditProductBtn" data-bs-toggle="modal" data-bs-target="#editProductModal">Edit Product</button>
+
+            <form method="POST" action="{{ url_for('main.delete_product', product_id=product.product_id) }}" style="display:inline;" onsubmit="return confirm('Delete product and all variants/images? This cannot be undone.');">
+              {% if csrf_token is defined %}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              {% endif %}
+              <button type="submit" class="btn btn-danger btn-sm">Delete Product</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="specs mb-3">
+          <h6 class="mb-2">Specifications</h6>
+          <dl>
+            <dt>Material</dt><dd>{{ product.material or 'N/A' }}</dd>
+            <dt>Weight</dt>
+            <dd>
+              {% if product.weight is not none and product.weight != '' %}
+                {{ product.weight }} kg
+              {% else %}
+                N/A
+              {% endif %}
+            </dd>
+            <dt>Fit</dt><dd>{{ product.fit or 'N/A' }}</dd>
+            <dt>Pattern</dt><dd>{{ product.pattern or 'N/A' }}</dd>
+            <dt>Occasion</dt><dd>{{ product.occasion or 'N/A' }}</dd>
+            <dt>Season</dt><dd>{{ product.season or 'N/A' }}</dd>
+            <dt>Sustainability</dt><dd>{{ product.sustainability or 'N/A' }}</dd>
+            <dt>Care</dt><dd>{{ product.care_instructions or 'N/A' }}</dd>
+          </dl>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Reviews (unchanged) -->
+    <div class="row mt-4">
+      <div class="col-12">
+        <div id="reviewsCard" class="reviews-card">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="avg-rating">
+                <div style="font-size:1.6rem;font-weight:800;" id="avgRating">{{ avg_rating }}</div>
+                <div>
+                  <div id="avgStars">
+                    {% for i in range(1,6) %}
+                      {% if i <= avg_rating|round(0,'floor') %}
+                        <span class="star">★</span>
+                      {% else %}
+                        <span class="star" style="color:#e9e9e9">★</span>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                  <div class="small text-muted" id="totalReviews">{{ total_reviews }} review{{ 's' if total_reviews!=1 }}</div>
                 </div>
               </div>
             </div>
-            {% endfor %}
+
+            <div class="d-flex gap-2 align-items-center">
+              <label class="small text-muted mb-0">Sort</label>
+              <select id="reviewSort" class="form-select form-select-sm">
+                <option value="latest">Latest</option>
+                <option value="oldest">Oldest</option>
+                <option value="highest">Highest</option>
+                <option value="lowest">Lowest</option>
+              </select>
+              <button id="loadMoreReviews" class="btn btn-outline-primary btn-sm">See more reviews</button>
+            </div>
           </div>
 
-          <!-- Add Variant button triggers modal -->
-          <div class="mt-3">
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVariantModal">+ Add Variant</button>
+          <hr>
+
+          <div id="reviewsList">
+            {% if top_reviews %}
+              {% for r in top_reviews %}
+                <div class="review-item d-flex gap-3" data-review-id="{{ r.review_id }}">
+                  <div style="width:56px;flex-shrink:0;">
+                    <div style="width:48px;height:48px;border-radius:50%;background:#f1f3f5;display:flex;align-items:center;justify-content:center;font-weight:700;color:#111;">
+                      {{ r.customer_name[:1]|upper }}
+                    </div>
+                  </div>
+                  <div style="flex:1;">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div>
+                        <strong>{{ r.customer_name }}</strong>
+                        <div class="review-meta">
+                          {% for i in range(1,6) %}
+                            {% if i <= r.rating %}
+                              <span class="star">★</span>
+                            {% else %}
+                              <span style="color:#e9e9e9" class="star">★</span>
+                            {% endif %}
+                          {% endfor %}
+                          <span class="ms-2 small text-muted">{{ r.created_at_str or '' }}</span>
+                        </div>
+                      </div>
+                      <div>
+                        {% if r.is_verified_purchase %}
+                          <div class="verified-badge">Verified</div>
+                        {% endif %}
+                      </div>
+                    </div>
+                    {% if r.title %}<div class="mt-2"><strong>{{ r.title }}</strong></div>{% endif %}
+                    <div class="mt-1 text-muted">{{ r.body or '' }}</div>
+                  </div>
+                </div>
+              {% endfor %}
+            {% else %}
+              <div class="text-muted">No reviews yet.</div>
+            {% endif %}
+          </div>
+
+          <div id="reviewsLoading" class="text-center py-3" style="display:none;">
+            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
           </div>
         </div>
+      </div>
+    </div>
 
+  </div>
+
+  <!-- Add Variant Modal -->
+  <div class="modal fade" id="addVariantModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form method="POST" action="{{ url_for('main.add_variant', product_id=product.product_id) }}" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Variant</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            {% if csrf_token is defined %}
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% endif %}
+            <div class="row g-2">
+              <div class="col-md-6"><label class="form-label">SKU</label><input name="sku" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">Price</label><input name="price" class="form-control" type="number" step="0.01"></div>
+              <div class="col-md-6"><label class="form-label">Size</label><input name="size" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">Color</label><input name="color" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">Color hex (optional)</label><input name="color_hex" class="form-control" placeholder="#ffffff"></div>
+              <div class="col-md-6"><label class="form-label">Stock</label><input name="stock" class="form-control" type="number" step="1"></div>
+              <div class="col-12"><label class="form-label">Images (optional)</label><input name="variant_images" class="form-control" type="file" multiple></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+            <button class="btn btn-primary" type="submit">Add Variant</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Variant Modal (existing images + delete actions) -->
+  <div class="modal fade" id="editVariantModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form id="editVariantForm" method="POST" action="" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Variant</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            {% if csrf_token is defined %}
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% endif %}
+            <input type="hidden" name="variant_id" id="edit_variant_id">
+            <div class="row g-2">
+              <div class="col-md-6"><label class="form-label">SKU</label><input name="sku" id="edit_sku" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">Price</label><input name="price" id="edit_price" class="form-control" type="number" step="0.01"></div>
+              <div class="col-md-6"><label class="form-label">Size</label><input name="size" id="edit_size" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">Color</label><input name="color" id="edit_color" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">Color hex (optional)</label><input name="color_hex" id="edit_color_hex" class="form-control" placeholder="#ffffff"></div>
+              <div class="col-md-6"><label class="form-label">Stock</label><input name="stock" id="edit_stock" class="form-control" type="number" step="1"></div>
+              <div class="col-12"><label class="form-label">Add Images (optional)</label><input name="variant_images" id="edit_images" class="form-control" type="file" multiple></div>
+              <div class="col-12 small text-muted">Note: Uploaded images will be appended to the variant's existing images.</div>
+            </div>
+
+            <hr class="my-3">
+            <h6>Existing images</h6>
+            <div id="existingVariantImages" class="d-flex flex-wrap">
+              <!-- JS will render .existing-image blocks here with:
+                   - <img>
+                   - checkbox <input type="checkbox" name="delete_image_ids" value="...">
+                   - immediate delete button (AJAX) -->
+            </div>
+            <div class="small text-muted mt-2">Check images to delete and save changes, or use the immediate delete button on an image to remove it instantly.</div>
+
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+            <button class="btn btn-primary" type="submit">Save changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Product Modal -->
+  <div class="modal fade" id="editProductModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form id="editProductForm" method="POST" action="{{ url_for('main.edit_product', product_id=product.product_id) }}" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title">Edit Product</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            {% if csrf_token is defined %}
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {% endif %}
+            <div class="row g-2">
+              <div class="col-md-6"><label class="form-label">Name</label><input name="name" id="editp_name" class="form-control" required></div>
+              <div class="col-md-6"><label class="form-label">Brand</label><input name="brand" id="editp_brand" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">Category</label><input name="category" id="editp_category" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">SKU (product)</label><input name="sku" id="editp_sku" class="form-control"></div>
+              <div class="col-12"><label class="form-label">Short description</label><input name="short_description" id="editp_short" class="form-control"></div>
+              <div class="col-12"><label class="form-label">Description (plaintext / with line breaks)</label><textarea name="description" id="editp_description" class="form-control" rows="6"></textarea></div>
+
+              <div class="col-md-6"><label class="form-label">Material</label><input name="material" id="editp_material" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">Weight (kg)</label><input name="weight" id="editp_weight" type="number" step="0.01" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">Fit</label><input name="fit" id="editp_fit" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">Pattern</label><input name="pattern" id="editp_pattern" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">Occasion</label><input name="occasion" id="editp_occasion" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">Season</label><input name="season" id="editp_season" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">Sustainability</label><input name="sustainability" id="editp_sustainability" class="form-control"></div>
+              <div class="col-md-6"><label class="form-label">Care instructions</label><input name="care_instructions" id="editp_care" class="form-control"></div>
+
+              <div class="col-12"><label class="form-label">Product images</label><input type="file" name="product_images" id="editp_images" class="form-control" multiple></div>
+
+              <div class="col-12 mt-2">
+                <label class="form-check">
+                  <input class="form-check-input" type="checkbox" name="is_returnable" id="editp_returnable">
+                  <span class="form-check-label">Returnable</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal" type="button">Cancel</button>
+            <button class="btn btn-primary" type="submit">Save product</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
 
   {% include 'customer/footer.html' %}
-
-  <!-- Add Variant Modal -->
-  <div class="modal fade" id="addVariantModal" tabindex="-1" aria-labelledby="addVariantModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <form method="POST" action="{{ url_for('main.add_variant', product_id=product.product_id) }}" enctype="multipart/form-data" class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addVariantModalLabel">Add Variant</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label">Size</label>
-              <input name="size" class="form-control" placeholder="Size">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Color</label>
-              <input name="color" class="form-control" placeholder="Color">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Color Hex</label>
-              <input name="color_hex" class="form-control" placeholder="#ffffff">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Variant SKU (optional)</label>
-              <input name="sku" class="form-control" placeholder="Optional SKU">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Price (₹)</label>
-              <input name="price" type="number" step="0.01" class="form-control" placeholder="Price">
-            </div>
-            <div class="col-md-6">
-              <label class="form-label">Stock</label>
-              <input name="stock" type="number" class="form-control" placeholder="Stock count">
-            </div>
-
-            <div class="col-12">
-              <label class="form-label">Variant Images</label>
-              <input type="file" name="variant_images" class="form-control" accept="image/*" multiple>
-              <small class="text-muted">Upload images for this variant (optional)</small>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-primary">Add Variant</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      // Build JS arrays from server data
+    document.addEventListener('DOMContentLoaded', function(){
+      // Data provided by server
       const productImages = [
         {% for img in product_images %}
           "{{ url_for('static', filename=img.path) }}",
@@ -187,88 +471,375 @@
       {% for vid, imgs in variant_images.items() %}
         variantImages[{{ vid }}] = [
           {% for img in imgs %}
-            "{{ url_for('static', filename=img.path) }}",
+            { id: {{ img.image_id }}, src: "{{ url_for('static', filename=img.path) }}" },
           {% endfor %}
-        ].filter(Boolean);
+        ];
       {% endfor %}
 
-      const variantBtns = Array.from(document.querySelectorAll('.variant-btn'));
-      const variantDetails = Array.from(document.querySelectorAll('.variant-details'));
-      const stockStatusEl = document.getElementById('stock-status');
-      let selectedVariantId = null;
+      const variantButtons = Array.from(document.querySelectorAll('#variantList .variant-btn'));
+      const mainImg = document.getElementById('mainImage');
+      const thumbStrip = document.getElementById('thumbStrip');
+      const prevBtn = document.getElementById('imgPrev');
+      const nextBtn = document.getElementById('imgNext');
+
+      // owner controls
+      const btnEdit = document.getElementById('btnEditVariant');
+      const btnDelete = document.getElementById('btnDeleteVariant');
+      const deleteVariantForm = document.getElementById('deleteVariantForm');
+      const editForm = document.getElementById('editVariantForm');
+
+      const topPriceEl = document.getElementById('topPrice');
+      const topSkuEl = document.getElementById('topSku');
+      const stockTop = document.getElementById('stockTop');
+      const variantSizeEl = document.getElementById('variantSize');
+      const variantColorEl = document.getElementById('variantColor');
+      const variantSwatchEl = document.getElementById('variantSwatch');
+
+      // reviews
+      const reviewsList = document.getElementById('reviewsList');
+      const reviewSortEl = document.getElementById('reviewSort');
+      const loadMoreBtn = document.getElementById('loadMoreReviews');
+      const reviewsLoading = document.getElementById('reviewsLoading');
+      let reviewsOffset = {{ top_reviews|length }};
+      const productId = {{ product.product_id }};
+      let reviewsSort = 'latest';
+
+      // edit product modal fields
+      const productData = {{ product|tojson }};
+      const openEditProductBtn = document.getElementById('openEditProductBtn');
+      const editProductForm = document.getElementById('editProductForm');
+
+      // existing images container in edit variant modal
+      const existingImagesContainer = document.getElementById('existingVariantImages');
+
+      // image state
       let currentList = [];
       let currentIndex = 0;
-      const imgEl = document.getElementById('current-image');
+      let selectedVariantId = null;
 
-      // Choose default variant (first .active) or first button
-      const defaultBtn = variantBtns.find(b => b.classList.contains('active')) || variantBtns[0];
-      if (defaultBtn) {
-        selectedVariantId = defaultBtn.getAttribute('data-variant-id');
+      function renderThumbs(list) {
+        thumbStrip.innerHTML = '';
+        if (!list || list.length === 0) {
+          const imgEl = document.createElement('img');
+          imgEl.src = "{{ url_for('static', filename='uploads/placeholder.png') }}";
+          imgEl.className = 'selected';
+          thumbStrip.appendChild(imgEl);
+          return;
+        }
+        list.forEach((src, i) => {
+          const imgEl = document.createElement('img');
+          imgEl.src = (typeof src === 'string') ? src : src.src;
+          imgEl.dataset.index = i;
+          if (i === 0) imgEl.classList.add('selected');
+          imgEl.addEventListener('click', ()=> { showImageAt(Number(imgEl.dataset.index)); });
+          thumbStrip.appendChild(imgEl);
+        });
+      }
+
+      function showImageAt(i) {
+        if (!currentList || currentList.length === 0) {
+          mainImg.src = "{{ url_for('static', filename='uploads/placeholder.png') }}";
+          return;
+        }
+        const newIndex = ((i % currentList.length) + currentList.length) % currentList.length;
+        mainImg.classList.add('opacity-75');
+        setTimeout(()=> {
+          mainImg.src = (typeof currentList[newIndex] === 'string') ? currentList[newIndex] : currentList[newIndex].src;
+          mainImg.classList.remove('opacity-75');
+        }, 120);
+        Array.from(thumbStrip.querySelectorAll('img')).forEach((t, j) => t.classList.toggle('selected', j === newIndex));
+        currentIndex = newIndex;
+      }
+
+      prevBtn.addEventListener('click', ()=> showImageAt(currentIndex - 1));
+      nextBtn.addEventListener('click', ()=> showImageAt(currentIndex + 1));
+
+      function updateOwnerUIForVariant(vid, btnEl) {
+        const price = btnEl.getAttribute('data-price') || '';
+        const sku = btnEl.getAttribute('data-sku') || '';
+        const stock = parseInt(btnEl.getAttribute('data-stock') || '0', 10);
+        const size = btnEl.getAttribute('data-size') || '';
+        const color = btnEl.getAttribute('data-color') || '';
+        const colorHex = btnEl.getAttribute('data-color-hex') || '';
+
+        selectedVariantId = vid;
+        topPriceEl.textContent = price ? '₹' + price : '₹—';
+        topSkuEl.textContent = sku || 'N/A';
+        if (variantSizeEl) variantSizeEl.textContent = size || 'N/A';
+        if (variantColorEl) variantColorEl.textContent = color || 'N/A';
+        if (variantSwatchEl) {
+          if (colorHex && colorHex.trim() !== '') {
+            variantSwatchEl.style.display = 'inline-block';
+            variantSwatchEl.style.background = colorHex;
+          } else {
+            variantSwatchEl.style.display = 'none';
+          }
+        }
+        if (stock > 0) {
+          stockTop.innerHTML = '<span class="text-success">In stock — ' + stock + ' units</span>';
+        } else {
+          stockTop.innerHTML = '<span class="text-danger">Out of stock</span>';
+        }
+
+        // enable owner controls and set form action targets
+        btnEdit.disabled = false;
+        btnDelete.disabled = false;
+        deleteVariantForm.action = `/product/${productId}/variant/${vid}/delete`;
+        editForm.action = `/product/${productId}/variant/${vid}/edit`;
+
+        // prefill edit modal inputs
+        document.getElementById('edit_variant_id').value = vid;
+        document.getElementById('edit_sku').value = sku || '';
+        document.getElementById('edit_price').value = price || '';
+        document.getElementById('edit_stock').value = stock || 0;
+        document.getElementById('edit_size').value = size || '';
+        document.getElementById('edit_color').value = color || '';
+        document.getElementById('edit_color_hex').value = colorHex || '';
+
+        // populate existing images panel inside the edit variant modal
+        populateExistingVariantImages(vid);
       }
 
       function setImageListForVariant(vid) {
-        const arr = variantImages[vid] || [];
-        currentList = arr.length ? arr : productImages.slice();
+        const vImgs = variantImages[vid] && variantImages[vid].length ? variantImages[vid].slice() : [];
+        currentList = vImgs.length ? vImgs : (productImages.length ? productImages.slice() : ["{{ url_for('static', filename='uploads/placeholder.png') }}"]);
         currentIndex = 0;
-        showIndex(0);
+        renderThumbs(currentList);
+        showImageAt(0);
       }
 
-      function showIndex(i) {
-        if (!currentList || currentList.length === 0) {
-          imgEl.src = "{{ url_for('static', filename='uploads/placeholder.png') }}";
+      function populateExistingVariantImages(vid) {
+        existingImagesContainer.innerHTML = '';
+        const arr = variantImages[vid] || [];
+        if (!arr || arr.length === 0) {
+          existingImagesContainer.innerHTML = '<div class="text-muted small">No existing images for this variant.</div>';
           return;
         }
-        currentIndex = ((i % currentList.length) + currentList.length) % currentList.length;
-        imgEl.src = currentList[currentIndex];
-      }
+        arr.forEach(img => {
+          const wrap = document.createElement('div');
+          wrap.className = 'existing-image';
+          const thumb = document.createElement('img');
+          thumb.src = img.src;
+          thumb.alt = 'img';
+          const cb = document.createElement('div');
+          cb.innerHTML = `
+            <label class="form-check">
+              <input class="form-check-input" type="checkbox" name="delete_image_ids" value="${img.id}">
+              <span class="form-check-label small">Delete on save</span>
+            </label>
+          `;
+          const delNow = document.createElement('button');
+          delNow.type = 'button';
+          delNow.className = 'btn btn-outline-danger btn-sm delete-now';
+          delNow.textContent = 'Delete now';
+          delNow.addEventListener('click', async function(){
+            if (!confirm('Delete this image immediately?')) return;
+            try {
+              const res = await fetch(`/product/image/${img.id}/delete`, { method: 'POST', credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+              const data = await res.json();
+              if (data && data.ok) {
+                // remove from UI and local variantImages array
+                wrap.remove();
+                // remove from variantImages[vid] array
+                variantImages[vid] = (variantImages[vid] || []).filter(x => x.id !== img.id);
+              } else {
+                alert('Failed to delete image: ' + (data && data.error ? data.error : 'unknown'));
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Error deleting image');
+            }
+          });
 
-      function updateStockBadgeByVariantId(vid) {
-        const btn = variantBtns.find(b => b.getAttribute('data-variant-id') === String(vid));
-        if (!btn) {
-          stockStatusEl.innerHTML = '';
-          return;
-        }
-        const stock = parseInt(btn.getAttribute('data-stock') || '0', 10);
-        if (stock <= 0) {
-          stockStatusEl.innerHTML = '<span class="badge-out">OUT OF STOCK</span>';
-        } else {
-          stockStatusEl.innerHTML = `<span class="badge-in">In stock — ${stock} units</span>`;
-        }
-      }
-
-      // initialize
-      if (selectedVariantId) {
-        // set active class properly
-        variantBtns.forEach(b => b.classList.toggle('active', b.getAttribute('data-variant-id') === selectedVariantId));
-        setImageListForVariant(selectedVariantId);
-        variantDetails.forEach(d => d.style.display = d.id === `variant-${selectedVariantId}` ? 'block' : 'none');
-        updateStockBadgeByVariantId(selectedVariantId);
-      } else {
-        currentList = productImages.slice();
-        showIndex(0);
-        stockStatusEl.innerHTML = '';
-      }
-
-      // attach nav
-      document.getElementById('prev-image').addEventListener('click', () => showIndex(currentIndex - 1));
-      document.getElementById('next-image').addEventListener('click', () => showIndex(currentIndex + 1));
-
-      // variant button clicks
-      variantBtns.forEach(btn => {
-        btn.addEventListener('click', function () {
-          const vid = btn.getAttribute('data-variant-id');
-          // toggle active classes
-          variantBtns.forEach(b => b.classList.toggle('active', b === btn));
-          // show/hide variant cards
-          variantDetails.forEach(d => d.style.display = d.id === `variant-${vid}` ? 'block' : 'none');
-          // update images
-          setImageListForVariant(vid);
-          // update stock badge
-          updateStockBadgeByVariantId(vid);
-          selectedVariantId = vid;
+          wrap.appendChild(thumb);
+          wrap.appendChild(cb);
+          wrap.appendChild(delNow);
+          existingImagesContainer.appendChild(wrap);
         });
+      }
+
+      function selectVariant(btnEl) {
+        const vid = btnEl.getAttribute('data-variant-id');
+        variantButtons.forEach(b => b.classList.toggle('active', b === btnEl));
+        selectedVariantId = vid;
+        setImageListForVariant(vid);
+        updateOwnerUIForVariant(vid, btnEl);
+        try {
+          const u = new URL(window.location.href);
+          u.searchParams.set('variant_id', String(vid));
+          const sku = btnEl.getAttribute('data-sku');
+          if (sku) u.searchParams.set('variant_sku', sku);
+          history.replaceState(null, '', u.toString());
+        } catch(e){}
+      }
+
+      // Initialize selection
+      const initialVariantId = {{ initial_variant_id|tojson }};
+      let initialButton = variantButtons.find(b => b.classList.contains('active')) || variantButtons[0];
+      if (initialVariantId) {
+        const forced = variantButtons.find(b => b.getAttribute('data-variant-id') === String(initialVariantId));
+        if (forced) initialButton = forced;
+      }
+      if (initialButton) {
+        selectVariant(initialButton);
+      } else {
+        currentList = productImages.length ? productImages.slice() : ["{{ url_for('static', filename='uploads/placeholder.png') }}"];
+        renderThumbs(currentList);
+        showImageAt(0);
+        btnEdit.disabled = true;
+        btnDelete.disabled = true;
+      }
+
+      // attach events to variant buttons
+      variantButtons.forEach(btn => {
+        btn.addEventListener('click', ()=> selectVariant(btn));
+        btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectVariant(btn); }});
       });
+
+      // Fullscreen viewer (bootstrap modal)
+      const imgModal = new bootstrap.Modal(document.getElementById('imageFullscreenModal'), {});
+      const fullscreenImg = document.getElementById('fullscreenImage');
+      mainImg.addEventListener('click', function(){
+        fullscreenImg.src = mainImg.src;
+        imgModal.show();
+      });
+
+      // Reviews AJAX (unchanged from customer)
+      reviewSortEl.value = 'latest';
+      reviewSortEl.addEventListener('change', async function(){
+        reviewsSort = reviewSortEl.value;
+        reviewsLoading.style.display = 'block';
+        try {
+          const q = new URLSearchParams({ offset:0, limit:5, sort:reviewsSort });
+          const res = await fetch(`/prod/${productId}/reviews_ajax?` + q.toString(), { credentials: 'same-origin' });
+          const data = await res.json();
+          if (!data.ok) return;
+          document.getElementById('avgRating').textContent = data.avg_rating;
+          document.getElementById('totalReviews').textContent = data.total_reviews + ' review' + (data.total_reviews !== 1 ? 's' : '');
+          reviewsList.innerHTML = '';
+          if (data.reviews && data.reviews.length) {
+            data.reviews.forEach(r => {
+              const node = document.createElement('div');
+              node.className = 'review-item d-flex gap-3';
+              node.innerHTML = `
+                <div style="width:56px;flex-shrink:0;">
+                  <div style="width:48px;height:48px;border-radius:50%;background:#f1f3f5;display:flex;align-items:center;justify-content:center;font-weight:700;color:#111;">
+                    ${ (r.customer_name || 'A').charAt(0).toUpperCase() }
+                  </div>
+                </div>
+                <div style="flex:1;">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <strong>${ r.customer_name || 'Anonymous' }</strong>
+                      <div class="review-meta">
+                        ${ Array.from({length:5}).map((_,i) => i < r.rating ? '<span class="star">★</span>' : '<span class="star" style="color:#e9e9e9">★</span>').join('') }
+                        <span class="ms-2 small text-muted">${ r.created_at_str || '' }</span>
+                      </div>
+                    </div>
+                    <div>${ r.is_verified_purchase ? '<div class="verified-badge">Verified</div>' : '' }</div>
+                  </div>
+                  ${ r.title ? `<div class="mt-2"><strong>${ r.title }</strong></div>` : ''}
+                  <div class="mt-1 text-muted">${ r.body || '' }</div>
+                </div>
+              `;
+              reviewsList.appendChild(node);
+            });
+          } else {
+            reviewsList.innerHTML = '<div class="text-muted">No reviews yet.</div>';
+          }
+          reviewsOffset = data.reviews ? data.reviews.length : 0;
+        } finally {
+          reviewsLoading.style.display = 'none';
+        }
+      });
+
+      // load more reviews
+      loadMoreBtn.addEventListener('click', async function(){
+        reviewsLoading.style.display = 'block';
+        try {
+          const q = new URLSearchParams({ offset: reviewsOffset, limit:5, sort: reviewsSort });
+          const res = await fetch(`/prod/${productId}/reviews_ajax?` + q.toString(), { credentials: 'same-origin' });
+          const data = await res.json();
+          if (!data.ok) return;
+          if (!data.reviews || data.reviews.length === 0) {
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.textContent = 'No more reviews';
+            return;
+          }
+          data.reviews.forEach(r => {
+            const node = document.createElement('div');
+            node.className = 'review-item d-flex gap-3';
+            node.innerHTML = `
+              <div style="width:56px;flex-shrink:0;">
+                <div style="width:48px;height:48px;border-radius:50%;background:#f1f3f5;display:flex;align-items:center;justify-content:center;font-weight:700;color:#111;">
+                  ${ (r.customer_name || 'A').charAt(0).toUpperCase() }
+                </div>
+              </div>
+              <div style="flex:1;">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong>${ r.customer_name || 'Anonymous' }</strong>
+                    <div class="review-meta">
+                      ${ Array.from({length:5}).map((_,i) => i < r.rating ? '<span class="star">★</span>' : '<span class="star" style="color:#e9e9e9">★</span>').join('') }
+                      <span class="ms-2 small text-muted">${ r.created_at_str || '' }</span>
+                    </div>
+                  </div>
+                  <div>${ r.is_verified_purchase ? '<div class="verified-badge">Verified</div>' : '' }</div>
+                </div>
+                ${ r.title ? `<div class="mt-2"><strong>${ r.title }</strong></div>` : ''}
+                <div class="mt-1 text-muted">${ r.body || '' }</div>
+              </div>
+            `;
+            reviewsList.appendChild(node);
+          });
+          reviewsOffset += data.reviews.length;
+          if (reviewsOffset >= data.total_reviews) {
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.textContent = 'No more reviews';
+          }
+        } finally {
+          reviewsLoading.style.display = 'none';
+        }
+      });
+
+      // Prefill Edit Product modal when opened
+      openEditProductBtn && openEditProductBtn.addEventListener('click', function () {
+        // productData is server-provided
+        try {
+          document.getElementById('editp_name').value = productData.name || '';
+          document.getElementById('editp_brand').value = productData.brand || '';
+          document.getElementById('editp_category').value = productData.category || '';
+          document.getElementById('editp_short').value = productData.short_description || '';
+          // description - stored raw / processed on server; use raw description if available
+          document.getElementById('editp_description').value = productData.description || '';
+          document.getElementById('editp_material').value = productData.material || '';
+          document.getElementById('editp_weight').value = productData.weight || '';
+          document.getElementById('editp_fit').value = productData.fit || '';
+          document.getElementById('editp_pattern').value = productData.pattern || '';
+          document.getElementById('editp_occasion').value = productData.occasion || '';
+          document.getElementById('editp_season').value = productData.season || '';
+          document.getElementById('editp_sustainability').value = productData.sustainability || '';
+          document.getElementById('editp_care').value = productData.care_instructions || '';
+          document.getElementById('editp_sku').value = productData.sku || '';
+          document.getElementById('editp_returnable').checked = !!productData.is_returnable;
+        } catch (e) {
+          console.warn('Could not prefill product modal', e);
+        }
+      });
+
     });
   </script>
+
+  <!-- fullscreen modal for images -->
+  <div class="modal fade" id="imageFullscreenModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+      <div class="modal-content bg-dark">
+        <div class="modal-body d-flex align-items-center justify-content-center p-0" style="position:relative;">
+          <button type="button" class="btn btn-light position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close">Close</button>
+          <img id="fullscreenImage" class="img-fluid" src="" alt="Full image">
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

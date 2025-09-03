@@ -9,7 +9,7 @@ import logging
 from datetime import datetime, timedelta
 from collections import OrderedDict
 import html as _html
-
+import urllib.parse
 # Environment helpers
 from dotenv import load_dotenv
 
@@ -123,6 +123,7 @@ def google_callback():
 
 
 @main.route("/set-password", methods=["GET", "POST"])
+@nocache
 def set_password():
     if "google_email" not in session:
         flash("Google verification required before setting password.", "warning")
@@ -244,6 +245,7 @@ def register():
 
 # ---- Profile page (tabs: profile, addresses, security) ----
 @main.route('/profile')
+@nocache
 def profile():
     if 'customer_id' not in session:
         flash("Please login to view profile.", "warning")
@@ -272,6 +274,7 @@ def profile():
 # ---- Edit profile (name, phone, email) ----
 
 @main.route('/profile/edit', methods=['POST'])
+@nocache
 def profile_edit():
     if 'customer_id' not in session:
         flash("Please login to edit profile.", "warning")
@@ -318,6 +321,7 @@ def profile_edit():
 # ---- Change password (current + new) ----
 
 @main.route('/profile/change-password', methods=['POST'])
+@nocache
 def profile_change_password():
     if 'customer_id' not in session:
         flash("Please login to change password.", "warning")
@@ -367,6 +371,7 @@ def profile_change_password():
 # ---- Add address (POST) ----
 
 @main.route('/address/add', methods=['POST'])
+@nocache
 def address_add():
     if 'customer_id' not in session:
         flash("Please login to manage addresses.", "warning")
@@ -413,6 +418,7 @@ def address_add():
 # ---- Edit address (GET for form or POST to save) ----
 
 @main.route('/address/<int:address_id>/edit', methods=['POST'])
+@nocache
 def address_edit(address_id):
     if 'customer_id' not in session:
         flash("Please login to manage addresses.", "warning")
@@ -468,6 +474,7 @@ def address_edit(address_id):
 # ---- Delete address ----
 
 @main.route('/address/<int:address_id>/delete', methods=['POST'])
+@nocache
 def address_delete(address_id):
     if 'customer_id' not in session:
         flash("Please login to manage addresses.", "warning")
@@ -509,6 +516,7 @@ def address_delete(address_id):
 
 # ------------------- Set default address (POST) -------------------
 @main.route('/address/<int:address_id>/set-default', methods=['POST'])
+@nocache
 def address_set_default(address_id):
     if 'customer_id' not in session:
         flash("Please login to manage addresses.", "warning")
@@ -540,7 +548,6 @@ def address_set_default(address_id):
 # -----------------------place order----------------------------
 
 @main.route('/place-order', methods=['GET'])
-@nocache
 def place_order():
     q = (request.args.get('q') or '').strip()
     sort = request.args.get('sort') or 'newest'   # default sort
@@ -734,7 +741,6 @@ def place_order():
 # ------------------viewing product details----------------------
 
 @main.route('/prod/<int:product_id>')
-@nocache
 def view_prod_detail(product_id):
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
@@ -1113,6 +1119,7 @@ def cart_add():
 # Backend: cart routes (drop in to your routes file)
 
 @main.route('/cart')
+@nocache
 def view_cart():
     if 'customer_id' not in session:
         flash("Please login to add products.", "warning")
@@ -1135,6 +1142,7 @@ def view_cart():
 
 
 @main.route('/update_cart_quantity', methods=['POST'])
+@nocache
 def update_cart_quantity():
     if 'customer_id' not in session:
         flash("Please login to add products.", "warning")
@@ -1203,6 +1211,7 @@ def update_cart_quantity():
 
 
 @main.route('/remove_cart_item', methods=['POST'])
+@nocache
 def remove_cart_item():
     if 'customer_id' not in session:
         flash("Please login to add products.", "warning")
@@ -1227,6 +1236,7 @@ def remove_cart_item():
 
 
 @main.route('/checkout', methods=['GET'])
+@nocache
 def checkout():
     if 'customer_id' not in session:
         flash("Please login to continue to checkout.", "warning")
@@ -1262,6 +1272,7 @@ def checkout():
 
 
 @main.route('/place_cart_order', methods=['POST'])
+@nocache
 def place_cart_order():
     # require login
     if 'customer_id' not in session:
@@ -1942,16 +1953,21 @@ def download_invoice():
         flash("Please login to download invoice", "warning")
         return redirect(url_for('main.login'))
 
+    # decide redirect target helper based on caller type (owner vs customer)
+    is_owner = ('owner_id' in session) or session.get('is_owner', False)
+    def redirect_owner_or_customer(endpoint_customer='main.view_orders', endpoint_owner='main.owner_view_orders'):
+        return redirect(url_for(endpoint_owner if is_owner else endpoint_customer))
+
     order_id = request.form.get('order_id')
     if not order_id:
         flash("Missing order id", "warning")
-        return redirect(url_for('main.view_orders'))
+        return redirect_owner_or_customer()
 
     try:
         order_id = int(order_id)
     except ValueError:
         flash("Invalid order id", "danger")
-        return redirect(url_for('main.view_orders'))
+        return redirect_owner_or_customer()
 
     # DB lookup
     conn = get_db()
@@ -1961,15 +1977,14 @@ def download_invoice():
         o = cursor.fetchone()
         if not o:
             flash("Order not found", "danger")
-            return redirect(url_for('main.view_orders'))
+            return redirect_owner_or_customer()
 
         # permission: owner/admin can download any invoice
-        is_owner = ('owner_id' in session) or session.get('is_owner', False)
         if not is_owner:
             # must be the customer who owns the order
             if 'customer_id' not in session or int(o.get('customer_id')) != int(session.get('customer_id')):
                 flash("Permission denied", "danger")
-                return redirect(url_for('main.view_orders'))
+                return redirect_owner_or_customer()
 
         # fetch latest payment row that has invoice_path
         cursor.execute("""
@@ -1982,7 +1997,7 @@ def download_invoice():
         p = cursor.fetchone()
         if not p or not p.get('invoice_path'):
             flash("Invoice not available", "warning")
-            return redirect(url_for('main.view_orders'))
+            return redirect_owner_or_customer()
 
         invoice_fname = p.get('invoice_path')
 
@@ -1995,26 +2010,26 @@ def download_invoice():
         invoice_dir_abs = os.path.abspath(invoice_dir)
         fullpath = os.path.abspath(os.path.join(invoice_dir_abs, invoice_fname))
 
-        # simple safety check to ensure invoice file is in invoice_dir
-        if not fullpath.startswith(invoice_dir_abs + os.sep) and fullpath != invoice_dir_abs:
+        # security: ensure final path is inside invoice_dir_abs (prevent path traversal)
+        if not (fullpath == invoice_dir_abs or fullpath.startswith(invoice_dir_abs + os.sep)):
             current_app.logger.error("Potential invoice path traversal attempt: %s", fullpath)
             flash("Invalid invoice path", "danger")
-            return redirect(url_for('main.view_orders'))
+            return redirect_owner_or_customer()
 
         if not os.path.exists(fullpath) or not os.path.isfile(fullpath):
             current_app.logger.error("Invoice file missing: %s", fullpath)
             flash("Invoice file missing", "danger")
-            return redirect(url_for('main.view_orders'))
+            return redirect_owner_or_customer()
 
         # send file for download
         # If your Flask version is older and does not support download_name,
-        # replace download_name=<name> with attachment_filename=<name>
+        # use attachment_filename=<name> instead.
         return send_file(fullpath, as_attachment=True, download_name=os.path.basename(fullpath))
 
     except Exception as e:
         current_app.logger.exception("Error while trying to download invoice for order %s: %s", order_id, e)
         flash("Unable to download invoice. Try again.", "danger")
-        return redirect(url_for('main.view_orders'))
+        return redirect_owner_or_customer()
     finally:
         try:
             cursor.close()
@@ -2023,9 +2038,11 @@ def download_invoice():
             pass
 
 
+
 # -----------------view orders--------------
 
 @main.route('/orders')
+@nocache
 def view_orders():
     if 'customer_id' not in session:
         flash("Please log in to view orders.", "warning")
@@ -2191,6 +2208,7 @@ def view_orders():
 
 
 @main.route('/submit_review', methods=['POST'])
+@nocache
 def submit_review():
     if 'customer_id' not in session:
         flash("Please login to submit a review.", "warning")
@@ -2273,6 +2291,7 @@ def submit_review():
 
 
 @main.route('/request_order_cancellation', methods=['POST'])
+@nocache
 def request_order_cancellation():
     # ensure logged-in
     if 'customer_id' not in session:
@@ -2377,7 +2396,7 @@ def owner_logout():
 # --------------------add product--------------------
 
 
-ALLOWED_IMAGE_EXT = {"png", "jpg", "jpeg", "gif"}
+ALLOWED_IMAGE_EXT = {"png", "jpg", "jpeg", "gif","webp","avif"}
 
 
 def allowed_file(filename):
@@ -2858,13 +2877,56 @@ def view_owner_products():
 
 
 
+import urllib.parse
+
+# Helper: try to obtain a variant_id from form, args, or referrer query string.
+def _extract_variant_id_from_request():
+    """
+    Returns an integer variant_id if present in:
+      - request.form (fields: 'variant_id', 'edit_variant_id')
+      - request.args (query param 'variant_id' or 'variant_sku' not handled here)
+      - request.referrer (parses query string)
+    Otherwise returns None.
+    """
+    # 1) check form fields (common names)
+    for fname in ('variant_id', 'edit_variant_id', 'current_variant_id', 'open_variant_id'):
+        v = request.form.get(fname)
+        if v:
+            try:
+                return int(v)
+            except Exception:
+                pass
+
+    # 2) check request.args
+    v = request.args.get('variant_id')
+    if v:
+        try:
+            return int(v)
+        except Exception:
+            pass
+
+    # 3) try to parse from referrer query string
+    ref = request.referrer
+    if ref:
+        try:
+            parsed = urllib.parse.urlparse(ref)
+            qs = urllib.parse.parse_qs(parsed.query)
+            vlist = qs.get('variant_id') or qs.get('variantId') or qs.get('variant')
+            if vlist:
+                try:
+                    return int(vlist[0])
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    return None
+
+# ---------- View product detail (unchanged) ----------
 @main.route('/product/<int:product_id>')
 @nocache
 def view_product_detail(product_id):
-    """
-    Fetch product, its variants (default first), product-level images,
-    and variant images grouped by variant_id. Pass to template.
-    """
+    # owner-only
     if 'owner_id' not in session:
         flash("Please log in as an owner.", "warning")
         return redirect('/login')
@@ -2872,106 +2934,597 @@ def view_product_detail(product_id):
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
 
-    # Fetch product row
     cursor.execute("SELECT * FROM products WHERE product_id = %s", (product_id,))
     product = cursor.fetchone()
     if not product:
-        cursor.close()
-        conn.close()
+        cursor.close(); conn.close()
         flash("Product not found", "danger")
         return redirect(url_for('main.view_owner_products'))
 
-    # Normalize image_path
+    # Optional ownership check: if products have owner_id column, ensure owner owns it
+    if 'owner_id' in product and product.get('owner_id') is not None:
+        if int(product.get('owner_id')) != int(session.get('owner_id')):
+            cursor.close(); conn.close()
+            flash("You are not authorized to view this product.", "danger")
+            return redirect(url_for('main.view_owner_products'))
+
+    # Normalize simple fields
     if product.get('image_path'):
         product['image_path'] = product['image_path'].replace('\\', '/')
+    for fld in ('brand','category','short_description','description','material',
+                'fit','care_instructions','pattern','occasion','season','sustainability','weight'):
+        product[fld] = product.get(fld) or ''
 
-    # Fetch variants, ordering default variant first (so it will be variants[0])
+    # Keep raw DB description (unescaped) for debug panel
+    raw_desc = product.get('description') or ''
+    product['description_raw'] = raw_desc
+
+    # Description normalization (same robust pipeline as customer)
+    try:
+        s = _html.unescape(raw_desc or '')
+
+        # Replace any <br> (case-insensitive) with newline
+        s = re.sub(r'(?i)<\s*br\s*/?\s*>', '\n', s)
+
+        # Convert literal backslash-n sequences to real newline (if DB stored \n as text)
+        s = s.replace('\\r\\n', '\n').replace('\\n', '\n').replace('\\r', '\n')
+
+        # Normalize CRLF & CR to LF
+        s = s.replace('\r\n', '\n').replace('\r', '\n')
+
+        # Strip leading/trailing whitespace and collapse 3+ newlines to 2 for readability
+        s = s.strip()
+        s = re.sub(r'\n{3,}', '\n\n', s)
+
+        # Escape everything (protect against XSS)
+        escaped = escape(s)
+
+        # Convert newline characters to real <br/> tags for HTML rendering
+        escaped_with_br = Markup(str(escaped).replace('\n', '<br/>'))
+
+        product['description_html'] = escaped_with_br
+
+    except Exception:
+        current_app.logger.exception("Error processing product.description")
+        product['description_html'] = Markup(escape(raw_desc or '').replace('\n', '<br/>'))
+
+    # --- variants ---
     cursor.execute("""
-        SELECT pv.* 
+        SELECT pv.*
         FROM product_variants pv
         WHERE pv.product_id = %s
         ORDER BY pv.is_default DESC, pv.variant_id ASC
     """, (product_id,))
-    variants = cursor.fetchall()  # list of dicts
-
-    # Convert numeric fields to proper python types for templates
+    variants = cursor.fetchall() or []
     for v in variants:
-        v['price'] = float(v['price'] or 0.0)
-        v['stock_count'] = int(v['stock_count'] or 0)
-        # ensure string fields aren't None in template
-        for f in ('sku', 'size', 'color', 'color_hex'):
-            if f in v and v[f] is None:
-                v[f] = ''
+        v['price'] = float(v.get('price') or 0.0)
+        v['stock_count'] = int(v.get('stock_count') or 0)
+        for f in ('sku','size','color','color_hex'):
+            v[f] = v.get(f) or ''
 
-    # Fetch product-level images (variant_id IS NULL), order by is_primary desc then position
+    # product-level images (variant_id IS NULL)
     cursor.execute("""
-        SELECT * FROM product_images
+        SELECT *
+        FROM product_images
         WHERE product_id = %s AND variant_id IS NULL
         ORDER BY is_primary DESC, position ASC, image_id ASC
     """, (product_id,))
-    product_images = cursor.fetchall()
+    product_images = cursor.fetchall() or []
     for pi in product_images:
         pi['path'] = pi['path'].replace('\\', '/')
 
-    # Fetch variant images (variant_id IS NOT NULL) and group them by variant_id
+    # variant images grouped by variant_id
     cursor.execute("""
-        SELECT * FROM product_images
+        SELECT *
+        FROM product_images
         WHERE product_id = %s AND variant_id IS NOT NULL
         ORDER BY variant_id ASC, position ASC, image_id ASC
     """, (product_id,))
-    all_variant_images = cursor.fetchall()
+    all_variant_images = cursor.fetchall() or []
     variant_images = {}
     for img in all_variant_images:
         img['path'] = img['path'].replace('\\', '/')
-        vid = img['variant_id']
-        if vid not in variant_images:
-            variant_images[vid] = []
-        variant_images[vid].append(img)
+        vid = img.get('variant_id')
+        variant_images.setdefault(vid, []).append(img)
+
+    # prepare thumbnail path for each variant (fallback product image / placeholder)
+    for v in variants:
+        vid = v.get('variant_id')
+        if vid in variant_images and variant_images[vid]:
+            v['thumb'] = variant_images[vid][0]['path']
+        elif product_images:
+            v['thumb'] = product_images[0]['path']
+        elif product.get('image_path'):
+            v['thumb'] = product['image_path']
+        else:
+            v['thumb'] = 'uploads/placeholder.png'
+
+    # initial variant selection (optional: from query params)
+    initial_variant_id = None
+    qvid = request.args.get('variant_id')
+    qsku = request.args.get('variant_sku')
+    if qvid:
+        try:
+            qv = int(qvid)
+            if any(int(x.get('variant_id')) == qv for x in variants):
+                initial_variant_id = qv
+        except Exception:
+            pass
+    elif qsku:
+        for v in variants:
+            if v.get('sku') and v['sku'] == qsku:
+                initial_variant_id = int(v['variant_id'])
+                break
+
+    # Reviews aggregate & initial top 5 (same as customer)
+    cursor.execute("SELECT COALESCE(AVG(rating),0) AS avg_rating, COUNT(*) AS total_reviews FROM product_reviews WHERE product_id = %s", (product_id,))
+    agg = cursor.fetchone() or {'avg_rating':0.0, 'total_reviews':0}
+    avg_rating = float(agg.get('avg_rating') or 0.0)
+    total_reviews = int(agg.get('total_reviews') or 0)
+
+    cursor.execute("""
+        SELECT pr.*, c.name AS customer_name
+        FROM product_reviews pr
+        LEFT JOIN customers c ON c.customer_id = pr.customer_id
+        WHERE pr.product_id = %s
+        ORDER BY pr.created_at DESC
+        LIMIT 5
+    """, (product_id,))
+    top_reviews = cursor.fetchall() or []
+    for r in top_reviews:
+        r['customer_name'] = r.get('customer_name') or 'Anonymous'
+        r['rating'] = int(r.get('rating') or 0)
+        r['title'] = r.get('title') or ''
+        r['body'] = r.get('body') or ''
+        try:
+            r['created_at_str'] = r['created_at'].strftime('%b %d, %Y') if r.get('created_at') else ''
+        except Exception:
+            r['created_at_str'] = str(r.get('created_at') or '')
 
     cursor.close()
     conn.close()
 
-    # If there is no product-level image, but variants exist and the default variant has images,
-    # use the first variant image as fallback for initial display in templates.
+    # show developer debug panel either when app.debug or session['is_dev']
+    show_dev = bool(current_app.debug or session.get('is_dev'))
+
     return render_template(
         'owner/product_detail.html',
         product=product,
         variants=variants,
         product_images=product_images,
-        variant_images=variant_images
+        variant_images=variant_images,
+        initial_variant_id=initial_variant_id,
+        avg_rating=round(avg_rating, 2),
+        total_reviews=total_reviews,
+        top_reviews=top_reviews,
+        show_dev=show_dev
     )
 
-
-# Delete a product
-@main.route('/delete_product/<int:product_id>', methods=['POST'])
+# ---------- Edit product (POST only) ----------
+@main.route('/product/<int:product_id>/edit', methods=['POST'])
 @nocache
-def delete_product(product_id):
+def edit_product(product_id):
+    # Owner auth
     if 'owner_id' not in session:
         flash("Please log in as an owner.", "warning")
         return redirect('/login')
-    conn = get_db()
-    cursor = conn.cursor(dictionary=True)
-    # remove image files recorded in product_images
-    cursor.execute("SELECT path FROM product_images WHERE product_id = %s", (product_id,))
-    rows = cursor.fetchall()
-    for r in rows:
-        if r and r.get('path'):
-            image_path = os.path.join(current_app.static_folder, r['path'])
-            if os.path.exists(image_path):
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+
+        # Fetch product (ensure exists)
+        cursor.execute("SELECT * FROM products WHERE product_id = %s", (product_id,))
+        product = cursor.fetchone()
+        if not product:
+            flash("Product not found.", "danger")
+            return redirect(url_for('main.view_owner_products'))
+
+        # Read and sanitize common fields
+        name = (request.form.get('name') or '').strip()
+        brand = (request.form.get('brand') or '').strip() or None
+        category = (request.form.get('category') or '').strip() or None
+        short_description = (request.form.get('short_description') or '').strip() or None
+        description = (request.form.get('description') or '').strip() or None
+
+        material = (request.form.get('material') or '').strip() or None
+        fit = (request.form.get('fit') or '').strip() or None
+        care_instructions = (request.form.get('care_instructions') or '').strip() or None
+        pattern = (request.form.get('pattern') or '').strip() or None
+        occasion = (request.form.get('occasion') or '').strip() or None
+        season = (request.form.get('season') or '').strip() or None
+        sustainability = (request.form.get('sustainability') or '').strip() or None
+
+        # numeric fields
+        weight_raw = (request.form.get('weight') or '').strip()
+        try:
+            weight = float(weight_raw) if weight_raw != '' else None
+        except Exception:
+            weight = None
+
+        # boolean-like
+        is_returnable = 1 if request.form.get('is_returnable') in ('1', 'on', 'true', 'yes') else 0
+
+        # optional SKU / meta
+        sku = (request.form.get('sku') or '').strip() or None
+
+        # Fields controlling product-level image deletions and uploads
+        delete_image_ids = request.form.getlist('delete_image_ids')  # list of strings
+        try:
+            delete_image_ids = [int(x) for x in delete_image_ids if str(x).strip() != '']
+        except Exception:
+            delete_image_ids = []
+
+        new_files = request.files.getlist('product_images')
+
+        # Build update dict (if you prefer to skip NULL-on-empty change logic adjust here)
+        update_fields = {
+            'name': name or product.get('name'),
+            'brand': brand,
+            'category': category,
+            'short_description': short_description,
+            'description': description,
+            'material': material,
+            'fit': fit,
+            'care_instructions': care_instructions,
+            'pattern': pattern,
+            'occasion': occasion,
+            'season': season,
+            'sustainability': sustainability,
+            'weight': weight,
+            'is_returnable': is_returnable,
+            'sku': sku
+        }
+
+        set_clauses = []
+        params = []
+        for k, v in update_fields.items():
+            set_clauses.append(f"{k} = %s")
+            params.append(v)
+        params.append(product_id)
+        sql = f"UPDATE products SET {', '.join(set_clauses)} WHERE product_id = %s"
+        cursor.execute(sql, tuple(params))
+
+        # Delete selected product images (and files)
+        if delete_image_ids:
+            format_ids = ",".join(["%s"] * len(delete_image_ids))
+            cursor.execute(f"SELECT image_id, path FROM product_images WHERE image_id IN ({format_ids}) AND product_id = %s",
+                           tuple(delete_image_ids + [product_id]))
+            rows = cursor.fetchall() or []
+            for r in rows:
+                path = r.get('path') or ''
+                if path:
+                    abs_path = os.path.join(current_app.root_path, 'static', path.replace('/', os.path.sep))
+                    try:
+                        if os.path.exists(abs_path):
+                            os.remove(abs_path)
+                    except Exception as e:
+                        current_app.logger.warning("Failed to delete product image file %s: %s", abs_path, e)
+            cursor.execute(f"DELETE FROM product_images WHERE image_id IN ({format_ids}) AND product_id = %s",
+                           tuple(delete_image_ids + [product_id]))
+
+        # Handle uploads of new product-level images
+        if new_files:
+            UPLOAD_BASE = os.path.join(current_app.root_path, 'static', 'uploads', 'products')
+            os.makedirs(UPLOAD_BASE, exist_ok=True)
+
+            cursor.execute("SELECT COALESCE(MAX(position), -1) AS m FROM product_images WHERE product_id = %s AND variant_id IS NULL", (product_id,))
+            row = cursor.fetchone()
+            next_pos = (row['m'] if row and row.get('m') is not None else -1) + 1
+
+            inserted = 0
+            for f in (new_files or []):
+                if not f or not getattr(f, 'filename', None):
+                    continue
+                if not allowed_file(f.filename):
+                    continue
+                orig = secure_filename(f.filename)
+                unique = f"{product_id}_p_{next_pos}_{int(time.time())}_{uuid.uuid4().hex[:6]}"
+                filename = f"{unique}_{orig}"
+                saved_path = os.path.join(UPLOAD_BASE, filename)
                 try:
-                    os.remove(image_path)
-                except Exception:
-                    pass
+                    f.save(saved_path)
+                    rel = os.path.join('uploads', 'products', filename).replace(os.path.sep, '/')
+                    is_primary = 1 if (inserted == 0 and not has_primary_product_image(cursor, product_id)) else 0
+                    cursor.execute("INSERT INTO product_images (product_id, variant_id, path, alt_text, position, is_primary) VALUES (%s,%s,%s,%s,%s,%s)",
+                                   (product_id, None, rel, None, next_pos, is_primary))
+                    next_pos += 1
+                    inserted += 1
+                except Exception as e:
+                    current_app.logger.exception("Failed to save uploaded product image: %s", e)
+                    # continue
 
-    # delete product will cascade to images and variants via FK
-    cursor.execute("DELETE FROM products WHERE product_id = %s", (product_id,))
-    conn.commit()
-    conn.close()
+        # Set product.image_path fallback from product_images if present
+        cursor.execute("SELECT path FROM product_images WHERE product_id = %s AND variant_id IS NULL ORDER BY is_primary DESC, position ASC LIMIT 1", (product_id,))
+        row = cursor.fetchone()
+        new_image_path = None
+        if row and row.get('path'):
+            new_image_path = row['path'].replace('\\', '/')
+        if new_image_path:
+            cursor.execute("UPDATE products SET image_path = %s WHERE product_id = %s", (new_image_path, product_id))
 
-    flash('Product deleted successfully!', 'success')
-    return redirect('/view-products')
+        conn.commit()
+        flash("Product updated successfully.", "success")
 
-# put near your other imports at top of routes file
+        # Preserve variant selection if present in form/args/referrer
+        vid = _extract_variant_id_from_request()
+        if vid:
+            return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=vid))
+        else:
+            return redirect(url_for('main.view_product_detail', product_id=product_id))
+
+    except mysql.connector.Error as err:
+        if conn:
+            conn.rollback()
+        current_app.logger.exception("MySQL error editing product: %s", err)
+        flash(f"Database error: {err}", "danger")
+        vid = _extract_variant_id_from_request()
+        if vid:
+            return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=vid))
+        return redirect(url_for('main.view_product_detail', product_id=product_id))
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        current_app.logger.exception("Unexpected error editing product: %s", e)
+        flash(f"Unexpected error: {e}", "danger")
+        vid = _extract_variant_id_from_request()
+        if vid:
+            return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=vid))
+        return redirect(url_for('main.view_product_detail', product_id=product_id))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+# --- Delete a single image (AJAX / owner-only) ---
+@main.route('/product/image/<int:image_id>/delete', methods=['POST'])
+@nocache
+def delete_image(image_id):
+    # owner check
+    if 'owner_id' not in session:
+        return jsonify({"ok": False, "error": "Owner login required"}), 403
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT image_id, product_id, variant_id, path FROM product_images WHERE image_id = %s", (image_id,))
+        row = cursor.fetchone()
+        if not row:
+            return jsonify({"ok": False, "error": "Image not found"}), 404
+
+        # Remove file from disk where possible
+        path = row.get('path') or ''
+        if path:
+            abs_path = os.path.join(current_app.root_path, 'static', path.replace('/', os.path.sep))
+            try:
+                if os.path.exists(abs_path):
+                    os.remove(abs_path)
+            except Exception as e:
+                current_app.logger.warning("Failed to delete image file %s: %s", abs_path, e)
+                # continue to delete row anyway
+
+        # Delete DB row
+        cursor.execute("DELETE FROM product_images WHERE image_id = %s", (image_id,))
+
+        # If variant_id exists, recompute no. of images positions? (we keep it simple)
+        conn.commit()
+        return jsonify({"ok": True, "deleted": int(image_id)})
+    except mysql.connector.Error as err:
+        if conn:
+            conn.rollback()
+        current_app.logger.exception("MySQL error deleting image: %s", err)
+        return jsonify({"ok": False, "error": str(err)}), 500
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        current_app.logger.exception("Unexpected error deleting image: %s", e)
+        return jsonify({"ok": False, "error": str(e)}), 500
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+
+# ---------- Edit variant route (new) ----------
+@main.route('/product/<int:product_id>/variant/<int:variant_id>/edit', methods=['GET', 'POST'])
+@nocache
+def edit_variant(product_id, variant_id):
+    # only ensure owner session exists (single-owner setup)
+    if 'owner_id' not in session:
+        flash("Please log in as an owner.", "warning")
+        return redirect('/login')
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+
+        # Confirm product exists
+        cursor.execute("SELECT product_id, name FROM products WHERE product_id = %s", (product_id,))
+        prod = cursor.fetchone()
+        if not prod:
+            flash("Product not found.", "danger")
+            return redirect(url_for('main.view_owner_products'))
+
+        # Fetch the variant to edit
+        cursor.execute("SELECT * FROM product_variants WHERE variant_id = %s AND product_id = %s", (variant_id, product_id))
+        variant = cursor.fetchone()
+        if not variant:
+            flash("Variant not found for this product.", "danger")
+            return redirect(url_for('main.view_product_detail', product_id=product_id))
+
+        # GET -> render edit form
+        if request.method == 'GET':
+            # fetch variant images
+            cursor.execute("SELECT * FROM product_images WHERE variant_id = %s ORDER BY is_primary DESC, position ASC, image_id ASC", (variant_id,))
+            v_images = cursor.fetchall() or []
+
+            # fetch product-level images (for display)
+            cursor.execute("SELECT * FROM product_images WHERE product_id = %s AND variant_id IS NULL ORDER BY is_primary DESC, position ASC", (product_id,))
+            p_images = cursor.fetchall() or []
+
+            # normalize paths for template
+            for img in (v_images + p_images):
+                if img.get('path'):
+                    img['path'] = img['path'].replace('\\', '/')
+
+            # pass to template (you will need owner/variant_edit.html)
+            return render_template(
+                'owner/variant_edit.html',
+                product=prod,
+                variant=variant,
+                variant_images=v_images,
+                product_images=p_images
+            )
+
+        # POST -> apply updates
+        # Read form fields
+        sku = (request.form.get('sku') or '').strip() or None
+        size = (request.form.get('size') or '').strip() or None
+        color = (request.form.get('color') or '').strip() or None
+        color_hex = (request.form.get('color_hex') or '').strip() or None
+        price_raw = (request.form.get('price') or '').strip()
+        stock_raw = (request.form.get('stock') or '').strip()
+        is_default_flag = request.form.get('is_default') in ('1', 'on', 'true', 'yes')
+
+        # sanitize numeric inputs
+        try:
+            price = float(price_raw) if price_raw != '' else 0.0
+        except Exception:
+            price = 0.0
+        try:
+            stock_count = int(float(stock_raw)) if stock_raw != '' else 0
+        except Exception:
+            stock_count = 0
+
+        # Check SKU uniqueness (if a SKU provided)
+        if sku:
+            cursor.execute("SELECT 1 FROM product_variants WHERE sku = %s AND variant_id != %s LIMIT 1", (sku, variant_id))
+            if cursor.fetchone():
+                flash("SKU already in use by another variant.", "danger")
+                return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=variant_id))
+
+        # Handle image deletions (checkboxes named delete_image_ids[])
+        delete_ids = request.form.getlist('delete_image_ids')
+        try:
+            delete_ids = [int(x) for x in delete_ids if str(x).strip() != '']
+        except Exception:
+            delete_ids = []
+
+        # Files uploaded with input name "variant_images" (multiple)
+        uploaded_files = request.files.getlist('variant_images')
+
+        # Begin update transaction
+        # If this variant is set as default, clear other variants' is_default first
+        if is_default_flag:
+            cursor.execute("UPDATE product_variants SET is_default = 0 WHERE product_id = %s", (product_id,))
+
+        # Update variant row
+        cursor.execute("""
+            UPDATE product_variants
+            SET sku = %s, size = %s, color = %s, color_hex = %s, price = %s, stock_count = %s, is_default = %s
+            WHERE variant_id = %s AND product_id = %s
+        """, (sku, size, color, color_hex, price, stock_count, 1 if is_default_flag else 0, variant_id, product_id))
+
+        # Delete selected variant images (and remove files)
+        if delete_ids:
+            # only delete images which belong to this variant and product
+            format_ids = ",".join(["%s"] * len(delete_ids))
+            cursor.execute(f"SELECT image_id, path FROM product_images WHERE image_id IN ({format_ids}) AND variant_id = %s AND product_id = %s",
+                           tuple(delete_ids + [variant_id, product_id]))
+            rows = cursor.fetchall() or []
+            for r in rows:
+                path = r.get('path') or ''
+                if path:
+                    abs_path = os.path.join(current_app.root_path, 'static', path.replace('/', os.path.sep))
+                    try:
+                        if os.path.exists(abs_path):
+                            os.remove(abs_path)
+                    except Exception as e:
+                        current_app.logger.warning("Failed to delete variant image file %s: %s", abs_path, e)
+            # delete from DB
+            cursor.execute(f"DELETE FROM product_images WHERE image_id IN ({format_ids}) AND variant_id = %s AND product_id = %s",
+                           tuple(delete_ids + [variant_id, product_id]))
+
+        # Save uploaded variant images
+        if uploaded_files:
+            UPLOAD_BASE = os.path.join(current_app.root_path, 'static', 'uploads', 'products')
+            os.makedirs(UPLOAD_BASE, exist_ok=True)
+
+            # find next position index for this variant
+            cursor.execute("SELECT COALESCE(MAX(position), -1) AS m FROM product_images WHERE variant_id = %s", (variant_id,))
+            currow = cursor.fetchone()
+            next_pos = (currow['m'] if currow and currow.get('m') is not None else -1) + 1
+
+            vpos = next_pos
+            inserted = 0
+            for f in (uploaded_files or []):
+                if not f or not getattr(f, 'filename', None):
+                    continue
+                if not allowed_file(f.filename):
+                    # skip invalid file
+                    continue
+                orig = secure_filename(f.filename)
+                unique = f"{product_id}_var{variant_id}_{vpos}_{int(time.time())}_{uuid.uuid4().hex[:6]}"
+                filename = f"{unique}_{orig}"
+                saved_path = os.path.join(UPLOAD_BASE, filename)
+                try:
+                    f.save(saved_path)
+                    rel = os.path.join('uploads', 'products', filename).replace(os.path.sep, '/')
+                    # is_primary -> if this is the first image for this variant, mark primary
+                    is_primary = 1 if (vpos == next_pos and not inserted) else 0
+                    cursor.execute("INSERT INTO product_images (product_id, variant_id, path, alt_text, position, is_primary) VALUES (%s,%s,%s,%s,%s,%s)",
+                                   (product_id, variant_id, rel, None, vpos, is_primary))
+                    vpos += 1
+                    inserted += 1
+                except Exception as e:
+                    current_app.logger.exception("Failed saving uploaded variant image: %s", e)
+                    # continue with other files
+
+        # Recalculate product stock_count (sum of variant stock_count)
+        cursor.execute("SELECT COALESCE(SUM(stock_count), 0) AS tot FROM product_variants WHERE product_id = %s", (product_id,))
+        row = cursor.fetchone()
+        total_stock = int(row['tot'] if row and row.get('tot') is not None else 0)
+        cursor.execute("UPDATE products SET stock_count = %s WHERE product_id = %s", (total_stock, product_id))
+
+        conn.commit()
+        flash("Variant updated successfully.", "success")
+
+        # Always return to product page with this variant selected
+        return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=variant_id))
+
+    except mysql.connector.Error as err:
+        if conn:
+            conn.rollback()
+        current_app.logger.exception("MySQL error editing variant: %s", err)
+        flash(f"Database error editing variant: {err}", "danger")
+        # try to preserve variant selection if possible
+        vid = variant_id or _extract_variant_id_from_request()
+        if vid:
+            return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=vid))
+        return redirect(url_for('main.view_product_detail', product_id=product_id))
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        current_app.logger.exception("Unexpected error editing variant: %s", e)
+        flash(f"Unexpected error: {e}", "danger")
+        vid = variant_id or _extract_variant_id_from_request()
+        if vid:
+            return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=vid))
+        return redirect(url_for('main.view_product_detail', product_id=product_id))
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
 
 
 # ---------- Delete variant route ----------
@@ -3032,6 +3585,7 @@ def delete_variant(product_id, variant_id):
         if conn:
             conn.close()
 
+    # After deletion we redirect to the product page without a variant_id (deleted)
     return redirect(url_for('main.view_product_detail', product_id=product_id))
 
 
@@ -3099,7 +3653,7 @@ def add_variant(product_id):
                 try:
                     f.save(saved_path)
                     rel = os.path.join('uploads', 'products', filename).replace(os.path.sep, '/')
-                    # is_primary: if this is the very first image for this variant, mark as primary(0/1) -> keep 1 for first
+                    # is_primary: if this is the very first image for this variant, mark as primary
                     is_primary = 1 if vpos == 0 else 0
                     cursor.execute(
                         "INSERT INTO product_images (product_id, variant_id, path, alt_text, position, is_primary) VALUES (%s,%s,%s,%s,%s,%s)",
@@ -3117,23 +3671,101 @@ def add_variant(product_id):
 
         conn.commit()
         flash("Variant added successfully.", "success")
+
+        # After adding, redirect to product detail with the newly created variant selected
+        return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=variant_id))
+
     except mysql.connector.Error as err:
         if conn:
             conn.rollback()
         print("[MYSQL ERROR] adding variant:", err)
         flash(f"Error adding variant: {err}", "danger")
+        return redirect(url_for('main.view_product_detail', product_id=product_id))
     except Exception as e:
         if conn:
             conn.rollback()
         print("[ERROR] adding variant:", e)
         flash(f"Unexpected error: {e}", "danger")
+        return redirect(url_for('main.view_product_detail', product_id=product_id))
     finally:
         if cursor:
             cursor.close()
         if conn:
             conn.close()
 
-    return redirect(url_for('main.view_product_detail', product_id=product_id))
+# Delete a product
+
+
+@main.route('/delete_product/<int:product_id>', methods=['POST'])
+@nocache
+def delete_product(product_id):
+    # owner auth
+    if 'owner_id' not in session:
+        flash("Please log in as an owner.", "warning")
+        return redirect('/login')
+
+    conn = None
+    cursor = None
+    try:
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+
+        # ensure product exists
+        cursor.execute("SELECT product_id, image_path FROM products WHERE product_id = %s", (product_id,))
+        product = cursor.fetchone()
+        if not product:
+            flash("Product not found", "danger")
+            return redirect(url_for('main.view_owner_products'))
+
+        # fetch all image rows (product-level and variant-level) so we can remove files
+        cursor.execute("SELECT image_id, path FROM product_images WHERE product_id = %s", (product_id,))
+        rows = cursor.fetchall() or []
+
+        for r in rows:
+            path = r.get('path') or ''
+            if not path:
+                continue
+            # normalize path and build absolute path inside static/
+            abs_path = os.path.join(current_app.root_path, 'static', path.replace('/', os.path.sep))
+            try:
+                if os.path.exists(abs_path):
+                    os.remove(abs_path)
+            except Exception as ex:
+                current_app.logger.warning("Failed to remove product_images file %s: %s", abs_path, ex)
+
+        # also remove the standalone products.image_path (if set and different from product_images)
+        prod_img = product.get('image_path') or ''
+        if prod_img:
+            abs_prod_img = os.path.join(current_app.root_path, 'static', prod_img.replace('/', os.path.sep))
+            try:
+                if os.path.exists(abs_prod_img):
+                    os.remove(abs_prod_img)
+            except Exception as ex:
+                current_app.logger.warning("Failed to remove products.image_path file %s: %s", abs_prod_img, ex)
+
+        # Now delete the product row (assumes FK cascade will remove product_images/product_variants)
+        cursor.execute("DELETE FROM products WHERE product_id = %s", (product_id,))
+        conn.commit()
+
+        flash('Product deleted successfully!', 'success')
+        return redirect(url_for('main.view_owner_products'))
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        current_app.logger.exception("Error deleting product %s: %s", product_id, e)
+        flash("An error occurred while deleting the product.", "danger")
+        # safe fallback: redirect back to product detail page
+        return redirect(url_for('main.view_product_detail', product_id=product_id))
+
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+# --------------------- View and manage orders (customer and owner) ---------------------
+
 
 
 @main.route('/delete_order_item', methods=['POST'])
@@ -3198,12 +3830,16 @@ def delete_order_item():
 #--------------------- include cancellation-request in allowed statuses (between delivered and cancelled)------------------
 ALLOWED_STATUSES = ['processing', 'confirmed', 'out for delivery', 'delivered', 'cancellation-request', 'cancelled', 'refunded']
 
+# or whatever route name you already used; keep route mapping same in your app
+# --- back-end: owner_view_orders (updated to attach latest review by that customer for each item) ---
+
 @main.route('/owner/orders')
 @main.route('/owner-orders')
+@nocache
 def owner_view_orders():
     if 'owner_id' not in session:
         flash("Please log in as owner to view this page", "warning")
-        return redirect('/owner/login')
+        return redirect('/login')
 
     status = request.args.get('status')
     q = request.args.get('q','').strip()
@@ -3319,7 +3955,7 @@ def owner_view_orders():
             "product_id": r.get('product_id'),
             "variant_id": r.get('variant_id'),
             "product_name": r.get('product_name'),
-            "image_path": r.get('image_path'),
+            "image_path": r.get('image_path').replace('\\','/') if r.get('image_path') else None,
             "quantity": r.get('quantity'),
             "unit_price": float(r['unit_price']) if r['unit_price'] is not None else None,
             "total_price": float(r['total_price']) if r['total_price'] is not None else None,
@@ -3327,8 +3963,49 @@ def owner_view_orders():
                 "sku": r.get('variant_sku'),
                 "size": r.get('variant_size'),
                 "color": r.get('variant_color')
-            }
+            },
+            "review": None
         })
+
+    # --- Attach review for the specific order/item if it exists ---
+    # NOTE: this requires product_reviews.order_id column to exist and link to orders.order_id
+    try:
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+        for oid, od in orders.items():
+            cust_id = od['customer'].get('customer_id')
+            if not cust_id:
+                continue
+            for item in od['items']:
+                try:
+                    # Find review for this exact order + product + customer
+                    cursor.execute("""
+                        SELECT review_id, rating, title, body, created_at
+                        FROM product_reviews
+                        WHERE product_id = %s AND customer_id = %s AND order_id = %s
+                        ORDER BY created_at DESC
+                        LIMIT 1
+                    """, (item['product_id'], cust_id, oid))
+                    rev = cursor.fetchone()
+                    if rev:
+                        try:
+                            created_at_str = rev['created_at'].strftime('%b %d, %Y') if rev.get('created_at') else ''
+                        except Exception:
+                            created_at_str = str(rev.get('created_at') or '')
+                        item['review'] = {
+                            'review_id': rev.get('review_id'),
+                            'rating': int(rev.get('rating') or 0),
+                            'title': rev.get('title') or '',
+                            'body': rev.get('body') or '',
+                            'created_at_str': created_at_str
+                        }
+                except Exception:
+                    current_app.logger.exception("Error fetching review for product %s customer %s order %s",
+                                                  item['product_id'], cust_id, oid)
+        cursor.close()
+        conn.close()
+    except Exception:
+        current_app.logger.exception("Error while attaching reviews to orders")
 
     return render_template(
         "owner/view_orders.html",
@@ -3338,6 +4015,7 @@ def owner_view_orders():
         sort=sort,
         allowed_statuses=ALLOWED_STATUSES
     )
+
 
 
 @main.route('/owner/update_order_status', methods=['POST'])
