@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Owner - View Products</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='owner/view_products.css') }}">
+  <style>
+    body { background:#f7f7f9; }
+    .sidebar { background:#fff; border-radius:8px; padding:18px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
+    .filter-section { padding:8px 0; border-bottom:1px solid #eee; }
+    .filter-section:last-child { border-bottom:none; }
+    .filter-section h6 { font-weight:600; margin-bottom:8px; }
+    .product-card { border-radius:10px; transition:transform .15s ease; }
+    .product-card:hover { transform:translateY(-4px); box-shadow:0 8px 20px rgba(0,0,0,.06); }
+    .search-bar { max-width:540px; width:100%; }
+    .small-muted { color:#6c757d; font-size:.9rem; }
+    .price-strong { font-weight:700; color:#111; }
+    .out-of-stock { color:#dc3545; font-weight:700; }
+    .filter-count { color:#6c757d; font-size:.85rem; margin-left:6px; }
+    .ch-collapse { cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:8px 0; }
+
+    /* NEW: centered right-side section title */
+    .section-title {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .section-title h2 {
+      font-size: 1.6rem;
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+      color: #212529;
+    }
+    .section-title p {
+      margin: 6px 0 0;
+      color: #6c757d;
+      font-size: 0.95rem;
+    }
+    /* subtle underline */
+    .section-title .underline {
+      width: 56px;
+      height: 3px;
+      background: linear-gradient(90deg,#0d6efd,#6610f2);
+      margin: 10px auto 0;
+      border-radius: 3px;
+    }
+
+    @media (min-width: 992px) {
+      .section-title h2 { font-size: 1.8rem; }
+    }
+  </style>
+</head>
+<body>
+  {% include 'customer/layout.html' %}
+  <div class="container-fluid mt-4">
+    <div class="row g-4">
+      <!-- LEFT SIDEBAR -->
+      <div class="col-lg-3">
+        <div class="sidebar">
+          <h5 class="mb-3">Refine By</h5>
+
+          <form method="GET" id="filtersForm">
+            <!-- Search term (kept here so search remains when user toggles filters) -->
+            <input type="hidden" name="q" value="{{ selected.q }}">
+
+            <!-- Category -->
+            <div class="filter-section">
+              <div class="ch-collapse" data-bs-toggle="collapse" data-bs-target="#catCollapse">
+                <h6 class="mb-0">Category</h6>
+                <span>+</span>
+              </div>
+              <div id="catCollapse" class="collapse show mt-2">
+                {% for cat in filters.categories %}
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="category" value="{{ cat }}" id="cat_{{ loop.index }}" {% if cat in selected.categories %}checked{% endif %}>
+                  <label class="form-check-label small" for="cat_{{ loop.index }}">{{ cat }}</label>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Brands -->
+            <div class="filter-section">
+              <div class="ch-collapse" data-bs-toggle="collapse" data-bs-target="#brandCollapse">
+                <h6 class="mb-0">Brands</h6><span>+</span>
+              </div>
+              <div id="brandCollapse" class="collapse show mt-2">
+                {% for b in filters.brands %}
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="brand" value="{{ b }}" id="brand_{{ loop.index }}" {% if b in selected.brands %}checked{% endif %}>
+                  <label class="form-check-label small" for="brand_{{ loop.index }}">{{ b }}</label>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Price Range -->
+            <div class="filter-section">
+              <div class="ch-collapse" data-bs-toggle="collapse" data-bs-target="#priceCollapse">
+                <h6 class="mb-0">Price</h6><span>+</span>
+              </div>
+              <div id="priceCollapse" class="collapse show mt-2">
+                <div class="d-flex gap-2">
+                  <input type="number" name="min_price" class="form-control" placeholder="{{ filters.global_min_price }}" value="{{ selected.min_price or '' }}">
+                  <input type="number" name="max_price" class="form-control" placeholder="{{ filters.global_max_price }}" value="{{ selected.max_price or '' }}">
+                </div>
+                <small class="small-muted">Enter min and max price (INR)</small>
+              </div>
+            </div>
+
+            <!-- Rating -->
+            <div class="filter-section">
+              <div class="ch-collapse" data-bs-toggle="collapse" data-bs-target="#ratingCollapse">
+                <h6 class="mb-0">Rating</h6><span>+</span>
+              </div>
+              <div id="ratingCollapse" class="collapse show mt-2">
+                {% for r in [5,4,3,2] %}
+                <div class="form-check">
+                  <input class="form-check-input" type="radio" name="rating" id="rating_{{ r }}" value="{{ r }}" {% if selected.rating and selected.rating|int == r %}checked{% endif %}>
+                  <label class="form-check-label small" for="rating_{{ r }}">{{ r }}★ & above</label>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Colors -->
+            <div class="filter-section">
+              <div class="ch-collapse" data-bs-toggle="collapse" data-bs-target="#colorCollapse">
+                <h6 class="mb-0">Colors</h6><span>+</span>
+              </div>
+              <div id="colorCollapse" class="collapse show mt-2">
+                {% for c in filters.colors %}
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="color" value="{{ c }}" id="color_{{ loop.index }}" {% if c in selected.colors %}checked{% endif %}>
+                  <label class="form-check-label small" for="color_{{ loop.index }}">{{ c }}</label>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Size & Fit -->
+            <div class="filter-section">
+              <div class="ch-collapse" data-bs-toggle="collapse" data-bs-target="#sizeCollapse">
+                <h6 class="mb-0">Size & Fit</h6><span>+</span>
+              </div>
+              <div id="sizeCollapse" class="collapse show mt-2">
+                {% for s in filters.sizes %}
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="size" value="{{ s }}" id="size_{{ loop.index }}" {% if s in selected.sizes %}checked{% endif %}>
+                  <label class="form-check-label small" for="size_{{ loop.index }}">{{ s }}</label>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <!-- Tags -->
+            <div class="filter-section">
+              <div class="ch-collapse" data-bs-toggle="collapse" data-bs-target="#tagCollapse">
+                <h6 class="mb-0">Tags</h6><span>+</span>
+              </div>
+              <div id="tagCollapse" class="collapse show mt-2">
+                {% for t in filters.tags %}
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="tag" value="{{ t.tag_id }}" id="tag_{{ t.tag_id }}" {% if t.tag_id|string in selected.tags %}checked{% endif %}>
+                  <label class="form-check-label small" for="tag_{{ t.tag_id }}">{{ t.name }}</label>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="mt-3 d-grid">
+              <button type="submit" class="btn btn-primary">Apply Filters</button>
+              <a href="{{ url_for('main.view_owner_products') }}" class="btn btn-link mt-2">Reset</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- RIGHT: products list -->
+      <div class="col-lg-9">
+        <!-- CENTERED SECTION TITLE (NEW) -->
+        <div class="section-title">
+          <h2>Our Products</h2>
+          <p>Explore your catalog — search, sort and apply filters to quickly find items.</p>
+          <div class="underline" aria-hidden="true"></div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <form method="GET" class="d-flex w-100 me-3" id="searchForm" style="gap:12px;">
+            <!-- keep all selected filters as hidden inputs so searching preserves choices -->
+            {% for k, vals in selected.items() %}
+              {% if vals and k not in ['q','sort','min_price','max_price','rating'] %}
+                {% for v in vals %}
+                  <input type="hidden" name="{{ 'category' if k=='categories' else 'brand' if k=='brands' else 'tag' if k=='tags' else 'color' if k=='colors' else 'size' if k=='sizes' else k }}" value="{{ v }}">
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+
+            <input name="q" type="text" class="form-control search-bar" placeholder="Search products (name, brand, description)" value="{{ selected.q or '' }}">
+            <select name="sort" class="form-select w-auto" onchange="this.form.submit()">
+              <option value="newest" {% if selected.sort=='newest' %}selected{% endif %}>Newest</option>
+              <option value="low" {% if selected.sort=='low' %}selected{% endif %}>Price: Low to High</option>
+              <option value="high" {% if selected.sort=='high' %}selected{% endif %}>Price: High to Low</option>
+              <option value="rating" {% if selected.sort=='rating' %}selected{% endif %}>Rating</option>
+            </select>
+            <button type="submit" class="btn btn-outline-secondary">Search</button>
+          </form>
+        </div>
+
+        <!-- products grid -->
+        <div class="row g-3">
+          {% if products %}
+            {% for product in products %}
+            <div class="col-md-4">
+              <div class="card product-card h-100">
+                <a href="{{ url_for('main.view_product_detail', product_id=product.product_id) }}">
+                  <img src="{{ url_for('static', filename=(product.image_path or 'uploads/placeholder.png')) }}" class="card-img-top" style="height:220px; object-fit:contain; background:#fff;">
+                </a>
+                <div class="card-body">
+                  <h6 class="mb-1">{{ product.name }}</h6>
+                  <div class="small-muted mb-2">{{ product.brand or '—' }} • {{ product.category or '—' }}</div>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <div class="price-strong">₹{{ '%.2f' % product.price_range.min }}</div>
+                      {% if product.price_range.has_range %}
+                        <div class="small text-muted">up to ₹{{ '%.2f' % product.price_range.max }}</div>
+                      {% endif %}
+                    </div>
+                    <div>
+                      {% if product.stats.total_stock <= 0 %}
+                        <div class="out-of-stock">Out of stock</div>
+                      {% else %}
+                        <div class="small text-success">{{ product.stats.total_stock }} in stock</div>
+                      {% endif %}
+                    </div>
+                  </div>
+                </div>
+                <div class="card-footer bg-white">
+                  <div class="d-grid gap-2">
+                    <a href="{{ url_for('main.view_prod_detail', product_id=product.product_id) }}" class="btn btn-outline-primary btn-sm">View</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="col-12">
+              <div class="p-4 bg-white rounded shadow-sm text-center">No products found for the selected filters.</div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% include 'customer/footer.html' %}
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // small helper: when user clicks a filter checkbox, submit the form (so UX is immediate)
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.sidebar input[type="checkbox"], .sidebar input[type="radio"]').forEach(function (el) {
+        el.addEventListener('change', function () {
+          // submit filters form
+          document.getElementById('filtersForm').submit();
+        });
+      });
+      // expand/collapse glyph toggles
+      document.querySelectorAll('.ch-collapse').forEach(function(el) {
+        el.addEventListener('click', function() {
+          const span = el.querySelector('span');
+          const target = document.querySelector(el.getAttribute('data-bs-target'));
+          if (target.classList.contains('show')) {
+            span.textContent = '+';
+          } else {
+            span.textContent = '-';
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

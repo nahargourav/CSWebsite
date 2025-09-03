@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Add Product - Owner</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet"/>
+  <style>
+    .variant-row { border: 1px solid #e2e2e2; padding:12px; margin-bottom:10px; border-radius:6px; }
+    .file-list { font-size:0.9rem; color:#555; margin-top:6px; }
+  </style>
+</head>
+<body>
+  {% include 'owner/owner_layout.html' %}
+  <div class="container mt-5">
+    <div class="card p-4 shadow-lg">
+      <h3 class="text-center mb-4">Add New Product</h3>
+
+      <form method="POST" action="/add-product" enctype="multipart/form-data" novalidate>
+        <div class="row g-3">
+          <div class="col-md-8">
+            <label class="form-label">Product Name</label>
+            <input type="text" name="name" class="form-control" id="name" required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">SKU (optional)</label>
+            <input type="text" name="sku" class="form-control">
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Brand</label>
+            <input type="text" name="brand" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Category</label>
+            <input type="text" name="category" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Currency</label>
+            <input type="text" name="currency" class="form-control" value="INR" readonly>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Weight (kg)</label>
+            <input type="number" step="0.001" name="weight" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Material</label>
+            <input type="text" name="material" class="form-control">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Short Description</label>
+            <input type="text" name="short_description" class="form-control">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-control" rows="4"></textarea>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Fit</label>
+            <input type="text" name="fit" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Pattern</label>
+            <input type="text" name="pattern" class="form-control">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Occasion</label>
+            <input type="text" name="occasion" class="form-control">
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Season</label>
+            <input type="text" name="season" class="form-control">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Sustainability</label>
+            <input type="text" name="sustainability" class="form-control">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Care Instructions</label>
+            <textarea name="care_instructions" class="form-control" rows="2"></textarea>
+          </div>
+
+          <div class="col-md-4">
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" value="1" id="is_returnable" name="is_returnable" checked>
+              <label class="form-check-label" for="is_returnable">Returnable</label>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="form-check mt-2">
+              <input class="form-check-input" type="checkbox" value="1" id="is_active" name="is_active" checked>
+              <label class="form-check-label" for="is_active">Active</label>
+            </div>
+          </div>
+
+          <!-- Main Product Image -->
+          <div class="col-12">
+            <label class="form-label">Main Product Image (single)</label>
+            <input type="file" name="main_image" id="main_image" class="form-control" accept="image/*" required>
+            <div class="file-list" id="main-image-list"></div>
+          </div>
+
+          <!-- Variants section -->
+          <div class="col-12">
+            <label class="form-label">Variants (size / color / color hex / sku / price / stock)</label>
+            <div id="variants">
+              <!-- initial variant row (index 0) -->
+              <div class="variant-row d-flex flex-wrap gap-2 align-items-end" data-index="0">
+                <div style="flex:1 1 120px;">
+                  <label class="form-label mb-1">Size</label>
+                  <input name="variant_size[]" class="form-control" placeholder="Size" required>
+                </div>
+                <div style="flex:1 1 140px;">
+                  <label class="form-label mb-1">Color</label>
+                  <input name="variant_color[]" class="form-control" placeholder="Color">
+                </div>
+                <div style="flex:1 1 120px;">
+                  <label class="form-label mb-1">Color Hex</label>
+                  <input name="variant_color_hex[]" class="form-control" placeholder="#ffffff">
+                </div>
+                <div style="flex:1 1 140px;">
+                  <label class="form-label mb-1">Variant SKU</label>
+                  <input name="variant_sku[]" class="form-control" placeholder="Optional">
+                </div>
+                <div style="flex:1 1 120px;">
+                  <label class="form-label mb-1">Price (₹)</label>
+                  <input name="variant_price[]" type="number" step="0.01" class="form-control" required>
+                </div>
+                <div style="flex:1 1 120px;">
+                  <label class="form-label mb-1">Stock</label>
+                  <input name="variant_stock[]" type="number" class="form-control variant-stock" value="0" required>
+                </div>
+                <div style="flex:1 1 220px;">
+                  <label class="form-label mb-1">Variant Images</label>
+                  <input type="file" name="variant_images_0" class="form-control variant-images" data-index="0" accept="image/*" multiple>
+                  <div class="file-list variant-file-list" data-index="0"></div>
+                </div>
+                <div>
+                  <button type="button" class="btn btn-outline-danger btn-remove-variant" style="height:38px;">Remove</button>
+                </div>
+              </div>
+            </div>
+
+            <button type="button" id="add-variant" class="btn btn-sm btn-secondary mt-2">Add Variant</button>
+
+            <!-- Hidden template -->
+            <div id="variant-template" style="display:none;">
+              <div class="variant-row d-flex flex-wrap gap-2 align-items-end" data-index="__INDEX__">
+                <div style="flex:1 1 120px;">
+                  <label class="form-label mb-1">Size</label>
+                  <input name="variant_size[]" class="form-control" placeholder="Size" required>
+                </div>
+                <div style="flex:1 1 140px;">
+                  <label class="form-label mb-1">Color</label>
+                  <input name="variant_color[]" class="form-control" placeholder="Color">
+                </div>
+                <div style="flex:1 1 120px;">
+                  <label class="form-label mb-1">Color Hex</label>
+                  <input name="variant_color_hex[]" class="form-control" placeholder="#ffffff">
+                </div>
+                <div style="flex:1 1 140px;">
+                  <label class="form-label mb-1">Variant SKU</label>
+                  <input name="variant_sku[]" class="form-control" placeholder="Optional">
+                </div>
+                <div style="flex:1 1 120px;">
+                  <label class="form-label mb-1">Price (₹)</label>
+                  <input name="variant_price[]" type="number" step="0.01" class="form-control" required>
+                </div>
+                <div style="flex:1 1 120px;">
+                  <label class="form-label mb-1">Stock</label>
+                  <input name="variant_stock[]" type="number" class="form-control variant-stock" value="0" required>
+                </div>
+                <div style="flex:1 1 220px;">
+                  <label class="form-label mb-1">Variant Images</label>
+                  <input type="file" name="variant_images___INDEX___" class="form-control variant-images" data-index="__INDEX__" accept="image/*" multiple>
+                  <div class="file-list variant-file-list" data-index="__INDEX__"></div>
+                </div>
+                <div>
+                  <button type="button" class="btn btn-outline-danger btn-remove-variant" style="height:38px;">Remove</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Total Stock Count</label>
+            <input type="number" class="form-control" id="total_stock" name="total_stock" value="0" readonly>
+            <small class="text-muted">Calculated from variant stocks</small>
+          </div>
+        </div>
+
+        <div class="mt-3">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} my-2">{{ message }}</div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+        </div>
+
+        <button type="submit" class="btn btn-success w-100 mt-3">Add Product</button>
+      </form>
+    </div>
+  </div>
+
+  {% include 'customer/footer.html' %}
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const variantsEl = document.getElementById('variants');
+      const addBtn = document.getElementById('add-variant');
+      const templateHtml = document.getElementById('variant-template').innerHTML;
+      const stockTotalInput = document.getElementById('total_stock');
+
+      // update file list text helper
+      function updateFileList(fileInput) {
+        const idx = fileInput.dataset.index;
+        const listEl = document.querySelector('.variant-file-list[data-index="' + idx + '"]');
+        if (!listEl) return;
+        const files = Array.from(fileInput.files).map(f => f.name);
+        listEl.textContent = files.length ? `Selected ${files.length} file(s): ${files.join(', ')}` : '';
+      }
+
+      // Update total stock
+      function updateTotalStock() {
+        const stocks = Array.from(document.querySelectorAll('input[name="variant_stock[]"]'))
+          .map(i => parseInt(i.value) || 0);
+        stockTotalInput.value = stocks.reduce((a,b) => a+b, 0);
+      }
+
+      // attach listeners to a variant-row element (for remove, stock input change, file change)
+      function attachRowHandlers(row) {
+        row.querySelectorAll('.btn-remove-variant').forEach(btn => {
+          btn.onclick = function () {
+            row.remove();
+            updateTotalStock();
+            // reindex file inputs' data-index and name attributes
+            reindexVariantFiles();
+          };
+        });
+
+        row.querySelectorAll('.variant-stock').forEach(input => {
+          input.addEventListener('input', updateTotalStock);
+        });
+
+        row.querySelectorAll('.variant-images').forEach(input => {
+          input.addEventListener('change', function (e) {
+            updateFileList(e.target);
+          });
+        });
+      }
+
+      // renames variant image inputs (name="variant_images_{index}") and data-index attributes so backend can read variant_images_0, variant_images_1 ...
+      function reindexVariantFiles() {
+        const rows = Array.from(variantsEl.querySelectorAll('.variant-row'));
+        rows.forEach((r, idx) => {
+          r.dataset.index = idx;
+          r.querySelectorAll('.variant-images').forEach(input => {
+            input.name = 'variant_images_' + idx;
+            input.dataset.index = idx;
+            const fileList = r.querySelector('.variant-file-list');
+            if (fileList) fileList.dataset.index = idx;
+          });
+        });
+      }
+
+      // Add variant button
+      addBtn.addEventListener('click', function () {
+        const index = variantsEl.querySelectorAll('.variant-row').length;
+        const newHtml = templateHtml.replace(/__INDEX__/g, index);
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = newHtml;
+        const newRow = wrapper.firstElementChild;
+        variantsEl.appendChild(newRow);
+        attachRowHandlers(newRow);
+        reindexVariantFiles();
+        updateTotalStock();
+      });
+
+      // initial attach and setup for first row
+      document.querySelectorAll('.variant-row').forEach(row => attachRowHandlers(row));
+      reindexVariantFiles();
+      updateTotalStock();
+
+      // main image preview text
+      const mainImageInput = document.getElementById('main_image');
+      const mainImageList = document.getElementById('main-image-list');
+      if (mainImageInput) {
+        mainImageInput.addEventListener('change', function (e) {
+          const files = Array.from(e.target.files).map(f => f.name);
+          mainImageList.textContent = files.length ? `Selected: ${files.join(', ')}` : '';
+        });
+      }
+    });
+  </script>
+</body>
+</html>

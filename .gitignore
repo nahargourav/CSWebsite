@@ -1,0 +1,55 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment / secrets
+.env
+.env.*
+.venv/
+venv/
+env/
+ENV/
+
+# Virtual environment artifacts
+venv/
+.venv/
+*.venv
+
+# Test / coverage
+.pytest_cache/
+.cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# Flask instance folder (contains local runtime files, invoices, secrets)
+instance/
+
+# Uploaded media (optional - ignore if you want uploads tracked)
+app/static/uploads/
+static/uploads/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Node
+node_modules/

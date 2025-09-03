@@ -1,0 +1,63 @@
+/* Background: Yellow-Green Gradient */
+body {
+    background: linear-gradient(to right, #FFD600, #00C853);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+}
+
+/* Card Styling */
+.card {
+    width: 100%;
+    max-width: 400px;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px 0 #00C85333;
+    background: #fff;
+    text-align: center;
+}
+
+/* InternSync Branding */
+.brand-title {
+    font-size: 26px;
+    font-weight: bold;
+}
+
+.brand-title .intern {
+    color: #FFD600; /* Bright yellow */
+}
+
+.brand-title .sync {
+    color: #00C853; /* Vivid green */
+}
+
+/* Form Fields */
+.form-control {
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* Button Styling */
+.btn-primary {
+    width: 100%;
+    border-radius: 8px;
+    background-color: #00C853;
+    border-color: #00C853;
+    border: none;
+    transition: 0.3s;
+}
+
+.btn-primary:hover {
+    background-color: #FFD600;
+    border-color: #FFD600;
+    color: #212121;
+}
+
+/* Footer Link */
+.login-link {
+    font-size: 14px;
+    margin-top: 10px;
+}

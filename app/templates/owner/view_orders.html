@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>All Orders - Owner</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* layout */
+    .order-img{height:70px;width:70px;object-fit:cover;border-radius:8px;transition:transform .28s ease, box-shadow .28s ease;}
+    .clickable-item{cursor:pointer}
+    .no-image-box{height:70px;width:70px;border-radius:8px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;color:#999}
+    .ellipsis{max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:middle}
+    .controls-row .form-control{min-width:220px}
+    .controls-row .form-select{min-width:180px}
+    .status-select{min-width:160px}
+    .owner-meta{font-size:.9rem;color:#666}
+
+    /* card & item animations */
+    .order-card { transition: transform .18s ease, box-shadow .18s ease; }
+    .order-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(2,6,23,.06); }
+
+    /* individual order item styling + hover */
+    .order-item {
+      display:flex;
+      align-items:center;
+      gap:1rem;
+      padding:.65rem;
+      border-radius:10px;
+      background: linear-gradient(180deg,#ffffff,#fbfbfd);
+      transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease;
+      box-shadow: 0 6px 14px rgba(2,6,23,.04);
+      will-change: transform;
+      transform: translateZ(0);
+      margin-bottom:.75rem;
+    }
+    .order-item:hover {
+      transform: translateY(-6px) scale(1.01);
+      box-shadow: 0 18px 40px rgba(2,6,23,.08);
+      background: linear-gradient(180deg,#ffffff,#f7fbff);
+    }
+    .order-item:active { transform: translateY(-3px) scale(.999); }
+
+    /* image zoom on hover */
+    .order-item:hover .order-img { transform: scale(1.06); box-shadow: 0 8px 20px rgba(2,6,23,.08); }
+
+    /* subtle fade-up entry animation */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .order-item { animation: fadeUp .32s ease both; }
+
+    /* small stagger using nth-child for nicer feel (within each order list) */
+    .items-list > .order-item:nth-child(1) { animation-delay: 0.02s; }
+    .items-list > .order-item:nth-child(2) { animation-delay: 0.06s; }
+    .items-list > .order-item:nth-child(3) { animation-delay: 0.10s; }
+    .items-list > .order-item:nth-child(4) { animation-delay: 0.14s; }
+    .items-list > .order-item:nth-child(5) { animation-delay: 0.18s; }
+    .items-list > .order-item:nth-child(6) { animation-delay: 0.22s; }
+
+    /* status badge styling (same colours as customer view) */
+    .status-badge {
+      display:inline-block;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:600;
+      font-size:.85rem;
+      color:#fff;
+      text-transform:capitalize;
+      box-shadow:0 2px 6px rgba(0,0,0,.06);
+    }
+    .status-processing{ background: linear-gradient(180deg,#ffc107,#e0a800); color:#111; } /* yellow */
+    .status-confirmed{ background: linear-gradient(180deg,#28a745,#1e7e34); } /* green */
+    .status-out-for-delivery{ background: linear-gradient(180deg,#fd7e14,#e06b06); } /* orange */
+    .status-delivered{ background: linear-gradient(180deg,#0dcaf0,#0aa5c1); } /* blue */
+    .status-cancellation-request{ background: linear-gradient(180deg,#dc3545,#b02a37); } /* red */
+    .status-cancelled{ background: linear-gradient(180deg,#b02a37,#8b222c); } /* darker red */
+    .status-refunded{ background: linear-gradient(180deg,#dc3545,#a81f2a); } /* refunded red */
+
+    /* layout helpers */
+    .order-header-actions { display:flex; gap:8px; align-items:center; justify-content:flex-end; }
+    @media (max-width: 768px) {
+      .order-header-actions { flex-direction:column; align-items:flex-end; gap:6px; }
+    }
+  </style>
+</head>
+<body>
+    {% include 'owner/owner_layout.html' %}
+  <div class="container mt-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <h2 class="mb-3">All Orders (Owner)</h2>
+
+    <form id="orders-controls" method="get" class="mb-3 controls-row d-flex flex-wrap gap-2 align-items-center">
+      <input type="search" name="q" value="{{ q }}" placeholder="Search order id,product,sku,customer,address" class="form-control" style="max-width:460px;">
+      <select name="sort" class="form-select" onchange="this.form.submit()">
+        <option value="date_desc" {% if sort=='date_desc' %}selected{% endif %}>Newest to Oldest</option>
+        <option value="date_asc" {% if sort=='date_asc' %}selected{% endif %}>Oldest to Newest</option>
+        <option value="total_desc" {% if sort=='total_desc' %}selected{% endif %}>Total High to Low</option>
+        <option value="total_asc" {% if sort=='total_asc' %}selected{% endif %}>Total Low to High</option>
+      </select>
+      <button type="submit" class="btn btn-primary">Search</button>
+      <a href="{{ url_for('main.owner_view_orders') }}" class="btn btn-outline-secondary">Reset</a>
+    </form>
+
+    <div class="mb-3">
+      {# include cancellation-request between delivered and cancelled #}
+      {% set statuses = ['all','processing','confirmed','out for delivery','delivered','cancellation-request','cancelled','refunded'] %}
+      <div class="btn-group">
+        {% for s in statuses %}
+          <a href="{{ url_for('main.owner_view_orders', status=(None if s=='all' else s), q=q or None, sort=sort or None) }}"
+             class="btn {% if current_status==s %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm text-capitalize">
+             {% if s == 'cancellation-request' %}
+               cancellation requests
+             {% else %}
+               {{ s }}
+             {% endif %}
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-9">
+        {% if orders %}
+          {% for order_id, order in orders.items() %}
+            <div class="card mb-4 order-card">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                  <strong>Order #</strong> {{ order_id }} &nbsp; | &nbsp;
+                  <span class="owner-meta">Date: {{ order.order_date }}</span>
+                  <br>
+                  <span class="owner-meta">Customer: {{ order.customer.name }} ({{ order.customer.email }})</span>
+                </div>
+
+                <div class="text-end order-header-actions">
+                  <div>
+                    <strong>{{ order.currency }} {{ order.total_amount }}</strong>
+                  </div>
+
+                  <!-- colored status badge -->
+                  <div>
+                    <span class="status-badge status-{{ order.order_status|lower|replace(' ', '-') }}">
+                      {{ order.order_status }}
+                    </span>
+                  </div>
+
+                  <div class="mt-1">
+                    <label class="small mb-0">Order Status</label>
+                    <select class="form-select form-select-sm status-select" onchange="onOwnerStatusChange(this, {{ order_id|tojson }})">
+                      {% for s in allowed_statuses %}
+                        <option value="{{ s }}" {% if s==order.order_status %}selected{% endif %}>{{ s }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-8">
+                    <div class="items-list">
+                      {% for item in order['items'] %}
+                        <div class="order-item clickable-item"
+                             role="button"
+                             tabindex="0"
+                             onclick="window.location='/prod/{{ item.product_id }}'{% if item.variant_id %} + '?variant={{ item.variant_id }}'{% endif %};"
+                             onkeypress="if(event.key==='Enter' || event.key===' '){ window.location='/prod/{{ item.product_id }}'{% if item.variant_id %} + '?variant={{ item.variant_id }}'{% endif %}; }"
+                        >
+                          {% if item.image_path %}
+                            <img src="{{ url_for('static', filename=item.image_path.replace('\\','/')) }}" class="order-img" alt="{{ item.product_name }}">
+                          {% else %}
+                            <div class="no-image-box">No Image</div>
+                          {% endif %}
+
+                          <div class="flex-grow-1">
+                            <h6 class="mb-1">{{ item.product_name }}</h6>
+                            <div class="owner-meta">
+                              {% if item.variant.sku %}SKU: <span class="ellipsis">{{ item.variant.sku }}</span>{% endif %}
+                              {% if item.variant.size %}, Size: {{ item.variant.size }}{% endif %}
+                              {% if item.variant.color %}, Color: {{ item.variant.color }}{% endif %}
+                            </div>
+                            <div class="small text-muted">Qty: {{ item.quantity }} &nbsp; | &nbsp; Unit: {{ order.currency }} {{ item.unit_price }} &nbsp; | &nbsp; Subtotal: {{ order.currency }} {{ item.total_price }}</div>
+                          </div>
+
+                          <!-- per-item actions removed (delete button removed as requested) -->
+                        </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+
+                  <div class="col-md-4">
+                    <div class="card p-3 border-0">
+                      <h6>Order Summary</h6>
+                      <table class="table table-sm mb-2">
+                        <thead><tr><th>Item</th><th>Qty</th><th>Total</th></tr></thead>
+                        <tbody>
+                          {% for item in order['items'] %}
+                            <tr>
+                              <td style="max-width:120px"><span class="ellipsis">{{ item.product_name }}</span></td>
+                              <td>{{ item.quantity }}</td>
+                              <td>{{ order.currency }} {{ item.total_price }}</td>
+                            </tr>
+                          {% endfor %}
+                          <tr>
+                            <td colspan="2" class="text-end">Shipping</td>
+                            <td>{{ order.currency }} {{ order.shipping_cost }}</td>
+                          </tr>
+                          <tr>
+                            <th colspan="2" class="text-end">Grand Total</th>
+                            <th>{{ order.currency }} {{ order.total_amount }}</th>
+                          </tr>
+                        </tbody>
+                      </table>
+
+                      <div class="small">
+                        <strong>Ship to</strong><br>
+                        {% if order.shipping_address.name %}{{ order.shipping_address.name }}<br>{% endif %}
+                        {{ order.shipping_address.line1 }}{% if order.shipping_address.line2 %}, {{ order.shipping_address.line2 }}{% endif %}<br>
+                        {{ order.shipping_address.city }}, {{ order.shipping_address.state }} - {{ order.shipping_address.postal_code }}<br>
+                        {{ order.shipping_address.country }}<br>
+                        {% if order.shipping_address.phone %}Phone: {{ order.shipping_address.phone }}{% endif %}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          {% endfor %}
+        {% else %}
+          <p>No orders found.</p>
+        {% endif %}
+      </div>
+
+      <div class="col-lg-3">
+        <div class="card p-3 mb-4">
+          <h6>Quick Summary</h6>
+          {% if orders %}
+            <div style="max-height:420px;overflow:auto">
+              <table class="table table-sm table-bordered mb-0">
+                <thead><tr><th>Order</th><th>Date</th><th>Total</th></tr></thead>
+                <tbody>
+                  {% for order_id, order in orders.items() %}
+                    <tr><td>{{ order_id }}</td><td>{{ order.order_date }}</td><td>{{ order.currency }} {{ order.total_amount }}</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            <div class="fw-bold text-end mt-2">Grand Total: {{ orders.values()|map(attribute='total_amount')|sum }}</div>
+          {% else %}
+            <p>No orders yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% include 'customer/footer.html' %}
+
+<!-- Confirmation modal for owner status change -->
+<div class="modal fade" id="ownerStatusConfirmModal" tabindex="-1" aria-labelledby="ownerStatusConfirmLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="ownerStatusConfirmLabel">Confirm Status Change</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to change status of order <strong>#<span id="modalOrderId"></span></strong> to
+        <strong><span id="modalNewStatus"></span></strong>?
+        <div class="mt-2 small text-muted">This will update the order status and notify the customer as per your flow.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">No, cancel</button>
+        <button type="button" id="ownerConfirmStatusBtn" class="btn btn-primary">Yes, change status</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  // Keep track of the select and data being confirmed
+  let pendingSelect = null;
+  let pendingOrderId = null;
+  let pendingNewStatus = null;
+  const confirmModalEl = document.getElementById('ownerStatusConfirmModal');
+  const bsConfirmModal = new bootstrap.Modal(confirmModalEl);
+  const modalOrderIdSpan = document.getElementById('modalOrderId');
+  const modalNewStatusSpan = document.getElementById('modalNewStatus');
+  const confirmBtn = document.getElementById('ownerConfirmStatusBtn');
+
+  // called by onchange in the select
+  function onOwnerStatusChange(selectEl, orderId) {
+    // store pending values
+    pendingSelect = selectEl;
+    pendingOrderId = orderId;
+    pendingNewStatus = selectEl.value;
+
+    // show modal with details
+    modalOrderIdSpan.textContent = String(orderId);
+    modalNewStatusSpan.textContent = pendingNewStatus;
+    bsConfirmModal.show();
+  }
+
+  // Confirm button action: call backend, then reload to show flashed message
+  confirmBtn.addEventListener('click', async function () {
+    if (!pendingSelect || !pendingOrderId || !pendingNewStatus) {
+      bsConfirmModal.hide();
+      return;
+    }
+    // disable confirm button to prevent double clicks
+    confirmBtn.disabled = true;
+
+    try {
+      const payload = { order_id: pendingOrderId, new_status: pendingNewStatus };
+      const res = await fetch('/owner/update_order_status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!data.ok) {
+        alert('Error: ' + (data.error || 'Unable to update status'));
+        bsConfirmModal.hide();
+        confirmBtn.disabled = false;
+        // revert select visually by reloading to match server
+        location.reload();
+        return;
+      }
+
+      // on success, reload page so backend's flashed message is shown
+      bsConfirmModal.hide();
+      setTimeout(() => { location.reload(); }, 200);
+    } catch (err) {
+      alert('Network error while updating order status');
+      bsConfirmModal.hide();
+      confirmBtn.disabled = false;
+    }
+  });
+
+  // When modal closed without confirming, revert select to server state by reloading
+  confirmModalEl.addEventListener('hidden.bs.modal', function () {
+    if (pendingSelect) {
+      location.reload();
+    }
+  });
+</script>
+</body>
+</html>

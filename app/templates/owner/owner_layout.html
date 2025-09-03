@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}OrderEase | Order Processing System{% endblock %}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap 5 CSS CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='customer/footer.css') }}">
+  {% block head %}{% endblock %}
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+    }
+    .main-content {
+      flex: 1;
+      margin: 70px auto 20px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 10px;
+      position: relative;
+      z-index: 1;
+    }
+    /* Navbar custom styles */
+    .navbar-nav.central-nav {
+      justify-content: center;
+      gap: 28px;
+      width: 74%;
+      flex-direction: row;
+      align-items: center;
+    }
+    .navbar-nav.central-nav .nav-link,
+    .navbar-nav.ms-auto .nav-link {
+      transition: color 0.2s, background 0.2s, font-size 0.2s;
+      font-size: 1.05rem;
+    }
+    .navbar-nav.central-nav .nav-link:hover,
+    .navbar-nav.central-nav .nav-link:focus,
+    .navbar-nav.ms-auto .nav-link:hover,
+    .navbar-nav.ms-auto .nav-link:focus {
+      color: #FFD600 !important;
+      font-size: 1.13rem;
+    }
+    /* Add margin between right-side (user) buttons */
+    .navbar-nav .nav-item:not(:last-child) {
+      margin-right: 12px;
+    }
+    /* Remove margin for central nav to avoid double spacing */
+    .navbar-nav.central-nav .nav-item {
+      margin-right: 0;
+    }
+    /* Logout button hover effect */
+    .navbar-nav .btn-outline-light.nav-link:hover,
+    .navbar-nav .btn-outline-light.nav-link:focus {
+      background: #FFD600 !important;
+      color: #fff !important;
+      border-color: #FFD600 !important;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-success shadow ">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/owner-index">
+      <span style="color:#FFD600;">Order</span><span style="color:#fff;">Ease Owner</span>
+    </a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavOwner">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavOwner">
+      <ul class="navbar-nav central-nav">
+        <li class="nav-item"><a class="nav-link text-white" href="/add-product">Add Products</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="/view-products">View Products</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="/owner-orders">View Orders</a></li>
+      </ul>
+      <ul class="navbar-nav ms-auto">
+        {% if session.get('owner_id') and session.get('owner_name') %}
+          <li class="nav-item d-flex align-items-center">
+            <span class="nav-link fw-bold text-warning" style="font-size:1.1rem;">
+              <i class="fa fa-user-circle me-1"></i> {{ session['owner_name'] }}
+            </span>
+          </li>
+          <li class="nav-item" style="margin-top:5px;">
+            <a class="nav-link btn btn-outline-light ms-2 px-3 py-1 text-white" href="/owner-logout" style="font-weight:600; border-radius:20px; background:#fff; color:green !important;">Log out</a>
+          </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+<!-- Bootstrap JS CDN -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+

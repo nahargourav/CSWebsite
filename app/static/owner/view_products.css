@@ -1,0 +1,21 @@
+body {
+    background-color: #f4f4f4;
+}
+
+.card-img-top {
+    height: 200px;
+    object-fit:contain;
+}
+
+.card {
+    border-radius: 15px;
+    transition: transform 0.2s ease;
+}
+
+.card:hover {
+    transform: scale(1.02);
+}
+
+.card-title {
+    font-weight: bold;
+}

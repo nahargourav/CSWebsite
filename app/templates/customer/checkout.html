@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Checkout</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet"/>
+
+    <style>
+        .center-card { max-width: 720px; margin: 40px auto; }
+        .declaration-alert { font-size: .95rem; }
+        .form-check-label { user-select: none; }
+        /* Processing overlay tweaks */
+        .processing-body { display:flex; gap:1rem; align-items:center; }
+        .processing-spinner { width:2rem; height:2rem; border-width:.35rem; }
+    </style>
+
+    <!-- Razorpay checkout script -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+    {% include 'customer/layout.html' %}
+
+    <div class="card center-card p-4 shadow">
+        <h3 class="text-center mb-3">Complete Payment</h3>
+        <p class="text-center">You will be redirected to Razorpay to complete the payment.</p>
+
+        <!-- Declaration summary + read link -->
+        <div class="alert alert-warning declaration-alert" role="alert">
+            <strong>Important:</strong>
+            Once your order is <em>Out for delivery</em> or <em>Delivered</em>, return or refund requests will not be accepted
+            unless damage or defects were reported at the time of delivery.
+            <a href="#" id="readDeclaration" class="ms-2">Read full declaration</a>
+        </div>
+
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="acceptDeclaration">
+            <label class="form-check-label" for="acceptDeclaration">
+                I confirm I will inspect the product in the delivery agent's presence and report any damage immediately.
+            </label>
+        </div>
+
+        <div class="text-center">
+            <button id="rzp-button" class="btn btn-success btn-lg">Pay Now</button>
+        </div>
+    </div>
+
+    <!-- Full declaration modal -->
+    <div class="modal fade" id="declarationModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Delivery & Returns Declaration</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p><strong>Please read carefully before completing payment.</strong></p>
+
+            <p>
+              Once your order status is <em>Out for delivery</em> or <em>Delivered</em>, return, exchange or refund requests will not be accepted
+              unless the issue (damage, defect, or missing item) is reported immediately to the delivery agent at the time of delivery and
+              recorded on the delivery receipt.
+            </p>
+
+            <ul>
+              <li>Open and inspect the package in the presence of the delivery agent.</li>
+              <li>If the product is damaged, defective, or items are missing, report it immediately and note it on the delivery paperwork.</li>
+              <li>If you accept the package without reporting the issue, you may not be eligible for a return or refund later.</li>
+            </ul>
+
+            <p class="mb-0 small text-muted">
+              If you have a question about this policy, contact our support before completing payment.
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button id="declineBtn" type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button id="acceptBtn" type="button" class="btn btn-primary">I understand &amp; agree</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Processing / buffering modal (non-dismissible) -->
+    <div class="modal fade" id="processingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-body">
+            <div class="processing-body">
+              <div class="spinner-border processing-spinner text-primary" role="status" aria-hidden="true"></div>
+              <div>
+                <div class="fw-semibold">Confirming payment</div>
+                <div class="small text-muted">Please wait while we verify your payment and finalize the order. Do not close this window.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap JS (bundle includes Popper) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      (function () {
+        // Server-inserted values (Jinja)
+        const RAZORPAY_KEY = {{ razorpay_key|tojson }};
+        const RAZORPAY_ORDER_ID = {{ razorpay_order_id|tojson }};
+        const AMOUNT = {{ amount|tojson }};    // paise
+        const CURRENCY = {{ currency|tojson }};
+
+        const payBtn = document.getElementById('rzp-button');
+        const acceptCheckbox = document.getElementById('acceptDeclaration');
+        const readDeclaration = document.getElementById('readDeclaration');
+        const declModalEl = document.getElementById('declarationModal');
+        const declModal = new bootstrap.Modal(declModalEl);
+        const acceptBtn = document.getElementById('acceptBtn');
+
+        const processingModalEl = document.getElementById('processingModal');
+        const processingModal = new bootstrap.Modal(processingModalEl, { backdrop: 'static', keyboard: false });
+
+        let opening = false;
+
+        // Razorpay options (kept consistent with your original flow)
+        const options = {
+          key: RAZORPAY_KEY,
+          amount: AMOUNT,
+          currency: CURRENCY,
+          name: "Champalal & Sons",
+          description: "Order Payment",
+          order_id: RAZORPAY_ORDER_ID,
+
+          handler: async function (response) {
+            // Show buffering/processing modal while we confirm server-side
+            try {
+              processingModal.show();
+            } catch (e) {
+              console.debug('processingModal show failed', e);
+            }
+
+            try {
+              // disable button to avoid double submits
+              payBtn.disabled = true;
+
+              const res = await fetch('/payment_success', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(response),
+                credentials: 'same-origin'
+              });
+
+              const data = await res.json().catch(()=>({ status:'error', error:'Invalid JSON from server' }));
+
+              // keep the processing modal visible for a short moment so user perceives confirmation
+              setTimeout(() => {
+                // Hide processing modal and then redirect (we hide before redirect so modal disappearance is smooth)
+                try { processingModal.hide(); } catch (e) {}
+                if (data && data.status === 'ok') {
+                  // optionally show a quick success alert (native) then redirect
+                  // using location replace to avoid back-button confusion
+                  window.location.replace('/cart');
+                } else {
+                  alert('Payment verification failed: ' + (data && data.error ? data.error : 'Unknown error'));
+                  window.location.replace('/cart');
+                }
+              }, 700);
+            } catch (err) {
+              console.error('Error in payment handler:', err);
+              try { processingModal.hide(); } catch (e) {}
+              alert('Server error during payment verification. Returning to cart.');
+              window.location.replace('/cart');
+            } finally {
+              payBtn.disabled = false;
+            }
+          },
+
+          modal: {
+            ondismiss: function () {
+              // When user closes Razorpay modal without completing payment, call cancel and go back to cart.
+              try {
+                // Show a short processing modal while we inform server (optional)
+                processingModal.show();
+                fetch('/payment_cancel', { method: 'POST', credentials: 'same-origin' })
+                  .finally(() => {
+                    try { processingModal.hide(); } catch (e) {}
+                    alert('Payment cancelled. Your cart is intact; you may retry.');
+                    window.location.replace('/cart');
+                  });
+              } catch (e) {
+                try { processingModal.hide(); } catch (x) {}
+                window.location.replace('/cart');
+              }
+            }
+          },
+
+          prefill: {},
+          theme: { color: '#00C853' }
+        };
+
+        const rzp = new Razorpay(options);
+
+        // handle payment.failed as extra safety
+        try {
+          if (typeof rzp.on === 'function') {
+            rzp.on('payment.failed', function(response){
+              // show processing modal while notifying server, then redirect
+              try { processingModal.show(); } catch (e) {}
+              fetch('/payment_cancel', { method: 'POST', credentials: 'same-origin' })
+                .finally(() => {
+                  try { processingModal.hide(); } catch (e) {}
+                  alert('Payment failed or was declined. Your order has been cancelled and stock restored.');
+                  window.location.replace('/cart');
+                });
+            });
+          }
+        } catch (e) {
+          console.debug('rzp.on binding failed', e);
+        }
+
+        // show full declaration modal when link clicked
+        readDeclaration.addEventListener('click', function (ev) {
+          ev.preventDefault();
+          declModal.show();
+        });
+
+        // when user accepts in modal: check checkbox and open Razorpay
+        acceptBtn.addEventListener('click', function () {
+          acceptCheckbox.checked = true;
+          declModal.hide();
+          openRazorpay();
+        });
+
+        // centralized open function that enforces acceptance
+        function openRazorpay() {
+          if (!acceptCheckbox.checked) {
+            // show modal for full declaration to ensure the user reads & accepts
+            declModal.show();
+            return;
+          }
+
+          if (opening) return;
+          opening = true;
+          payBtn.disabled = true;
+          try {
+            rzp.open();
+          } catch (err) {
+            console.error('Failed to open Razorpay dialog', err);
+            alert('Unable to open payment window. Try again later.');
+            payBtn.disabled = false;
+            opening = false;
+          }
+          // safety re-enable if something goes wrong
+          setTimeout(()=> { payBtn.disabled = false; opening = false; }, 5000);
+        }
+
+        // click handler
+        payBtn.addEventListener('click', function (e) {
+          e.preventDefault();
+          openRazorpay();
+        });
+      })();
+    </script>
+</body>
+</html>
