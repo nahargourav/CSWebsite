@@ -12,7 +12,7 @@ import html as _html
 import urllib.parse
 # Environment helpers
 from dotenv import load_dotenv
-
+import razorpay as rz_module
 # Third-party / Flask
 from flask import (
     Blueprint, render_template, request, redirect, url_for, flash,
@@ -1478,9 +1478,6 @@ def place_cart_order():
         return redirect(url_for('main.view_cart'))
 
     try:
-        rz_module = globals().get('razorpay')
-        if not rz_module:
-            import razorpay as rz_module
         client = rz_module.Client(auth=(RZP_KEY_ID, RZP_KEY_SECRET))
     except Exception:
         current_app.logger.exception("Razorpay init error")
