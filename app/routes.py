@@ -28,8 +28,107 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
 
 # Database
-import mysql.connector
+
 from app.db.db_config import get_db
+
+# Postgres compatibility shim for routes.py
+# Insert this block in routes.py where mysql.connector was originally imported
+
+import sys
+import types
+try:
+    import psycopg2
+    import psycopg2.extras
+    from psycopg2 import IntegrityError as PGIntegrityError, DatabaseError as PGDatabaseError
+except Exception:
+    psycopg2 = None
+    psycopg2_extras = None
+
+# Provide a fake mysql.connector module so existing except mysql.connector.Error
+# and except mysql.connector.IntegrityError continue to work without changing many lines.
+mysql_module = types.ModuleType('mysql')
+mysql_connector_module = types.ModuleType('mysql.connector')
+# Map common MySQL exception names to psycopg2 ones (or fall back to Exception)
+mysql_connector_module.Error = PGDatabaseError if psycopg2 is not None else Exception
+mysql_connector_module.IntegrityError = PGIntegrityError if psycopg2 is not None else Exception
+mysql_module.connector = mysql_connector_module
+sys.modules['mysql'] = mysql_module
+sys.modules['mysql.connector'] = mysql_connector_module
+
+# Cursor/connection wrapper to emulate MySQL-style cursor(dictionary=True) and cursor.lastrowid
+class _CursorWrapper:
+    def __init__(self, cur, parent_conn):
+        self._cur = cur
+        self._parent_conn = parent_conn
+        self._lastrowid = None
+
+    def execute(self, sql, params=None):
+        # execute the provided SQL
+        result = self._cur.execute(sql, params)
+        # If this looks like an INSERT, attempt to capture the last inserted id via PostgreSQL's LASTVAL()
+        try:
+            sql_str = (sql or '').strip().lower()
+            if sql_str.startswith('insert'):
+                # use a temporary cursor to fetch LASTVAL()
+                tmp = self._parent_conn.cursor()
+                try:
+                    tmp.execute("SELECT LASTVAL()")
+                    row = tmp.fetchone()
+                    if row:
+                        # row might be a tuple like (123,)
+                        self._lastrowid = row[0]
+                finally:
+                    try:
+                        tmp.close()
+                    except Exception:
+                        pass
+        except Exception:
+            # don't let this break normal flow
+            pass
+        return result
+
+    def __getattr__(self, name):
+        return getattr(self._cur, name)
+
+    @property
+    def lastrowid(self):
+        return self._lastrowid
+
+
+class _ConnWrapper:
+    def __init__(self, conn):
+        self._conn = conn
+
+    def cursor(self, dictionary=False):
+        # Provide MySQL-like dictionary cursor when requested
+        try:
+            if dictionary:
+                return _CursorWrapper(self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor), self._conn)
+        except Exception:
+            # fallback if RealDictCursor not available
+            pass
+        return _CursorWrapper(self._conn.cursor(), self._conn)
+
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+
+
+# Wrap the imported get_db so routes.py continues to call get_db() normally
+_original_get_db = globals().get('get_db')
+if _original_get_db:
+    def get_db():
+        conn = _original_get_db()
+        try:
+            # If psycopg2 connection, wrap for compatibility
+            if psycopg2 is not None and hasattr(conn, 'cursor'):
+                return _ConnWrapper(conn)
+        except Exception:
+            pass
+        return conn
+    # Replace the name in module globals
+    globals()['get_db'] = get_db
+
+# End of compatibility shim
 
 # PDF / ReportLab
 from reportlab.lib.pagesizes import A4

@@ -1,8 +1,29 @@
+# Environment
+python-dotenv
+
+# Flask and related
 Flask
 Flask-Dance
-markupsafe
-mysql-connector-python
-python-dotenv
+Werkzeug
+itsdangerous
+Jinja2
+MarkupSafe
+
+# PostgreSQL
+psycopg2-binary
+
+# Password hashing
+bcrypt
+
+# PDF generation
 reportlab
+
+# Google OAuth
+oauthlib
+requests-oauthlib
+
+# Razorpay payments
 razorpay
-pytest
+
+# Optional: if you use gunicorn for deployment
+gunicorn
