@@ -27,3 +27,6 @@ razorpay
 
 # Optional: if you use gunicorn for deployment
 gunicorn
+
+razorpay
+setuptools<81
