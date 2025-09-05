@@ -668,10 +668,13 @@ def place_order():
     where_clauses = []
     params = []
 
-    # search across name, brand, category, short_description, description
+    # search across name, brand, category, short_description, description (case-insensitive only here)
     if q:
-        where_clauses.append("(p.name LIKE %s OR p.brand LIKE %s OR p.category LIKE %s OR p.short_description LIKE %s OR p.description LIKE %s)")
-        like = f"%{q}%"
+        # Only the search clause is made case-insensitive using LOWER(...)
+        where_clauses.append(
+            "(LOWER(p.name) LIKE %s OR LOWER(p.brand) LIKE %s OR LOWER(p.category) LIKE %s OR LOWER(p.short_description) LIKE %s OR LOWER(p.description) LIKE %s)"
+        )
+        like = f"%{q.lower()}%"
         params.extend([like, like, like, like, like])
 
     if selected_categories:
@@ -684,59 +687,104 @@ def place_order():
         where_clauses.append(f"p.brand IN ({placeholders})")
         params.extend(selected_brands)
 
-    # left joins below will provide pv for price and variants; tags handled via join in main query
-    # We'll apply color/size/tag filters using HAVING (after GROUP BY) for aggregated columns or via EXISTS checks in WHERE
-    # For simplicity and correctness we use EXISTS subqueries for color/size/tag (avoids complex HAVING)
+    # color/size/tag filters via EXISTS subqueries (works in both MySQL and Postgres)
     if selected_colors:
-        # require product has at least one variant with any of these colors
         placeholders = ",".join(["%s"] * len(selected_colors))
-        where_clauses.append(f"EXISTS (SELECT 1 FROM product_variants pv_c WHERE pv_c.product_id = p.product_id AND pv_c.color IN ({placeholders}))")
+        where_clauses.append(
+            f"EXISTS (SELECT 1 FROM product_variants pv_c WHERE pv_c.product_id = p.product_id AND pv_c.color IN ({placeholders}))"
+        )
         params.extend(selected_colors)
 
     if selected_sizes:
         placeholders = ",".join(["%s"] * len(selected_sizes))
-        where_clauses.append(f"EXISTS (SELECT 1 FROM product_variants pv_s WHERE pv_s.product_id = p.product_id AND pv_s.size IN ({placeholders}))")
+        where_clauses.append(
+            f"EXISTS (SELECT 1 FROM product_variants pv_s WHERE pv_s.product_id = p.product_id AND pv_s.size IN ({placeholders}))"
+        )
         params.extend(selected_sizes)
 
     if selected_tags:
         placeholders = ",".join(["%s"] * len(selected_tags))
-        where_clauses.append(f"EXISTS (SELECT 1 FROM product_tags pt JOIN tags t ON t.tag_id = pt.tag_id WHERE pt.product_id = p.product_id AND t.tag_id IN ({placeholders}))")
+        where_clauses.append(
+            f"EXISTS (SELECT 1 FROM product_tags pt WHERE pt.product_id = p.product_id AND pt.tag_id IN ({placeholders}))"
+        )
         params.extend(selected_tags)
 
     # combine where
     where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
 
-    # Main query: aggregate variants & images by product
-    # We compute min_price, max_price, total_stock, avg_rating (products.rating_avg already exists)
+    # Derived table for reviews:
+    #  - first collapse product_reviews by (product_id, customer_id, order_id) => avg per cluster
+    #  - then avg those cluster averages per product and count clusters -> rating_avg, reviews_count
+    # We'll LEFT JOIN that derived table so we can aggregate safely in the outer query.
+    reviews_subquery = """
+        LEFT JOIN (
+            SELECT t.product_id,
+                   AVG(t.avg_rating) AS avg_of_customer_order_ratings,
+                   COUNT(1) AS reviews_count
+            FROM (
+                SELECT pr.product_id, pr.customer_id, pr.order_id, AVG(pr.rating) AS avg_rating
+                FROM product_reviews pr
+                GROUP BY pr.product_id, pr.customer_id, pr.order_id
+            ) t
+            GROUP BY t.product_id
+        ) pr ON pr.product_id = p.product_id
+    """
+
+    # Main query.
+    # Note: to satisfy Postgres' grouping rules we include non-aggregated p.* columns in GROUP BY.
     main_q = f"""
         SELECT
-            p.product_id, p.name, p.brand, p.category, p.image_path, p.is_active, p.is_returnable,
+            p.product_id,
+            p.name,
+            p.brand,
+            p.category,
+            p.image_path,
+            p.is_active,
+            p.is_returnable,
             COALESCE(MIN(pv.price), 0) AS min_price,
             COALESCE(MAX(pv.price), 0) AS max_price,
-            COALESCE(SUM(pv.stock_count), 0) AS total_stock,
+            -- use product-level stock_count as you requested
+            COALESCE(p.stock_count, 0) AS total_stock,
             COUNT(DISTINCT pv.variant_id) AS variant_count,
-            COALESCE(p.rating_avg, 0) AS rating_avg,
-            COUNT(DISTINCT pi.image_id) AS total_images,
+            -- aggregate the joined review columns so Postgres allows them in SELECT while grouping by product fields
+            COALESCE(MAX(pr.avg_of_customer_order_ratings), 0) AS rating_avg,
+            COALESCE(MAX(pr.reviews_count), 0) AS reviews_count,
+            (SELECT COUNT(1) FROM product_images pi WHERE pi.product_id = p.product_id) AS total_images,
             p.created_at
         FROM products p
         LEFT JOIN product_variants pv ON pv.product_id = p.product_id
-        LEFT JOIN product_images pi ON pi.product_id = p.product_id
+        {reviews_subquery}
         WHERE {where_sql}
-        GROUP BY p.product_id
+        GROUP BY
+            p.product_id, p.name, p.brand, p.category, p.image_path,
+            p.is_active, p.is_returnable, p.stock_count, p.created_at
     """
 
-    # Apply price and rating filters via wrapping query or HAVING clause
+    # HAVING: price and rating filters (operate on the aggregated results)
     having_clauses = []
     having_params = []
     if min_price:
-        having_clauses.append("MIN(pv.price) >= %s")
-        having_params.append(float(min_price))
+        try:
+            min_val = float(min_price)
+            having_clauses.append("MIN(pv.price) >= %s")
+            having_params.append(min_val)
+        except Exception:
+            pass
     if max_price:
-        having_clauses.append("MIN(pv.price) <= %s")
-        having_params.append(float(max_price))
+        try:
+            max_val = float(max_price)
+            having_clauses.append("MAX(pv.price) <= %s")
+            having_params.append(max_val)
+        except Exception:
+            pass
     if rating_min:
-        having_clauses.append("COALESCE(p.rating_avg,0) >= %s")
-        having_params.append(float(rating_min))
+        try:
+            rv = float(rating_min)
+            # reference the aggregated alias (we used MAX(pr.avg_of_customer_order_ratings) as rating_avg)
+            having_clauses.append("COALESCE(MAX(pr.avg_of_customer_order_ratings),0) >= %s")
+            having_params.append(rv)
+        except Exception:
+            pass
 
     having_sql = (" HAVING " + " AND ".join(having_clauses)) if having_clauses else ""
 
@@ -766,39 +814,35 @@ def place_order():
         }
         p['stats'] = {
             'variants': int(p['variant_count'] or 0),
+            # use the product stock_count column (already selected as total_stock)
             'total_stock': int(p['total_stock'] or 0),
             'total_images': int(p['total_images'] or 0)
         }
+        # normalize path
         if p.get('image_path'):
             p['image_path'] = p['image_path'].replace('\\', '/')
 
     # --- Fetch dynamic filter values (distinct categories, brands, tags, colors, sizes) ---
-    # categories
     cursor.execute("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category <> '' ORDER BY category ASC")
     categories = [r['category'] for r in cursor.fetchall()]
 
-    # brands
     cursor.execute("SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL AND brand <> '' ORDER BY brand ASC")
     brands = [r['brand'] for r in cursor.fetchall()]
 
-    # tags (id + name)
     cursor.execute("""
         SELECT t.tag_id, t.name FROM tags t
         JOIN product_tags pt ON pt.tag_id = t.tag_id
         GROUP BY t.tag_id, t.name
         ORDER BY t.name ASC
     """)
-    tags = cursor.fetchall()  # list of dicts with tag_id and name
+    tags = cursor.fetchall()
 
-    # colors
     cursor.execute("SELECT DISTINCT color FROM product_variants WHERE color IS NOT NULL AND color <> '' ORDER BY color ASC")
     colors = [r['color'] for r in cursor.fetchall()]
 
-    # sizes
     cursor.execute("SELECT DISTINCT size FROM product_variants WHERE size IS NOT NULL AND size <> '' ORDER BY size ASC")
     sizes = [r['size'] for r in cursor.fetchall()]
 
-    # compute global min/max price for slider defaults (from variants)
     cursor.execute("SELECT COALESCE(MIN(price),0) AS min_price, COALESCE(MAX(price),0) AS max_price FROM product_variants")
     price_row = cursor.fetchone()
     global_min_price = float(price_row['min_price'] or 0)
@@ -835,6 +879,7 @@ def place_order():
         'request_args': request.args
     }
     return render_template('customer/view_products.html', **context)
+
 
 
 # ------------------viewing product details----------------------
@@ -1112,26 +1157,31 @@ def product_reviews_page(product_id):
 
 
 
-
 @main.route('/cart/add', methods=['POST'])
 @nocache
 def cart_add():
     if 'customer_id' not in session:
+        # AJAX clients receive JSON + redirect_url for login
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'ok': False,
+                'message': 'Please login to add products.',
+                'redirect_url': url_for('main.login')
+            }), 401
         flash("Please login to add products.", "warning")
         return redirect(url_for('main.login'))
-    """
-    Add a variant to cart stored in session.
-    Expected form fields: product_id, variant_id, qty
-    """
+
     product_id = request.form.get('product_id')
     variant_id = request.form.get('variant_id')
     qty_raw = request.form.get('qty') or '1'
-    print("adding to cart")
+
     # basic validation
     if not product_id or not variant_id:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'ok': False, 'message': 'Invalid request. Missing product/variant.'}), 400
         flash("Invalid request. Missing product/variant.", "danger")
         return redirect(request.referrer or url_for('main.view_products'))
-    print("fetched product id , now adding to cart")
+
     try:
         qty = int(qty_raw)
     except (ValueError, TypeError):
@@ -1139,59 +1189,131 @@ def cart_add():
     if qty < 1:
         qty = 1
 
-    # fetch variant and product details to validate stock and get price/sku
+    # fetch variant and product details
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM product_variants WHERE variant_id = %s AND product_id = %s", (variant_id, product_id))
+    cursor.execute(
+        "SELECT * FROM product_variants WHERE variant_id = %s AND product_id = %s",
+        (variant_id, product_id)
+    )
     variant = cursor.fetchone()
     if not variant:
         cursor.close()
         conn.close()
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'ok': False, 'message': 'Selected variant not found.'}), 404
         flash("Selected variant not found.", "danger")
         return redirect(request.referrer or url_for('main.view_products'))
 
-    cursor.execute("SELECT name, image_path, sku as product_sku FROM products WHERE product_id = %s", (product_id,))
+    cursor.execute(
+        "SELECT name, image_path, sku as product_sku FROM products WHERE product_id = %s",
+        (product_id,)
+    )
     p = cursor.fetchone()
+
+    # Try to get an image for the variant or product
+    variant_image_path = None
+    cursor.execute(
+        "SELECT path FROM product_images WHERE variant_id = %s ORDER BY is_primary DESC, position ASC LIMIT 1",
+        (variant_id,)
+    )
+    img = cursor.fetchone()
+    if img and img.get('path'):
+        variant_image_path = img.get('path')
+    else:
+        cursor.execute(
+            "SELECT path FROM product_images WHERE product_id = %s AND (variant_id IS NULL OR variant_id = 0) ORDER BY is_primary DESC, position ASC LIMIT 1",
+            (product_id,)
+        )
+        img2 = cursor.fetchone()
+        if img2 and img2.get('path'):
+            variant_image_path = img2.get('path')
+
     cursor.close()
     conn.close()
 
-    # stock check
     max_avail = int(variant.get('stock_count') or 0)
     if max_avail <= 0:
+        # out of stock
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'ok': False, 'message': 'Sorry, this variant is out of stock.'}), 409
         flash("Sorry, this variant is out of stock.", "warning")
         return redirect(request.referrer or url_for('main.view_products'))
 
-    # clamp qty to available stock
+    # clamp qty to available stock (for new items or when partial fill possible)
+    clamped = False
     if qty > max_avail:
         qty = max_avail
-        flash(f"Quantity reduced to available stock ({max_avail}).", "info")
+        clamped = True
 
-    # prepare cart item data
     price = float(variant.get('price') or 0.0)
     sku = variant.get('sku') or ''
     name = p.get('name') if p else ''
-    # choose image: variant primary image if present else product image
-    image_path = None
-    # try to find variant image from product_images table or session? easiest: attempt to find product_images/variant_images by re-querying DB
-    # but to avoid extra queries here, use product image as fallback
-    image_path = p.get('image_path') if p and p.get('image_path') else None
+    image_path = variant_image_path if variant_image_path else (p.get('image_path') if p and p.get('image_path') else None)
 
-    # Add to session cart structure: session['cart'] = [ {cart_item_id, product_id, variant_id, sku, name, price, qty, image_path, max_qty}, ... ]
     cart = session.get('cart', [])
 
     # Try to merge with existing same product+variant item
     merged = False
     for item in cart:
         if str(item.get('variant_id')) == str(variant_id) and str(item.get('product_id')) == str(product_id):
-            new_qty = int(item.get('qty', 0)) + qty
+            existing_qty = int(item.get('qty', 0))
+            # If already at or beyond stock, do not add more — return an error instead.
+            if existing_qty >= max_avail:
+                # AJAX: return JSON error so frontend shows correct state
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return jsonify({
+                        'ok': False,
+                        'message': f"Cannot add more — already at maximum available stock ({max_avail}).",
+                        'cart_count': sum(int(i.get('qty', 0)) for i in cart)
+                    }), 409
+                # non-AJAX fallback
+                flash(f"Cannot add more — already at maximum available stock ({max_avail}).", "warning")
+                return redirect(request.referrer or url_for('main.view_prod_detail', product_id=product_id, variant_id=variant_id))
+
+            # compute new quantity
+            new_qty = existing_qty + qty
             if new_qty > max_avail:
+                # increase to max available and notify (clamped)
                 new_qty = max_avail
-                flash(f"Quantity limited to available stock ({max_avail}).", "info")
+                item['qty'] = new_qty
+                item['max_qty'] = max_avail
+                merged = True
+                session['cart'] = cart
+                session.modified = True
+                # return success with clamped message for AJAX
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    cart_count = sum(int(i.get('qty', 0)) for i in session.get('cart', []))
+                    return jsonify({
+                        'ok': True,
+                        'message': f"Quantity reduced to available stock ({max_avail}). Item added to cart.",
+                        'cart_count': cart_count,
+                        'product_id': product_id,
+                        'variant_id': variant_id
+                    }), 200
+                # non-AJAX
+                flash(f"Quantity reduced to available stock ({max_avail}).", "info")
+                return redirect(url_for('main.view_prod_detail', product_id=product_id, variant_id=variant_id))
+
+            # normal merge within stock
             item['qty'] = new_qty
             item['max_qty'] = max_avail
             merged = True
-            break
+            session['cart'] = cart
+            session.modified = True
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                cart_count = sum(int(i.get('qty', 0)) for i in session.get('cart', []))
+                return jsonify({
+                    'ok': True,
+                    'message': 'Added to cart.',
+                    'cart_count': cart_count,
+                    'product_id': product_id,
+                    'variant_id': variant_id
+                }), 200
+            flash("Added to cart", "success")
+            return redirect(url_for('main.view_prod_detail', product_id=product_id, variant_id=variant_id))
 
+    # not merged => create new cart item (we already clamped qty above)
     if not merged:
         cart_item = {
             'cart_item_id': uuid.uuid4().hex,
@@ -1205,14 +1327,31 @@ def cart_add():
             'max_qty': max_avail
         }
         cart.append(cart_item)
+        session['cart'] = cart
+        session.modified = True
 
-    session['cart'] = cart
-    # optional: also set session.modified True to be sure
-    session.modified = True
+        cart_count = sum(int(i.get('qty', 0)) for i in session.get('cart', []))
+        # AJAX response: success (with clamped message if applicable)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            message = "Added to cart"
+            if clamped:
+                message = f"Quantity reduced to available stock ({max_avail}). Item added to cart."
+            return jsonify({
+                'ok': True,
+                'message': message,
+                'cart_count': cart_count,
+                'product_id': product_id,
+                'variant_id': variant_id,
+                'redirect_url': url_for('main.view_cart')
+            }), 200
 
-    flash("Added to cart", "success")
-    # redirect back to product page
-    return redirect(url_for('main.view_prod_detail', product_id=product_id))
+        # non-AJAX behavior preserved
+        if clamped:
+            flash(f"Quantity reduced to available stock ({max_avail}).", "info")
+        flash("Added to cart", "success")
+        return redirect(url_for('main.view_prod_detail', product_id=product_id, variant_id=variant_id))
+
+
 
 
 # Backend: cart routes (drop in to your routes file)
@@ -1478,6 +1617,9 @@ def place_cart_order():
         return redirect(url_for('main.view_cart'))
 
     try:
+        rz_module = globals().get('razorpay')
+        if not rz_module:
+            import razorpay as rz_module
         client = rz_module.Client(auth=(RZP_KEY_ID, RZP_KEY_SECRET))
     except Exception:
         current_app.logger.exception("Razorpay init error")
@@ -2219,6 +2361,74 @@ def view_orders():
     cursor.close()
     conn.close()
 
+    # -----------------------------
+    # Fetch variant/product images:
+    # For each variant_id, prefer the first product_images row for that variant
+    # (ordered by is_primary desc, position asc, image_id asc).
+    # If no variant image exists, prefer product-level product_images (variant_id IS NULL).
+    # Finally, fall back to products.image_path (already in the rows).
+    # -----------------------------
+    variant_ids = set()
+    product_ids = set()
+    for r in rows:
+        if r.get('variant_id') not in (None, 0):
+            try:
+                variant_ids.add(int(r.get('variant_id')))
+            except Exception:
+                pass
+        try:
+            product_ids.add(int(r.get('product_id')))
+        except Exception:
+            pass
+
+    variant_image_map = {}   # variant_id -> path
+    product_image_map = {}   # product_id -> path (product-level images where variant_id IS NULL)
+
+    if variant_ids or product_ids:
+        try:
+            conn = get_db()
+            cur = conn.cursor(dictionary=True)
+            # Build placeholders safely
+            clauses = []
+            params_imgs = []
+            if variant_ids:
+                placeholders = ','.join(['%s'] * len(variant_ids))
+                clauses.append(f"variant_id IN ({placeholders})")
+                params_imgs.extend(list(variant_ids))
+            if product_ids:
+                placeholders2 = ','.join(['%s'] * len(product_ids))
+                # product-level images (variant_id IS NULL)
+                clauses.append(f"(variant_id IS NULL AND product_id IN ({placeholders2}))")
+                params_imgs.extend(list(product_ids))
+            where_img = " OR ".join(clauses)
+            qimg = f"""
+                SELECT product_id, variant_id, path, is_primary, position, image_id
+                FROM product_images
+                WHERE {where_img}
+                ORDER BY is_primary DESC, position ASC, image_id ASC
+            """
+            cur.execute(qimg, tuple(params_imgs))
+            img_rows = cur.fetchall()
+            cur.close()
+            conn.close()
+
+            # pick first per variant_id (prefer variant-specific). For product-level images pick first per product.
+            for ir in img_rows:
+                vid = ir.get('variant_id')
+                pid = ir.get('product_id')
+                path = ir.get('path')
+                if vid not in (None, 0):
+                    # first seen for this variant wins (ordered by is_primary/position above)
+                    if vid not in variant_image_map:
+                        variant_image_map[vid] = path
+                else:
+                    # product-level fallback
+                    if pid not in product_image_map:
+                        product_image_map[pid] = path
+        except Exception as e:
+            # don't fail page display on image lookup errors; fall back to existing p.image_path
+            current_app.logger.exception("Could not fetch product images for orders view: %s", str(e))
+
     # group items by order_id
     orders = OrderedDict()
     for r in rows:
@@ -2246,12 +2456,25 @@ def view_orders():
                 },
                 "items": []
             }
+
+        # Determine image for this item:
+        chosen_image = None
+        vid = r.get('variant_id')
+        pid = r.get('product_id')
+        if vid not in (None, 0) and vid in variant_image_map:
+            chosen_image = variant_image_map.get(vid)
+        elif pid in product_image_map:
+            chosen_image = product_image_map.get(pid)
+        else:
+            # final fallback to the original products.image_path column (so template doesn't need changes)
+            chosen_image = r.get('image_path')
+
         orders[oid]['items'].append({
             "order_item_id": r['order_item_id'],
             "product_id": r['product_id'],
             "variant_id": r.get('variant_id'),
             "product_name": r['product_name'],
-            "image_path": r.get('image_path'),
+            "image_path": chosen_image,
             "quantity": r['quantity'],
             "unit_price": float(r['unit_price']) if r['unit_price'] is not None else None,
             "total_price": float(r['total_price']) if r['total_price'] is not None else (float(r['unit_price'] or 0) * int(r['quantity'] or 0)),
@@ -2301,6 +2524,7 @@ def view_orders():
         q=q,
         sort=sort
     )
+
 
 
 @main.route('/submit_review', methods=['POST'])

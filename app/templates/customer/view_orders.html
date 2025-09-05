@@ -103,9 +103,53 @@
       .star:hover { transform: translateY(-3px); }
       .star.filled { color: #ffc107; }
 
-      /* responsive tweaks */
+      /* small-screen responsive tweaks */
       @media (max-width: 768px) {
-        .controls-row .form-control{ min-width: 100% }
+        /* make controls full width and wrap */
+        .controls-row { gap:.5rem; }
+        .controls-row .form-control{ min-width: 100% !important; max-width: 100% !important; }
+        .controls-row .form-select{ min-width: 100% !important; max-width: 100% !important; }
+
+        /* hide big-screen status buttons and show mobile select */
+        .status-btns .btn-group { display: none; }
+        .status-mobile { display: block; margin-bottom: .75rem; }
+
+        /* compact action buttons: show icon only on small screens to avoid overflow */
+        .order-actions .btn { white-space:nowrap; }
+        .order-actions .btn i { font-size:1.05rem; }
+        /* hide long labels on very small screens, show only icon */
+        .btn .mobile-hide-text { display: none; }
+        .btn { padding: .45rem .6rem; font-size: .9rem; }
+        .btn-modern { padding: .35rem .6rem; border-radius:10px; gap:.35rem; box-shadow:none; }
+
+        /* Make review/download/cancel stack beneath item when needed */
+        .order-item { flex-direction: column; align-items: stretch; gap:.5rem; }
+        .order-item img, .order-item .no-image-box { margin-right: 0 !important; margin-bottom:.5rem; align-self:flex-start; }
+        .order-item .flex-grow-1 { order: 2; }
+        .order-item .ms-3 { order: 3; align-self:flex-end; min-width: auto; text-align:right; }
+
+        /* adjust right summary card to appear full width below items (Bootstrap already stacks, but ensure padding) */
+        .card-header { flex-direction: column; align-items: flex-start; gap:.5rem; }
+
+        /* status badge shrink */
+        .status-badge { padding:5px 8px; font-size:.78rem; }
+
+        /* smaller review button */
+        .review-btn { min-width: auto; width:100%; display:inline-flex; justify-content:center; }
+
+        /* All Orders Summary table scroll responsive */
+        .col-lg-3 { margin-top: 1rem; } /* give some breathing room when stacked */
+
+        /* make invoice button show icon + hide text */
+        .btn .desktop-hide-text { display: inline; }
+      }
+
+      /* Desktop: hide mobile select by default */
+      .status-mobile { display: none; }
+
+      /* keep ellipsis shorter on mobile */
+      @media (max-width: 420px) {
+        .ellipsis { max-width: 110px; }
       }
     </style>
 </head>
@@ -136,24 +180,81 @@
             <option value="total_desc" {% if sort=='total_desc' %}selected{% endif %}>Total High to Low</option>
             <option value="total_asc" {% if sort=='total_asc' %}selected{% endif %}>Total Low to High</option>
           </select>
-          <button type="submit" class="btn btn-primary">Search</button>
-          <a href="{{ url_for('main.view_orders') }}" class="btn btn-ghost btn-modern">Reset</a>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> <span class="d-none d-md-inline">Search</span></button>
+          <a href="{{ url_for('main.view_orders') }}" class="btn btn-ghost btn-modern"><i class="bi bi-arrow-clockwise"></i> <span class="d-none d-md-inline">Reset</span></a>
         </form>
 
-        <!-- Status filter buttons (includes 'cancellation-request' between delivered and cancelled) -->
+        <!-- Status filter: desktop buttons + mobile select with description above -->
         <div class="mb-4 status-btns">
           {% set statuses = ['all','processing','confirmed','out for delivery','delivered','cancellation-request','cancelled','refunded'] %}
-          <div class="btn-group" role="group" aria-label="status-filters">
-            {% for s in statuses %}
-              <a href="{{ url_for('main.view_orders', status=(None if s=='all' else s), q=q or None, sort=sort or None) }}"
-                 class="btn {% if current_status==s %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm text-capitalize">
-                 {% if s == 'cancellation-request' %}
-                   cancellation requests
-                 {% else %}
-                   {{ s }}
-                 {% endif %}
-              </a>
-            {% endfor %}
+          <div class="d-none d-md-block">  {# desktop: keep original btn-group #}
+            <div class="btn-group" role="group" aria-label="status-filters">
+              {% for s in statuses %}
+                <a href="{{ url_for('main.view_orders', status=(None if s=='all' else s), q=q or None, sort=sort or None) }}"
+                   class="btn {% if current_status==s %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm text-capitalize">
+                   {% if s == 'cancellation-request' %}
+                     cancellation requests
+                   {% else %}
+                     {{ s }}
+                   {% endif %}
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- mobile: status dropdown + description -->
+          <div class="status-mobile">
+            <label for="status-mobile-select" class="form-label small mb-1">Filter by status</label>
+            <select id="status-mobile-select" class="form-select" aria-label="Filter orders by status">
+              {% for s in statuses %}
+                {# build URL for each option #}
+                {% set href = url_for('main.view_orders', status=(None if s=='all' else s), q=q or None, sort=sort or None) %}
+                {% if s == 'all' %}
+                  {% set desc = 'Show all orders' %}
+                {% elif s == 'processing' %}
+                  {% set desc = 'Order received and being prepared.' %}
+                {% elif s == 'confirmed' %}
+                  {% set desc = 'Order confirmed by the seller.' %}
+                {% elif s == 'out for delivery' %}
+                  {% set desc = 'Order is with the delivery partner.' %}
+                {% elif s == 'delivered' %}
+                  {% set desc = 'Order delivered to you.' %}
+                {% elif s == 'cancellation-request' %}
+                  {% set desc = 'You requested cancellation; awaiting review.' %}
+                {% elif s == 'cancelled' %}
+                  {% set desc = 'Order has been cancelled.' %}
+                {% elif s == 'refunded' %}
+                  {% set desc = 'Amount refunded for this order.' %}
+                {% else %}
+                  {% set desc = '' %}
+                {% endif %}
+                <option value="{{ href }}" data-desc="{{ desc }}" {% if current_status==s %}selected{% endif %}>
+                  {% if s == 'cancellation-request' %}cancellation requests{% else %}{{ s }}{% endif %}
+                </option>
+              {% endfor %}
+            </select>
+            <div id="status-desc" class="small text-muted mt-2 mb-1">
+              {# initial description: map current_status to text (fallback) #}
+              {% if not current_status or current_status=='all' %}
+                Show all orders
+              {% elif current_status=='processing' %}
+                Order received and being prepared.
+              {% elif current_status=='confirmed' %}
+                Order confirmed by the seller.
+              {% elif current_status=='out for delivery' %}
+                Order is with the delivery partner.
+              {% elif current_status=='delivered' %}
+                Order delivered to you.
+              {% elif current_status=='cancellation-request' %}
+                You requested cancellation; awaiting review.
+              {% elif current_status=='cancelled' %}
+                Order has been cancelled.
+              {% elif current_status=='refunded' %}
+                Amount refunded for this order.
+              {% else %}
+                &nbsp;
+              {% endif %}
+            </div>
           </div>
         </div>
 
@@ -192,15 +293,18 @@
                                 class="btn btn-modern btn-danger-modern btn-animate request-cancel-btn"
                                 onclick="event.stopPropagation();"
                                 title="Request cancellation for this order">
-                                <i class="bi bi-x-circle-fill"></i> Request Cancellation
+                                <i class="bi bi-x-circle-fill" aria-hidden="true"></i>
+                                <span class="mobile-hide-text"> Request Cancellation</span>
                               </button>
                             {% elif cancellation_requested %}
                               <button type="button" class="btn btn-modern btn-danger-modern btn-disabled" disabled onclick="event.stopPropagation();">
-                                <i class="bi bi-clock-history"></i> Cancellation Requested
+                                <i class="bi bi-clock-history" aria-hidden="true"></i>
+                                <span class="mobile-hide-text"> Cancellation Requested</span>
                               </button>
                             {% else %}
                               <button type="button" class="btn btn-modern btn-ghost btn-disabled" disabled onclick="event.stopPropagation();">
-                                <i class="bi bi-x-circle"></i> Request Cancellation
+                                <i class="bi bi-x-circle" aria-hidden="true"></i>
+                                <span class="mobile-hide-text"> Request Cancellation</span>
                               </button>
                             {% endif %}
                           </form>
@@ -211,7 +315,8 @@
                           <form method="POST" action="{{ url_for('main.download_invoice') }}" onsubmit="event.stopPropagation();" style="display:inline-block;">
                             <input type="hidden" name="order_id" value="{{ order_id }}">
                             <button type="submit" class="btn btn-modern btn-ghost" title="Download invoice">
-                              <i class="bi bi-file-earmark-pdf"></i> Download Invoice
+                              <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
+                              <span class="mobile-hide-text"> Download Invoice</span>
                             </button>
                           </form>
                         </div>
@@ -272,7 +377,8 @@
                                     data-order_id="{{ order_id }}"
                                     data-product_name="{{ item.product_name|e }}"
                                   >
-                                    <i class="bi bi-star-fill"></i> Write Review
+                                    <i class="bi bi-star-fill" aria-hidden="true"></i>
+                                    <span class="mobile-hide-text"> Write Review</span>
                                   </button>
                                 {% endif %}
                               {% else %}
@@ -587,6 +693,20 @@
         if (vid) url += '?variant_id=' + encodeURIComponent(vid);
         window.location.href = url;
       });
+
+      // --- Mobile status select logic ---
+      const statusSelect = document.getElementById('status-mobile-select');
+      const statusDescBox = document.getElementById('status-desc');
+      if (statusSelect) {
+        statusSelect.addEventListener('change', function () {
+          const opt = this.options[this.selectedIndex];
+          const href = opt.value;
+          const desc = opt.getAttribute('data-desc') || '';
+          if (statusDescBox) statusDescBox.textContent = desc;
+          // navigate to the selected status (preserves q & sort because URLs were built server-side)
+          if (href) window.location.href = href;
+        });
+      }
 
     });
   </script>

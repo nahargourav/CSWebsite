@@ -103,6 +103,97 @@
     /* keyboard "pressed" feedback */
     .addr-card:active { transform: translateY(-3px); }
 
+    /* -------------------------
+       Buffer overlay styles (added)
+       ------------------------- */
+    @keyframes bufferSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    @keyframes bufferPulse {
+      0% { transform: scale(.92); opacity: 0; }
+      40% { transform: scale(1.06); opacity: .88; }
+      100% { transform: scale(.92); opacity: 0; }
+    }
+
+    #placeOrderBufferOverlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 999999;
+      align-items: center;
+      justify-content: center;
+      background: rgba(6,10,15,0.32);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      transition: opacity 260ms ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+    #placeOrderBufferOverlay.show {
+      display: flex;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .place-buffer-card {
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+      border-radius: 14px;
+      padding: 16px 18px;
+      display:flex;
+      gap:14px;
+      align-items:center;
+      box-shadow: 0 30px 80px rgba(2,6,23,0.18);
+      border: 1px solid rgba(13,110,253,0.06);
+      width: min(720px, calc(100% - 48px));
+      max-width: 92%;
+      transform: translateY(-10px);
+      transition: transform 320ms cubic-bezier(.2,.9,.2,1), opacity 260ms ease;
+      text-align:left;
+    }
+
+    .place-icon {
+      width:78px;
+      height:78px;
+      min-width:78px;
+      border-radius:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(180deg,#fff8ec,#fff);
+      box-shadow: 0 12px 36px rgba(255,170,0,0.06);
+      position:relative;
+      overflow:visible;
+    }
+    .place-pulse {
+      position:absolute;
+      width:140px;
+      height:140px;
+      border-radius:20px;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      background: radial-gradient(circle at 40% 30%, rgba(255,193,7,0.14), rgba(255,193,7,0.02) 40%);
+      filter: blur(10px);
+      opacity: 0;
+      animation: bufferPulse 1800ms ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .place-svg { width:42px; height:42px; transform-origin:center; }
+    .place-spin { animation: bufferSpin 2200ms linear infinite; }
+
+    .place-text h4 { margin:0 0 8px 0; font-size:1.05rem; font-weight:700; color:#0b365a; }
+    .place-text p { margin:0; color:#57606f; font-size:.95rem; line-height:1.32; }
+
+    .place-progress { margin-top:12px; height:8px; background: linear-gradient(90deg,#fff7e6,#fffdfa); border-radius:999px; overflow:hidden; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); width:100%; }
+    .place-progress > .bar { height:100%; width:0%; background: linear-gradient(90deg,#ffb300,#ff6d00); border-radius:999px; transition: width 700ms cubic-bezier(.2,.9,.2,1); box-shadow: 0 6px 18px rgba(255,160,0,0.08) inset; }
+
+    .place-success { border-color: rgba(40,167,69,0.18); box-shadow: 0 30px 80px rgba(40,167,69,0.06); }
+    .place-error { border-color: rgba(220,53,69,0.12); box-shadow: 0 30px 80px rgba(220,53,69,0.06); }
+
+    @media (max-width:640px) {
+      .place-buffer-card { padding: 12px 14px; gap:10px; }
+      .place-icon { width:64px; height:64px; min-width:64px; }
+      .place-svg { width:34px; height:34px; }
+    }
   </style>
 </head>
 <body>
@@ -201,7 +292,7 @@
 
             <div class="mt-3 d-flex gap-2">
               <a href="{{ url_for('main.view_cart') }}" class="btn btn-outline-secondary">Back to Cart</a>
-              <button type="submit" class="btn btn-primary">Place Order & Pay</button>
+              <button type="submit" class="btn btn-primary">Place Order &amp; Pay</button>
             </div>
           </form>
         </div>
@@ -327,6 +418,215 @@
         // keep cards tabbable by default via tabindex attribute already present
       }
     });
+  </script>
+
+  <!-- Overlay markup + improved timing/visibility control -->
+  <div id="placeOrderBufferOverlay" aria-hidden="true" role="status" aria-live="polite">
+    <div class="place-buffer-card" role="region" aria-label="Placing order">
+      <div class="place-icon" aria-hidden="true">
+        <div class="place-pulse" aria-hidden="true"></div>
+        <!-- Clean icon: shopping bag + rotating coin (coin has the spin class) -->
+        <svg class="place-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img">
+          <!-- bag body -->
+          <rect x="12" y="18" width="40" height="28" rx="6" fill="#fff7e6" stroke="#ffdca1" stroke-width="1.5"></rect>
+          <!-- bag handle -->
+          <path d="M22 18c0-6 8-6 10-6s10 0 10 6" stroke="#ffb300" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"></path>
+          <!-- tag/stripe for depth -->
+          <path d="M16 28h32" stroke="#ffe7b3" stroke-width="2"></path>
+
+          <!-- coin (circle) located slightly overlapping; coin rotates via place-spin -->
+          <g transform="translate(44,22)">
+            <g class="place-spin">
+              <circle cx="0" cy="0" r="6" fill="#ffb300" stroke="#ff9400" stroke-width="1"></circle>
+              <text x="-2" y="2.5" font-family="Arial, Helvetica, sans-serif" font-size="6" font-weight="700" fill="#5a3310">₹</text>
+            </g>
+            <!-- subtle shine -->
+            <ellipse cx="1.8" cy="-1.6" rx="1.8" ry="1.0" fill="rgba(255,255,255,0.7)"></ellipse>
+          </g>
+        </svg>
+      </div>
+
+      <div class="place-text" style="flex:1;">
+        <h4 id="placeBufferTitle">Address locked — one step to go</h4>
+        <p id="placeBufferMessage">We’ve locked your selected address. Securing your order and preparing the payment gateway — almost there.</p>
+
+        <div class="place-progress" aria-hidden="true">
+          <div class="bar" id="placeBufferBar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const overlay = document.getElementById('placeOrderBufferOverlay');
+      const card = overlay.querySelector('.place-buffer-card');
+      const titleEl = document.getElementById('placeBufferTitle');
+      const msgEl = document.getElementById('placeBufferMessage');
+      const bar = document.getElementById('placeBufferBar');
+      const form = document.getElementById('checkoutAddressForm');
+
+      // Fallback duration — if navigation doesn't start, finalize after this (ms)
+      const NAV_FAIL_HIDE_AFTER = 12000; // 12s
+
+      // suppression guard so overlay does NOT auto-show when page restored via bfcache / history
+      window.__suppressPlaceOverlay = false;
+      function clearSuppressOnNextInteraction() {
+        function onFirstPointer() {
+          window.__suppressPlaceOverlay = false;
+          document.removeEventListener('pointerdown', onFirstPointer, true);
+        }
+        document.addEventListener('pointerdown', onFirstPointer, true);
+      }
+
+      // hide function (immediate)
+      function hidePlaceOverlay(force = false) {
+        clearInterval(progressTimer);
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
+        bar.style.width = '0%';
+        progressValue = 0;
+        card.classList.remove('place-success','place-error');
+      }
+
+      // On bfcache restore or popstate, suppress briefly and hide any visible overlay
+      window.addEventListener('pageshow', function (ev) {
+        if (ev && ev.persisted) {
+          window.__suppressPlaceOverlay = true;
+          hidePlaceOverlay(true);
+          clearSuppressOnNextInteraction();
+          setTimeout(() => { window.__suppressPlaceOverlay = false; }, 600);
+        }
+      }, true);
+
+      window.addEventListener('popstate', function () {
+        window.__suppressPlaceOverlay = true;
+        hidePlaceOverlay(true);
+        clearSuppressOnNextInteraction();
+        setTimeout(() => { window.__suppressPlaceOverlay = false; }, 600);
+      });
+
+      // progress controller
+      let progressTimer = null;
+      let progressValue = 0;
+      function startProgress() {
+        clearInterval(progressTimer);
+        progressValue = Math.max(progressValue, 8);
+        bar.style.width = progressValue + '%';
+        progressTimer = setInterval(() => {
+          // slower increments, more natural feel
+          const inc = Math.max(0.12, Math.random() * 1.2);
+          progressValue = Math.min(99, progressValue + inc); // cap below 100 so we don't finish early
+          bar.style.width = progressValue.toFixed(2) + '%';
+        }, 450);
+      }
+
+      function finishProgress(state) {
+        clearInterval(progressTimer);
+        bar.style.width = '100%';
+        if (state === 'success') {
+          card.classList.remove('place-error');
+          card.classList.add('place-success');
+        } else if (state === 'error') {
+          card.classList.remove('place-success');
+          card.classList.add('place-error');
+        } else {
+          card.classList.remove('place-success','place-error');
+        }
+        // hide shortly after showing final state (user already navigated if navigation started)
+        setTimeout(() => hidePlaceOverlay(), 0);
+      }
+
+      function showPlaceOverlay(opts = {}) {
+        if (window.__suppressPlaceOverlay) return;
+        titleEl.textContent = opts.title || 'Address locked — one step to go';
+        msgEl.textContent = opts.message || 'We’ve locked your selected address. Securing your order and preparing the payment gateway — almost there.';
+        card.classList.remove('place-success','place-error');
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+        startProgress();
+      }
+
+      // keep reference to fallback timer so we can cancel it when navigation starts
+      let fallbackTimer = null;
+      let navigationStarted = false;
+
+      function cancelFallback() {
+        if (fallbackTimer) {
+          clearTimeout(fallbackTimer);
+          fallbackTimer = null;
+        }
+      }
+
+      // Detect navigation start (visibility hidden / pagehide / beforeunload) and cancel fallback so overlay stays visible
+      function onNavigationStart() {
+        navigationStarted = true;
+        cancelFallback();
+        // ensure progress goes to 100% visually while browser unloads (optional)
+        bar.style.width = '100%';
+      }
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') onNavigationStart();
+      }, true);
+      window.addEventListener('pagehide', onNavigationStart, true);
+      window.addEventListener('beforeunload', onNavigationStart, true);
+
+      // Intercept form submission: show overlay, paint, then submit immediately (double RAF)
+      if (form) {
+        form.addEventListener('submit', function (ev) {
+          if (window.__suppressPlaceOverlay) return;
+          ev.preventDefault();
+
+          // Validation: ensure an address is selected OR new address fields filled
+          const anySelected = Array.from(document.querySelectorAll('.addr-radio-input')).some(r => r.checked);
+          const anyNewFilled = ['#new_name','#new_line1','#new_city','#new_postal_code'].some(sel => {
+            const el = document.querySelector(sel); return el && el.value && el.value.trim().length > 0;
+          });
+          if (!anySelected && !anyNewFilled) {
+            alert('Please select a shipping address or fill a new address before proceeding.');
+            return;
+          }
+
+          // Show overlay immediately and start progress
+          showPlaceOverlay({
+            title: 'Locked & ready 🔒',
+            message: 'Your address is locked. Preparing payment options — one step left to complete your order.'
+          });
+
+          // Setup fallback: if navigation never starts, finish progress after NAV_FAIL_HIDE_AFTER
+          cancelFallback();
+          fallbackTimer = setTimeout(() => {
+            // only call finish if navigation hasn't started
+            if (!navigationStarted) {
+              finishProgress('success');
+              fallbackTimer = null;
+            }
+          }, NAV_FAIL_HIDE_AFTER);
+
+          // Give browser a frame to paint the overlay, then start navigation immediately
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              try {
+                // Do NOT call finishProgress here — let the page unload naturally.
+                form.submit();
+              } catch (err) {
+                // If submit throws, show error then hide
+                cancelFallback();
+                finishProgress('error');
+                setTimeout(() => hidePlaceOverlay(true), 900);
+              }
+            });
+          });
+        }, { passive: false });
+      }
+
+      // expose programmatic API if any script wants to reuse it
+      window.PlaceOrderBuffer = {
+        show: (opts) => showPlaceOverlay(opts),
+        hide: () => hidePlaceOverlay(true),
+        finish: (state = 'success') => finishProgress(state)
+      };
+    })();
   </script>
 </body>
 </html>

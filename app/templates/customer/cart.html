@@ -54,13 +54,11 @@
       border-radius: 10px;
     }
 
-    /* clickable product link */
     .product-link { display: inline-flex; gap: .75rem; align-items: center; text-decoration: none; color: inherit; transition: transform .12s ease; }
     .product-link .product-name { transition: text-decoration .12s ease, color .12s ease; font-weight:600; }
     .product-link:hover { transform: translateY(-3px); }
     .product-link:hover .product-name { color: var(--accent); text-decoration: underline; }
 
-    /* table row hover / lift */
     .table tbody tr {
       transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease;
       transform: translateY(0);
@@ -73,10 +71,8 @@
       box-shadow: var(--card-shadow);
       background: #ffffff;
     }
-    /* slightly separate rows visually */
     .table tbody tr td { transition: background-color .18s ease; }
 
-    /* primary CTA styles */
     .btn-primary {
       transition: transform .12s ease, box-shadow .12s ease;
       border-radius: 10px;
@@ -86,7 +82,6 @@
       box-shadow: 0 12px 32px rgba(13,110,253,0.14);
     }
 
-    /* small action buttons */
     .btn-outline-secondary, .btn-outline-primary {
       transition: transform .08s ease, box-shadow .08s ease;
     }
@@ -95,7 +90,6 @@
       box-shadow: 0 6px 18px rgba(2,6,23,0.06);
     }
 
-    /* delete button */
     .btn-danger {
       transition: transform .12s ease, box-shadow .12s ease;
       border-radius: 8px;
@@ -105,7 +99,6 @@
       box-shadow: 0 8px 24px rgba(244,63,94,0.12);
     }
 
-    /* gentle entrance animation for cart rows / summary */
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(8px); }
       to { opacity: 1; transform: translateY(0); }
@@ -113,7 +106,6 @@
     .table tbody tr { animation: fadeInUp .28s ease both; }
     .card-summary { animation: fadeInUp .36s ease both; }
 
-    /* subtle pulse for Proceed to Checkout to draw attention */
     @keyframes softPulse {
       0% { transform: translateY(0) scale(1); box-shadow: 0 10px 24px rgba(13,110,253,0.10); }
       50% { transform: translateY(-2px) scale(1.01); box-shadow: 0 18px 40px rgba(13,110,253,0.12); }
@@ -126,11 +118,117 @@
       animation: softPulse .9s ease-in-out;
     }
 
-    /* responsive tweak: ensure hover visuals don't break mobile */
     @media (max-width: 768px) {
       .table tbody tr:hover { transform: none; box-shadow: none; background: transparent; }
       .cart-img:hover { transform: none; box-shadow: none; }
       .product-link:hover { transform: none; }
+    }
+
+    /* -------------------------
+       Checkout buffering overlay (matches the "first code" buffer-card look)
+       - appears centered over the page (but not covering entire content permanently)
+       - shown briefly before navigating to checkout
+       ------------------------- */
+    #checkoutBufferOverlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      z-index: 999999;
+      align-items: center;
+      justify-content: center;
+      background: rgba(6,10,15,0.32);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      transition: opacity 260ms ease;
+      opacity: 0;
+      pointer-events: none;
+    }
+    #checkoutBufferOverlay.show {
+      display: flex;
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .checkout-buffer-card {
+      background: linear-gradient(180deg, #ffffff, #fbfdff);
+      border-radius: 14px;
+      padding: 18px 20px;
+      display:flex;
+      gap:14px;
+      align-items:center;
+      box-shadow: 0 40px 120px rgba(2,6,23,0.18);
+      border: 1px solid rgba(13,110,253,0.06);
+      width: min(640px, calc(100% - 48px));
+      max-width: 94%;
+      transform: translateY(-8px);
+      transition: transform 360ms cubic-bezier(.2,.9,.2,1), opacity 260ms ease;
+      text-align: left;
+    }
+
+    .checkout-icon {
+      width:88px;
+      height:88px;
+      min-width:88px;
+      border-radius:14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(180deg,#eff6ff,#ffffff);
+      box-shadow: 0 18px 48px rgba(13,110,253,0.06);
+      position:relative;
+      overflow:visible;
+    }
+    .checkout-pulse {
+      position:absolute;
+      width:132px;
+      height:132px;
+      border-radius:22px;
+      left:50%;
+      top:50%;
+      transform:translate(-50%,-50%);
+      background: radial-gradient(circle at 40% 30%, rgba(13,110,253,0.12), rgba(13,110,253,0.02) 40%);
+      filter: blur(8px);
+      opacity: 0;
+      animation: checkoutPulse 1400ms ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes checkoutPulse {
+      0% { opacity: 0; transform: translate(-50%,-50%) scale(.94); }
+      50% { opacity: 1; transform: translate(-50%,-50%) scale(1.06); }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(.94); }
+    }
+
+    .checkout-svg { width:48px; height:48px; transform-origin:center; }
+    .checkout-spin { animation: checkoutSpin 1100ms linear infinite; }
+    @keyframes checkoutSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    .checkout-text h4 { margin:0 0 6px 0; font-size:1.05rem; font-weight:700; color:#0b365a; }
+    .checkout-text p { margin:0; color:#57606f; font-size:.95rem; line-height:1.32; }
+
+    .checkout-progress {
+      margin-top: 12px;
+      height:8px;
+      background: linear-gradient(90deg,#eef6ff,#f8fbff);
+      border-radius:999px;
+      overflow:hidden;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+    .checkout-progress > .bar {
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg,#0d6efd,#6610f2);
+      border-radius:999px;
+      transition: width 420ms cubic-bezier(.2,.9,.2,1);
+      box-shadow: 0 6px 18px rgba(13,110,253,0.12) inset;
+    }
+
+    .checkout-success { border-color: rgba(40,167,69,0.18); box-shadow: 0 30px 80px rgba(40,167,69,0.06); }
+    .checkout-error { border-color: rgba(220,53,69,0.12); box-shadow: 0 30px 80px rgba(220,53,69,0.06); }
+
+    @media (max-width:640px) {
+      .checkout-buffer-card { padding: 14px; gap:12px; }
+      .checkout-icon { width:72px; height:72px; min-width:72px; }
+      .checkout-svg { width:40px; height:40px; }
+      .checkout-text h4 { font-size:1rem; }
     }
   </style>
 </head>
@@ -167,7 +265,6 @@
           </thead>
           <tbody>
             {% for item in cart %}
-            {# build product URL with optional variant query param #}
             {% set prod_url = url_for('main.view_prod_detail', product_id=item.product_id) %}
             {% if item.variant_id %}
               {% set prod_url = prod_url + '?variant_id=' + item.variant_id|string %}
@@ -191,14 +288,12 @@
               <td>₹{{ '%.2f'|format(item.price) }}</td>
               <td>
                 <div class="d-flex align-items-center gap-2">
-                  <!-- decrease -->
                   <form method="POST" action="{{ url_for('main.update_cart_quantity') }}" style="display:inline;">
                     <input type="hidden" name="cart_item_id" value="{{ item.cart_item_id }}">
                     <button type="submit" name="action" value="decrease"
                       class="btn btn-sm btn-outline-secondary">-</button>
                   </form>
 
-                  <!-- quantity input (set) -->
                   <form method="POST" action="{{ url_for('main.update_cart_quantity') }}" class="d-flex"
                     style="gap:6px;">
                     <input type="hidden" name="cart_item_id" value="{{ item.cart_item_id }}">
@@ -208,7 +303,6 @@
                     <button type="submit" class="btn btn-sm btn-outline-primary">Set</button>
                   </form>
 
-                  <!-- increase -->
                   <form method="POST" action="{{ url_for('main.update_cart_quantity') }}" style="display:inline;">
                     <input type="hidden" name="cart_item_id" value="{{ item.cart_item_id }}">
                     <button type="submit" name="action" value="increase"
@@ -239,7 +333,6 @@
 
       <!-- Right: Summary -->
       <div class="col-md-5">
-        <!-- inside customer/cart.html where you render summary on right column -->
         <div class="card shadow p-4 card-summary">
           <h4 class="mb-3">Order Summary</h4>
           {% if cart %}
@@ -262,8 +355,10 @@
             </table>
           </div>
 
-          <!-- Go to checkout page to select or add address -->
-          <a href="{{ url_for('main.checkout') }}" class="btn btn-primary w-100 pulse">Proceed to Checkout</a>
+          <!-- Proceed to checkout: buffered animation (class .checkout-trigger) -->
+          <a href="{{ url_for('main.checkout') }}" class="btn btn-primary w-100 checkout-trigger pulse" id="checkoutBtn">
+            Proceed to Checkout
+          </a>
           {% else %}
           <p>No items in cart.</p>
           {% endif %}
@@ -272,8 +367,201 @@
       </div>
     </div>
   </div>
+
   {% include 'customer/footer.html' %}
+
+  <!-- Checkout buffer overlay (inserted once) -->
+  <div id="checkoutBufferOverlay" aria-hidden="true" role="status" aria-live="polite">
+    <div class="checkout-buffer-card" role="region" aria-label="Proceeding to checkout">
+      <div class="checkout-icon" aria-hidden="true">
+        <div class="checkout-pulse" aria-hidden="true"></div>
+        <!-- Creative SVG: wallet with spinning ring -->
+        <svg class="checkout-svg checkout-spin" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <circle cx="24" cy="24" r="18" stroke="rgba(13,110,253,0.14)" stroke-width="3" />
+          <path d="M12 22h24v8a4 4 0 0 1-4 4H16a4 4 0 0 1-4-4v-8z" fill="#0d6efd" opacity="0.95"/>
+          <rect x="30" y="18" width="6" height="6" rx="1" fill="#fff"/>
+        </svg>
+      </div>
+
+      <div class="checkout-text" style="flex:1;">
+        <h4 id="checkoutBufferTitle">Preparing your checkout…</h4>
+        <p id="checkoutBufferMessage">Reserving items and securing your payment — this will only take a moment.</p>
+
+        <div class="checkout-progress" aria-hidden="true">
+          <div class="bar" id="checkoutBufferBar" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    (function () {
+      const overlay = document.getElementById('checkoutBufferOverlay');
+      const card = overlay.querySelector('.checkout-buffer-card');
+      const titleEl = document.getElementById('checkoutBufferTitle');
+      const msgEl = document.getElementById('checkoutBufferMessage');
+      const bar = document.getElementById('checkoutBufferBar');
+      const trigger = document.getElementById('checkoutBtn');
+
+      // suppression guard so overlay does NOT auto-show when page is restored via bfcache/popstate
+      window.__suppressCheckoutOverlay = false;
+      function clearSuppressOnNextInteraction() {
+        function onFirstPointer() {
+          window.__suppressCheckoutOverlay = false;
+          document.removeEventListener('pointerdown', onFirstPointer, true);
+        }
+        document.addEventListener('pointerdown', onFirstPointer, true);
+      }
+      window.addEventListener('pageshow', function (ev) {
+        if (ev && ev.persisted) {
+          window.__suppressCheckoutOverlay = true;
+          hideCheckoutOverlay(true);
+          clearSuppressOnNextInteraction();
+          setTimeout(() => { window.__suppressCheckoutOverlay = false; }, 600);
+        }
+      }, true);
+      window.addEventListener('popstate', function () {
+        // user used back/forward, suppress briefly and ensure overlay hidden
+        window.__suppressCheckoutOverlay = true;
+        hideCheckoutOverlay(true);
+        clearSuppressOnNextInteraction();
+        setTimeout(() => { window.__suppressCheckoutOverlay = false; }, 600);
+      });
+
+      // progress controller
+      let progressTimer = null;
+      let progressValue = 0;
+      function startProgress() {
+        clearInterval(progressTimer);
+        progressValue = Math.max(progressValue, 4);
+        bar.style.width = progressValue + '%';
+        progressTimer = setInterval(() => {
+          const increment = Math.max(0.4, Math.random() * 4);
+          progressValue = Math.min(92, progressValue + increment);
+          bar.style.width = progressValue.toFixed(2) + '%';
+        }, 300);
+      }
+      function finishProgress(finalState) {
+        clearInterval(progressTimer);
+        bar.style.width = '100%';
+        if (finalState === 'success') {
+          card.classList.remove('checkout-error');
+          card.classList.add('checkout-success');
+        } else if (finalState === 'error') {
+          card.classList.remove('checkout-success');
+          card.classList.add('checkout-error');
+        } else {
+          card.classList.remove('checkout-success','checkout-error');
+        }
+        setTimeout(hideCheckoutOverlay, 420);
+      }
+
+      function showCheckoutOverlay(opts = {}) {
+        if (window.__suppressCheckoutOverlay) return;
+        // optional overrides
+        titleEl.textContent = opts.title || 'Preparing your checkout…';
+        msgEl.textContent = opts.message || 'Reserving items and securing your payment — this will only take a moment.';
+        card.classList.remove('checkout-success','checkout-error');
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden','false');
+        startProgress();
+      }
+
+      function hideCheckoutOverlay(force = false) {
+        clearInterval(progressTimer);
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden','true');
+        bar.style.width = '0%';
+        progressValue = 0;
+        card.classList.remove('checkout-success','checkout-error');
+        // when forced we keep no further behavior
+      }
+
+      // --- NEW: navigation-detection + improved timing so overlay paints before navigation starts
+      // fallback duration — if navigation doesn't start, finalize after this (ms)
+      const NAV_FAIL_HIDE_AFTER = 12000; // 12s
+      let fallbackTimer = null;
+      let navigationStarted = false;
+
+      function cancelFallback() {
+        if (fallbackTimer) {
+          clearTimeout(fallbackTimer);
+          fallbackTimer = null;
+        }
+      }
+
+      function onNavigationStart() {
+        navigationStarted = true;
+        cancelFallback();
+        // optionally push bar to full so unload looks final
+        bar.style.width = '100%';
+      }
+
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'hidden') onNavigationStart();
+      }, true);
+      window.addEventListener('pagehide', onNavigationStart, true);
+      window.addEventListener('beforeunload', onNavigationStart, true);
+
+      // click handler for checkout CTA
+      if (trigger) {
+        trigger.addEventListener('click', function (ev) {
+          // don't show overlay if suppressed
+          if (window.__suppressCheckoutOverlay) return;
+          // allow ctrl/meta to open in new tab normally
+          if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) return;
+          const href = this.getAttribute('href') || '';
+          if (!href) return;
+          ev.preventDefault();
+
+          // show overlay with a friendly creative message
+          showCheckoutOverlay({
+            title: 'Fasten your seatbelt ✨',
+            message: 'We’re reserving your items, preparing the best checkout experience, almost ready…'
+          });
+
+          // Setup fallback: if navigation never starts, finish progress after NAV_FAIL_HIDE_AFTER
+          cancelFallback();
+          navigationStarted = false;
+          fallbackTimer = setTimeout(() => {
+            if (!navigationStarted) {
+              finishProgress('success');
+              fallbackTimer = null;
+            }
+          }, NAV_FAIL_HIDE_AFTER);
+
+          // Allow browser frames to paint the overlay, then start navigation immediately.
+          // Double requestAnimationFrame increases likelihood overlay is painted before navigation begins.
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              try {
+                // Start navigation — browser should begin unload / load next page now.
+                // Do NOT call finishProgress here (overlay should remain visible during unload)
+                window.location.href = href;
+              } catch (err) {
+                cancelFallback();
+                finishProgress('error');
+                hideCheckoutOverlay();
+              }
+            });
+          });
+        }, { passive: false });
+      }
+
+      // ensure overlay removed on popstate/pageshow as well (double safety)
+      window.addEventListener('pageshow', () => { hideCheckoutOverlay(true); });
+      window.addEventListener('popstate', () => { hideCheckoutOverlay(true); });
+
+      // exposed API if needed
+      window.CheckoutBuffer = {
+        show: (opts) => showCheckoutOverlay(opts),
+        hide: () => hideCheckoutOverlay(true),
+        finish: (state = 'success') => finishProgress(state)
+      };
+    })();
+  </script>
 </body>
 
 </html>

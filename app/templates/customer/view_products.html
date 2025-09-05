@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>View Products</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <!-- keep bootstrap CSS for layout, but we DO NOT use its JS/collapse -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='owner/view_products.css') }}">
   <style>
@@ -11,7 +12,6 @@
     .sidebar { background:#fff; border-radius:8px; padding:18px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
     .filter-section { padding:8px 0; border-bottom:1px solid #eee; }
     .filter-section:last-child { border-bottom:none; }
-    .filter-section h6 { font-weight:600; margin-bottom:8px; }
     .product-card { border-radius:10px; transition:transform .15s ease; }
     .product-card:hover { transform:translateY(-4px); box-shadow:0 8px 20px rgba(0,0,0,.06); }
     .search-bar { max-width:540px; width:100%; }
@@ -19,7 +19,36 @@
     .price-strong { font-weight:700; color:#111; }
     .out-of-stock { color:#dc3545; font-weight:700; }
     .filter-count { color:#6c757d; font-size:.85rem; margin-left:6px; }
-    .ch-collapse { cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:8px 0; }
+
+    /* Custom collapse UI (no Bootstrap JS) */
+    .filter-toggle {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      width:100%;
+      padding:8px 0;
+      background:transparent;
+      border:none;
+      font-size:1rem;
+      text-align:left;
+    }
+    .filter-toggle:focus { outline:2px solid rgba(13,110,253,0.18); border-radius:4px; }
+
+    /* animated collapse body using max-height and opacity */
+    .filter-body {
+      padding-top:6px; padding-bottom:6px;
+      overflow:hidden;
+      max-height:0;
+      opacity:0;
+      transition: max-height 280ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease;
+    }
+    /* when opened (no data-collapsed attr) expand */
+    .filter-body:not([data-collapsed="true"]) {
+      max-height: 600px; /* big enough to accommodate content */
+      opacity:1;
+    }
+
+    .collapse-glyph { font-weight:700; margin-left:8px; }
 
     /* NEW: centered right-side section title */
     .section-title {
@@ -38,7 +67,6 @@
       color: #6c757d;
       font-size: 0.95rem;
     }
-    /* subtle underline */
     .section-title .underline {
       width: 56px;
       height: 3px;
@@ -50,10 +78,125 @@
     @media (min-width: 992px) {
       .section-title h2 { font-size: 1.8rem; }
     }
+
+    /* ============================
+       Star rating widget - robust repeating-background approach
+       - Outer: light (empty) star SVG repeated
+       - Inner: filled star SVG repeated and clipped by width (exact pixel width from template)
+       - Outer width = 140px (5 stars * 28px each)
+       - Inner width is calculated precisely in pixels in the inline style.
+       ============================ */
+    .rating { --star-size-x: 28px; --star-size-y: 24px; display:inline-block; vertical-align:middle; font-size:0; line-height:0; }
+
+    .stars-outer {
+      position:relative;
+      display:inline-block;
+      width: 140px; /* 5 * 28 */
+      height: var(--star-size-y);
+      background-color: transparent;
+      /* light (empty) star as repeating background */
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='24' viewBox='0 0 22 22'><path fill='%23f1f3f5' d='M11 0l3.2 7.9L22 8.6l-5.5 4.2L18.6 22 11 18.2 3.4 22l2.1-9.2L0 8.6l7.8-.7L11 0z'/></svg>");
+      background-repeat: repeat-x;
+      background-size: 28px 24px;
+      overflow: hidden;
+      border-radius: 6px;
+    }
+
+    .stars-inner {
+      position:absolute;
+      top:0;
+      left:0;
+      height:100%;
+      /* filled star as repeating background (simple single color - gradient would need an SVG gradient) */
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='24' viewBox='0 0 22 22'><path fill='%23ffc107' d='M11 0l3.2 7.9L22 8.6l-5.5 4.2L18.6 22 11 18.2 3.4 22l2.1-9.2L0 8.6l7.8-.7L11 0z'/></svg>");
+      background-repeat: repeat-x;
+      background-size: 28px 24px;
+      width: 0px; /* controlled inline for precise fractional star rendering */
+      transition: width 380ms cubic-bezier(.2,.9,.2,1);
+      box-shadow: 0 2px 8px rgba(255,180,30,0.12) inset;
+      filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06));
+      pointer-events: none;
+    }
+
+    /* rating number text */
+    .rating-num { margin-left:10px; font-size:0.92rem; color:#495057; vertical-align:middle; display:inline-block; font-weight:600; }
+
+    .existing-image { display:inline-flex; flex-direction:column; gap:6px; align-items:center; margin:6px; }
+    .existing-image img { width:84px; height:84px; object-fit:cover; border-radius:8px; border:1px solid #e9ecef; }
+    .existing-image .delete-now { font-size:12px; }
+
+    #pageLoader { position:fixed; inset:0; background:rgba(255,255,255,0.65); display:none; align-items:center; justify-content:center; z-index:2000; }
+    #pageLoader .spinner { width:84px; height:84px; border-radius:12px; background:#fff; box-shadow:0 8px 30px rgba(2,6,23,0.08); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; padding:14px; }
+
+    /* Overlay shown while opening product details (buffering overlay) */
+    #openOverlay {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(6,10,15,0.48);
+      z-index: 3000;
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+    }
+    #openOverlay .box {
+      background: linear-gradient(180deg,#ffffff, #f8fbff);
+      border-radius: 14px;
+      padding: 20px 22px;
+      display:flex;
+      gap:14px;
+      align-items:center;
+      max-width: 520px;
+      width: calc(100% - 40px);
+      box-shadow: 0 30px 80px rgba(2,6,23,0.18);
+      border: 1px solid rgba(13,110,253,0.06);
+    }
+    #openOverlay .box .text h4 { margin:0 0 6px 0; font-size:1.05rem; }
+    #openOverlay .box .text p { margin:0; color:#57606f; font-size:0.95rem; }
+
+    /* subtle animated icon */
+    #openOverlay .pulse {
+      width:52px;
+      height:52px;
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(90deg,#0d6efd,#6610f2);
+      color:white;
+      box-shadow: 0 10px 30px rgba(13,110,253,0.18);
+      transform: translateZ(0);
+      animation: float 2000ms infinite ease-in-out;
+    }
+    @keyframes float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+      100% { transform: translateY(0); }
+    }
   </style>
 </head>
 <body>
   {% include 'customer/layout.html' %}
+  <div id="pageLoader"><div class="spinner"><div class="spinner-border" role="status"></div><div class="small text-muted">Loading…</div></div></div>
+
+  <!-- Overlay shown when user opens product detail (buffering / catalog opener) -->
+  <div id="openOverlay" aria-hidden="true" role="status" aria-live="polite">
+    <div class="box" role="dialog" aria-label="Opening product catalog">
+      <div class="pulse" aria-hidden="true">
+        <!-- simple icon (box) -->
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3 7l9-4 9 4-9 4L3 7z" fill="rgba(255,255,255,0.95)"/>
+          <path d="M21 7v7a2 2 0 0 1-1 1.73L12 20l-8-4.27A2 2 0 0 1 3 14V7" stroke="rgba(255,255,255,0.9)" stroke-width="0.6" opacity="0.9"/>
+        </svg>
+      </div>
+      <div class="text">
+        <h4>Opening the catalog…</h4>
+        <p>A catalogue you'll have never seen before — loading product details & visuals.</p>
+      </div>
+    </div>
+  </div>
+
   <div class="container-fluid mt-4">
     <div class="row g-4">
       <!-- LEFT SIDEBAR -->
@@ -62,16 +205,15 @@
           <h5 class="mb-3">Refine By</h5>
 
           <form method="GET" id="filtersForm">
-            <!-- Search term (kept here so search remains when user toggles filters) -->
             <input type="hidden" name="q" value="{{ selected.q }}">
 
             <!-- Category -->
             <div class="filter-section">
-              <div class="ch-collapse" data-bs-toggle="collapse" data-bs-target="#catCollapse">
-                <h6 class="mb-0">Category</h6>
-                <span>+</span>
-              </div>
-              <div id="catCollapse" class="collapse show mt-2">
+              <button type="button" class="filter-toggle" data-target="#catBody" aria-expanded="false">
+                <span>Category</span>
+                <span class="collapse-glyph">+</span>
+              </button>
+              <div id="catBody" class="filter-body" data-collapsed="true">
                 {% for cat in filters.categories %}
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" name="category" value="{{ cat }}" id="cat_{{ loop.index }}" {% if cat in selected.categories %}checked{% endif %}>
@@ -83,10 +225,11 @@
 
             <!-- Brands -->
             <div class="filter-section">
-              <div class="ch-collapse" data-bs-toggle="collapse" data-bs-target="#brandCollapse">
-                <h6 class="mb-0">Brands</h6><span>+</span>
-              </div>
-              <div id="brandCollapse" class="collapse show mt-2">
+              <button type="button" class="filter-toggle" data-target="#brandBody" aria-expanded="false">
+                <span>Brands</span>
+                <span class="collapse-glyph">+</span>
+              </button>
+              <div id="brandBody" class="filter-body" data-collapsed="true">
                 {% for b in filters.brands %}
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" name="brand" value="{{ b }}" id="brand_{{ loop.index }}" {% if b in selected.brands %}checked{% endif %}>
@@ -98,10 +241,11 @@
 
             <!-- Price Range -->
             <div class="filter-section">
-              <div class="ch-collapse" data-bs-toggle="collapse" data-bs-target="#priceCollapse">
-                <h6 class="mb-0">Price</h6><span>+</span>
-              </div>
-              <div id="priceCollapse" class="collapse show mt-2">
+              <button type="button" class="filter-toggle" data-target="#priceBody" aria-expanded="false">
+                <span>Price</span>
+                <span class="collapse-glyph">+</span>
+              </button>
+              <div id="priceBody" class="filter-body" data-collapsed="true">
                 <div class="d-flex gap-2">
                   <input type="number" name="min_price" class="form-control" placeholder="{{ filters.global_min_price }}" value="{{ selected.min_price or '' }}">
                   <input type="number" name="max_price" class="form-control" placeholder="{{ filters.global_max_price }}" value="{{ selected.max_price or '' }}">
@@ -112,25 +256,28 @@
 
             <!-- Rating -->
             <div class="filter-section">
-              <div class="ch-collapse" data-bs-toggle="collapse" data-bs-target="#ratingCollapse">
-                <h6 class="mb-0">Rating</h6><span>+</span>
-              </div>
-              <div id="ratingCollapse" class="collapse show mt-2">
+              <button type="button" class="filter-toggle" data-target="#ratingBody" aria-expanded="false">
+                <span>Rating</span>
+                <span class="collapse-glyph">+</span>
+              </button>
+              <div id="ratingBody" class="filter-body" data-collapsed="true">
                 {% for r in [5,4,3,2] %}
                 <div class="form-check">
-                  <input class="form-check-input" type="radio" name="rating" id="rating_{{ r }}" value="{{ r }}" {% if selected.rating and selected.rating|int == r %}checked{% endif %}>
+                  <input class="form-check-input rating-filter" type="radio" name="rating" id="rating_{{ r }}" value="{{ r }}" {% if selected.rating and selected.rating|int == r %}checked{% endif %}>
                   <label class="form-check-label small" for="rating_{{ r }}">{{ r }}★ & above</label>
                 </div>
                 {% endfor %}
+                <div class="small text-muted mt-1"><strong>Apply Filters</strong> or use <strong>Search</strong>.</div>
               </div>
             </div>
 
             <!-- Colors -->
             <div class="filter-section">
-              <div class="ch-collapse" data-bs-toggle="collapse" data-bs-target="#colorCollapse">
-                <h6 class="mb-0">Colors</h6><span>+</span>
-              </div>
-              <div id="colorCollapse" class="collapse show mt-2">
+              <button type="button" class="filter-toggle" data-target="#colorBody" aria-expanded="false">
+                <span>Colors</span>
+                <span class="collapse-glyph">+</span>
+              </button>
+              <div id="colorBody" class="filter-body" data-collapsed="true">
                 {% for c in filters.colors %}
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" name="color" value="{{ c }}" id="color_{{ loop.index }}" {% if c in selected.colors %}checked{% endif %}>
@@ -142,10 +289,11 @@
 
             <!-- Size & Fit -->
             <div class="filter-section">
-              <div class="ch-collapse" data-bs-toggle="collapse" data-bs-target="#sizeCollapse">
-                <h6 class="mb-0">Size & Fit</h6><span>+</span>
-              </div>
-              <div id="sizeCollapse" class="collapse show mt-2">
+              <button type="button" class="filter-toggle" data-target="#sizeBody" aria-expanded="false">
+                <span>Size & Fit</span>
+                <span class="collapse-glyph">+</span>
+              </button>
+              <div id="sizeBody" class="filter-body" data-collapsed="true">
                 {% for s in filters.sizes %}
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" name="size" value="{{ s }}" id="size_{{ loop.index }}" {% if s in selected.sizes %}checked{% endif %}>
@@ -157,10 +305,11 @@
 
             <!-- Tags -->
             <div class="filter-section">
-              <div class="ch-collapse" data-bs-toggle="collapse" data-bs-target="#tagCollapse">
-                <h6 class="mb-0">Tags</h6><span>+</span>
-              </div>
-              <div id="tagCollapse" class="collapse show mt-2">
+              <button type="button" class="filter-toggle" data-target="#tagBody" aria-expanded="false">
+                <span>Tags</span>
+                <span class="collapse-glyph">+</span>
+              </button>
+              <div id="tagBody" class="filter-body" data-collapsed="true">
                 {% for t in filters.tags %}
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" name="tag" value="{{ t.tag_id }}" id="tag_{{ t.tag_id }}" {% if t.tag_id|string in selected.tags %}checked{% endif %}>
@@ -171,7 +320,7 @@
             </div>
 
             <div class="mt-3 d-grid">
-              <button type="submit" class="btn btn-primary">Apply Filters</button>
+              <button type="submit" class="btn btn-primary" id="applyFiltersBtn">Apply Filters</button>
               <a href="{{ url_for('main.place_order') }}" class="btn btn-link mt-2">Reset</a>
             </div>
           </form>
@@ -180,16 +329,16 @@
 
       <!-- RIGHT: products list -->
       <div class="col-lg-9">
-        <!-- CENTERED SECTION TITLE (NEW) -->
+        <!-- CENTERED SECTION TITLE -->
         <div class="section-title">
           <h2>Our Products</h2>
-          <p>Explore your catalog — search, sort and apply filters to quickly find items.</p>
+          <p>Explore our catalog — search, sort and apply filters to quickly find items.</p>
           <div class="underline" aria-hidden="true"></div>
         </div>
 
         <div class="d-flex justify-content-between align-items-center mb-3">
           <form method="GET" class="d-flex w-100 me-3" id="searchForm" style="gap:12px;">
-            <!-- keep all selected filters as hidden inputs so searching preserves choices -->
+            <!-- server-side preserved hidden inputs for accessibility/non-JS fallback -->
             {% for k, vals in selected.items() %}
               {% if vals and k not in ['q','sort','min_price','max_price','rating'] %}
                 {% for v in vals %}
@@ -221,6 +370,21 @@
                 <div class="card-body">
                   <h6 class="mb-1">{{ product.name }}</h6>
                   <div class="small-muted mb-2">{{ product.brand or '—' }} • {{ product.category or '—' }}</div>
+
+                  <!-- rating widget (robust pixel-precise fill) -->
+                  <div class="mb-2 d-flex align-items-center">
+                    <div class="rating" title="{{ ('%.2f' % product.rating_avg) if product.rating_avg is not none else '0.0' }}">
+                      <div class="stars-outer" aria-hidden="true">
+                        <!-- compute exact pixel width: 5 stars => 140px total -->
+                        <div class="stars-inner" style="width: {{ ((product.rating_avg|float(0) / 5.0) * 140.0)|round(2) }}px;"></div>
+                      </div>
+                    </div>
+
+                    <div class="rating-num">
+                      {{ (product.reviews_count or 0) }} rating{{ 's' if (product.reviews_count or 0) != 1 else '' }} • {{ (product.rating_avg|float(0)|round(2)) }}
+                    </div>
+                  </div>
+
                   <div class="d-flex justify-content-between align-items-center">
                     <div>
                       <div class="price-strong">₹{{ '%.2f' % product.price_range.min }}</div>
@@ -256,29 +420,143 @@
   </div>
 
   {% include 'customer/footer.html' %}
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- intentionally no bootstrap JS -->
 
   <script>
-    // small helper: when user clicks a filter checkbox, submit the form (so UX is immediate)
     document.addEventListener('DOMContentLoaded', function () {
-      document.querySelectorAll('.sidebar input[type="checkbox"], .sidebar input[type="radio"]').forEach(function (el) {
-        el.addEventListener('change', function () {
-          // submit filters form
-          document.getElementById('filtersForm').submit();
+      const loader = document.getElementById('pageLoader');
+      const openOverlay = document.getElementById('openOverlay');
+      const applyBtn = document.getElementById('applyFiltersBtn');
+      const searchForm = document.getElementById('searchForm');
+      const filtersForm = document.getElementById('filtersForm');
+
+      function showLoader() { if (loader) loader.style.display = 'flex'; }
+      function hideLoader() { if (loader) loader.style.display = 'none'; }
+      hideLoader();
+
+      // Show the "opening product detail" overlay when user clicks a product link.
+      // Do not prevent navigation — simply display the overlay so user sees buffering UI.
+      function attachOpenOverlayToProductLinks() {
+        // select anchors inside product cards that navigate to product detail
+        const anchors = Array.from(document.querySelectorAll('.product-card a[href]'));
+        anchors.forEach(a => {
+          try {
+            const href = a.getAttribute('href') || '';
+            // only attach if url pattern looks like product detail (contains '/prod/')
+            if (href.indexOf('/prod/') === -1) return;
+            a.addEventListener('click', function (ev) {
+              // show overlay; actual navigation will proceed naturally
+              if (openOverlay) {
+                openOverlay.style.display = 'flex';
+                openOverlay.setAttribute('aria-hidden', 'false');
+              }
+              // small safety: in case the navigation is prevented or is AJAX, hide overlay after 6s
+              setTimeout(function () {
+                if (openOverlay) {
+                  openOverlay.style.display = 'none';
+                  openOverlay.setAttribute('aria-hidden', 'true');
+                }
+              }, 6000);
+            }, { passive: true });
+          } catch (e) { /* ignore */ }
+        });
+      }
+
+      attachOpenOverlayToProductLinks();
+
+      // rating radio: allow deselecting by clicking again
+      document.querySelectorAll('.rating-filter').forEach(function (radio) {
+        radio._wasChecked = radio.checked;
+        radio.addEventListener('click', function () {
+          if (radio._wasChecked) radio.checked = false;
+          setTimeout(function () { radio._wasChecked = radio.checked; }, 0);
         });
       });
-      // expand/collapse glyph toggles
-      document.querySelectorAll('.ch-collapse').forEach(function(el) {
-        el.addEventListener('click', function() {
-          const span = el.querySelector('span');
-          const target = document.querySelector(el.getAttribute('data-bs-target'));
-          if (target.classList.contains('show')) {
-            span.textContent = '+';
-          } else {
-            span.textContent = '-';
+
+      // apply button shows loader (submits filters form normally)
+      applyBtn && applyBtn.addEventListener('click', function () { showLoader(); });
+
+      // when Search is pressed, copy the CURRENT filters into the search form, then submit
+      searchForm && searchForm.addEventListener('submit', function (e) {
+        copyFiltersToSearchForm();
+        showLoader();
+        // allow normal submit
+      });
+
+      // Copy filters: remove previous filter hidden inputs (server-side or generated), then add current ones
+      function copyFiltersToSearchForm() {
+        if (!filtersForm || !searchForm) return;
+
+        const filterNames = ['category','brand','tag','color','size','min_price','max_price','rating'];
+
+        // remove previously generated hidden inputs
+        searchForm.querySelectorAll('input[data-generated="true"]').forEach(function (el) { el.remove(); });
+
+        // remove any hidden inputs in searchForm that match filterNames (these may be server-rendered old selections)
+        searchForm.querySelectorAll('input[type="hidden"]').forEach(function (h) {
+          if (filterNames.includes(h.name)) h.remove();
+        });
+
+        // gather current values from filtersForm
+        const inputs = filtersForm.querySelectorAll('input, select');
+        inputs.forEach(function (inp) {
+          if (!inp.name) return;
+          const type = inp.type;
+          if (type === 'checkbox' && inp.checked) {
+            const h = document.createElement('input');
+            h.type = 'hidden'; h.name = inp.name; h.value = inp.value; h.setAttribute('data-generated','true');
+            searchForm.appendChild(h);
+          } else if (type === 'radio' && inp.checked) {
+            const h = document.createElement('input');
+            h.type = 'hidden'; h.name = inp.name; h.value = inp.value; h.setAttribute('data-generated','true');
+            searchForm.appendChild(h);
+          } else if ((inp.name === 'min_price' || inp.name === 'max_price') && inp.value) {
+            const h = document.createElement('input');
+            h.type = 'hidden'; h.name = inp.name; h.value = inp.value; h.setAttribute('data-generated','true');
+            searchForm.appendChild(h);
           }
         });
+      }
+
+      // Custom collapse toggles (use data-collapsed and CSS transitions)
+      function toggleSection(btn) {
+        const targetSelector = btn.getAttribute('data-target');
+        if (!targetSelector) return;
+        const body = document.querySelector(targetSelector);
+        const glyph = btn.querySelector('.collapse-glyph');
+        if (!body) return;
+        const isOpen = !body.hasAttribute('data-collapsed');
+        if (isOpen) {
+          body.setAttribute('data-collapsed', 'true');
+          btn.setAttribute('aria-expanded', 'false');
+          if (glyph) glyph.textContent = '+';
+        } else {
+          body.removeAttribute('data-collapsed');
+          btn.setAttribute('aria-expanded', 'true');
+          if (glyph) glyph.textContent = '-';
+        }
+      }
+
+      // initialize filter sections (default collapsed)
+      document.querySelectorAll('.filter-section').forEach(function (section) {
+        const btn = section.querySelector('.filter-toggle');
+        const targetSelector = btn && btn.getAttribute('data-target');
+        const body = targetSelector ? document.querySelector(targetSelector) : null;
+        if (body) {
+          // ensure default collapsed state
+          body.setAttribute('data-collapsed', 'true');
+          if (btn) { btn.setAttribute('aria-expanded', 'false'); const g = btn.querySelector('.collapse-glyph'); if (g) g.textContent = '+'; }
+        }
+        if (btn) btn.addEventListener('click', function () { toggleSection(btn); });
       });
+
+      // accessibility fallback
+      document.querySelectorAll('.filter-toggle').forEach(function (b) {
+        b.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.click(); }
+        });
+      });
+
     });
   </script>
 </body>

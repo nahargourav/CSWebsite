@@ -70,10 +70,80 @@
 
     .section-sep { margin:18px 0; height:1px; background:linear-gradient(90deg, transparent, #eef3fb, transparent); border-radius:2px; }
 
+    /* Add-to-cart overlay (AJAX) - simplified */
+    #addCartOverlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10800;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.45);
+      padding: 18px;
+    }
+    #addCartOverlay .overlay-box {
+      background: #ffffff;
+      padding: 18px 20px;
+      border-radius: 12px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+      box-shadow: 0 20px 40px rgba(2,6,23,0.2);
+      min-width: 300px;
+      max-width: 520px;
+      width: 100%;
+      justify-content: flex-start;
+    }
+    #addCartOverlay .status-left { width: 76px; display:flex; align-items:center; justify-content:center; }
+    .cart-icon {
+      width:56px;
+      height:56px;
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: linear-gradient(180deg,#fff,#f8fbff);
+      box-shadow: 0 8px 20px rgba(2,6,23,0.08);
+      position: relative;
+      overflow: visible;
+    }
+    .cart-svg { width:36px; height:36px; transform-origin:center; transition: transform 280ms cubic-bezier(.2,.9,.2,1); }
+    .cart-pop { animation: cartPop 540ms ease forwards; }
+    @keyframes cartPop {
+      0% { transform: scale(1) translateY(0); }
+      40% { transform: scale(1.18) translateY(-6px); }
+      70% { transform: scale(0.98) translateY(0); }
+      100% { transform: scale(1) translateY(0); }
+    }
+    .cart-check {
+      position:absolute;
+      inset:auto;
+      right:-6px;
+      bottom:-6px;
+      width:28px;
+      height:28px;
+      border-radius:999px;
+      background: #28a745;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 8px 20px rgba(40,167,69,0.12);
+      color: #fff;
+      font-size:14px;
+      transform: scale(0);
+      transition: transform 240ms ease;
+    }
+    .cart-check.show { transform: scale(1); }
+
+    #addCartOverlay .status-right { flex:1; }
+    #addCartOverlay .status-right h5 { margin:0 0 6px 0; font-size:1rem; }
+    #addCartOverlay .status-right p { margin:0; color:var(--muted); font-size:.92rem; }
+
     @media (max-width: 768px) {
       .image-area { min-height:280px; padding:8px; }
       .thumb-strip img { width:64px; height:64px; }
       .variant-thumb { width:44px; height:44px; }
+      #addCartOverlay .overlay-box { flex-direction: row; gap:12px; padding:12px; }
     }
   </style>
 </head>
@@ -133,7 +203,6 @@
                   <img class="variant-thumb" src="{{ url_for('static', filename=v.thumb) }}" alt="thumb">
                   <div>
                     <div style="font-weight:700;font-size:.98rem;">{{ v.sku or 'SKU' }}</div>
-                    {# Always show the separator and show 'N/A' when missing #}
                     <div class="small text-muted">
                       {{ (v.size or 'N/A') }} &nbsp;•&nbsp; {{ (v.color or 'N/A') }}
                     </div>
@@ -174,7 +243,7 @@
 
           <div class="mt-3 d-flex gap-2 align-items-center">
             <div style="width:110px;">
-              <input id="topQty" type="number" min="1" value="1" class="form-control">
+              <input id="topQty" type="number" min="1" value="1" class="form-control" aria-label="Quantity">
               <small class="text-muted">Qty</small>
             </div>
             <form id="topAddToCartForm" method="POST" action="{{ url_for('main.cart_add') }}">
@@ -191,8 +260,6 @@
         <div class="specs mb-3">
           <h6 class="mb-2">Product Details</h6>
           <div style="font-weight:700">{{ product.short_description or 'N/A' }}</div>
-
-          {# Render the server-prepared HTML (only <br/> was re-introduced) #}
           <div class="text-muted">{{ product.description_html | safe }}</div>
         </div>
 
@@ -220,7 +287,7 @@
       </div>
     </div>
 
-    <!-- Reviews below (kept unchanged) -->
+    <!-- Reviews below (unchanged) -->
     <div class="row mt-4">
       <div class="col-12">
         <div id="reviewsCard" class="reviews-card">
@@ -308,6 +375,29 @@
 
   </div>
 
+  <!-- Add-to-cart overlay (AJAX) -->
+  <div id="addCartOverlay" role="status" aria-live="polite" aria-hidden="true">
+    <div class="overlay-box" role="dialog" aria-label="Cart status">
+      <div class="status-left" aria-hidden="true">
+        <div class="cart-icon" id="cartIcon" aria-hidden="true">
+          <!-- cart SVG -->
+          <svg class="cart-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M6 6h15l-1.5 9h-11L6 6z" fill="#495057" opacity="0.12"></path>
+            <path d="M7 6h11l-1.2 7.2a1 1 0 0 1-.98.8H9.18a1 1 0 0 1-.98-.8L7 6z" fill="#0d6efd"></path>
+            <circle cx="10" cy="20" r="1.5" fill="#111"></circle>
+            <circle cx="18" cy="20" r="1.5" fill="#111"></circle>
+          </svg>
+          <div class="cart-check" id="cartCheck" aria-hidden="true">✓</div>
+        </div>
+      </div>
+
+      <div class="status-right" id="overlayStatusRight">
+        <h5 id="overlayTitle">Adding to cart…</h5>
+        <p id="overlayMessage">We're reserving your item so you don't miss out — this will only take a moment.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- full-screen modal for image -->
   <div class="modal fade" id="imageFullscreenModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen">
@@ -360,6 +450,13 @@
       const variantSizeEl = document.getElementById('variantSize');
       const variantColorEl = document.getElementById('variantColor');
       const variantSwatchEl = document.getElementById('variantSwatch');
+
+      // overlay element & parts
+      const addCartOverlay = document.getElementById('addCartOverlay');
+      const overlayTitle = document.getElementById('overlayTitle');
+      const overlayMessage = document.getElementById('overlayMessage');
+      const cartIcon = document.getElementById('cartIcon');
+      const cartCheck = document.getElementById('cartCheck');
 
       // reviews state
       const reviewsList = document.getElementById('reviewsList');
@@ -424,7 +521,6 @@
         topPriceEl.textContent = price ? '₹' + price : '₹—';
         topSkuEl.textContent = sku || 'N/A';
 
-        // NEW: update size/color UI on the right
         if (variantSizeEl) variantSizeEl.textContent = size || 'N/A';
         if (variantColorEl) variantColorEl.textContent = color || 'N/A';
         if (variantSwatchEl) {
@@ -502,12 +598,123 @@
 
       // Add to cart top form: sync topQty -> hidden and validation on submit
       topQty.addEventListener('input', ()=> {
-        let v = parseInt(topQty.value) || 1;
-        if (v < 1) v = 1;
+        const raw = topQty.value;
+        if (raw === '' || raw === null) {
+          topHiddenQty.value = '';
+          return;
+        }
+        let v = parseInt(raw, 10);
+        if (isNaN(v) || v < 1) v = 1;
         topQty.value = v;
         topHiddenQty.value = v;
       });
 
+      topQty.addEventListener('blur', ()=> {
+        if (topQty.value === '' || topQty.value === null) {
+          topQty.value = 1;
+          topHiddenQty.value = 1;
+        }
+      });
+
+      // overlay helpers (simple: show state)
+      function showOverlay(state, info) {
+        addCartOverlay.style.display = 'flex';
+        addCartOverlay.setAttribute('aria-hidden', 'false');
+        cartCheck.classList.remove('show');
+        cartIcon.classList.remove('cart-pop');
+        overlayTitle.classList.remove('text-danger','text-success');
+
+        if (state === 'processing') {
+          overlayTitle.textContent = 'Adding to cart…';
+          overlayMessage.textContent = info && info.message ? info.message : "We are adding this item for you — momentarily.";
+        } else if (state === 'success') {
+          overlayTitle.textContent = info && info.title ? info.title : 'Added to cart';
+          overlayMessage.textContent = info && info.message ? info.message : 'Your item was added to the cart.';
+          overlayTitle.classList.add('text-success');
+          setTimeout(()=> {
+            cartIcon.classList.add('cart-pop');
+            cartCheck.classList.add('show');
+          }, 80);
+        } else if (state === 'error') {
+          overlayTitle.textContent = info && info.title ? info.title : 'Could not add item';
+          overlayMessage.textContent = info && info.message ? info.message : 'Something went wrong.';
+          overlayTitle.classList.add('text-danger');
+        }
+      }
+
+      function hideOverlay() {
+        addCartOverlay.style.display = 'none';
+        addCartOverlay.setAttribute('aria-hidden', 'true');
+        cartCheck.classList.remove('show');
+        cartIcon.classList.remove('cart-pop');
+      }
+
+      function updateCartCount(newCount) {
+        try {
+          const el = document.getElementById('cartCount');
+          if (el) {
+            el.textContent = (typeof newCount === 'number') ? newCount : newCount;
+          }
+        } catch(e){}
+      }
+
+      // AJAX add-to-cart logic: expects JSON - no flying animation and do NOT disable add button
+      async function doAddToCartAjax(payload) {
+        showOverlay('processing', { message: "Quickly reserving stock — please wait." });
+
+        try {
+          const headers = { 'X-Requested-With': 'XMLHttpRequest' };
+          const resp = await fetch(payload.url, {
+            method: 'POST',
+            body: payload.formData,
+            credentials: 'same-origin',
+            headers,
+            redirect: 'follow'
+          });
+
+          const contentType = (resp.headers.get('content-type') || '').toLowerCase();
+
+          if (contentType.indexOf('application/json') !== -1) {
+            const data = await resp.json();
+            if (resp.ok && data && data.ok) {
+              if (data.cart_count !== undefined) updateCartCount(Number(data.cart_count));
+              showOverlay('success', { title: data.title || 'Added to cart', message: data.message || 'Item added.' });
+              setTimeout(()=> { hideOverlay(); }, 700);
+            } else {
+              // server-side failure (e.g. 409 conflict when already at max stock)
+              const msg = data && data.message ? data.message : 'Could not add item to cart.';
+              showOverlay('error', { title: 'Could not add item', message: msg });
+              setTimeout(()=> { hideOverlay(); }, 1200);
+            }
+            return;
+          }
+
+          // Non-JSON response (redirect or HTML) -> follow server redirect so flash messages display
+          if (resp.redirected || contentType.indexOf('text/html') !== -1) {
+            const finalUrl = resp.url || null;
+            showOverlay('success', { title: 'Processing', message: 'Redirecting…' });
+            setTimeout(()=> {
+              if (finalUrl) {
+                window.location.href = finalUrl;
+              } else {
+                payload.originalForm.submit();
+              }
+            }, 600);
+            return;
+          }
+
+          // unexpected response type -> fallback to normal submit
+          showOverlay('error', { title: 'Unexpected server response', message: 'Falling back to normal submission.' });
+          setTimeout(()=> { payload.originalForm.submit(); }, 700);
+        } catch (err) {
+          // network error
+          console.error(err);
+          showOverlay('error', { title: 'Network error', message: 'A network error occurred. Try again.' });
+          setTimeout(()=> { hideOverlay(); }, 1200);
+        }
+      }
+
+      // Hook up the form submit: validate -> attempt AJAX
       document.getElementById('topAddToCartForm').addEventListener('submit', function(e){
         const vid = topVariantIdInput.value;
         if (!vid) {
@@ -515,6 +722,17 @@
           alert('Please select a variant first.');
           return;
         }
+
+        if (!topHiddenQty.value || topHiddenQty.value === '') {
+          const raw = topQty.value;
+          if (raw === '' || raw === null) {
+            topHiddenQty.value = '1';
+            topQty.value = 1;
+          } else {
+            topHiddenQty.value = String(parseInt(raw, 10) || 1);
+          }
+        }
+
         const btnEl = variantButtons.find(b => b.getAttribute('data-variant-id') === String(vid));
         const stock = btnEl ? parseInt(btnEl.getAttribute('data-stock') || '0', 10) : 0;
         const qty = parseInt(topHiddenQty.value) || 1;
@@ -528,10 +746,19 @@
           alert('Requested quantity exceeds available stock.');
           return;
         }
-        // form submits normally to your /cart_add route
+
+        // intercept submit to do AJAX
+        e.preventDefault();
+
+        const form = e.target;
+        const action = form.getAttribute('action') || window.location.href;
+        const formData = new FormData(form);
+        const payload = { url: action, formData, originalForm: form };
+
+        doAddToCartAjax(payload);
       });
 
-      // Reviews AJAX (unchanged logic - kept for brevity)
+      // Reviews AJAX (unchanged)
       reviewSortEl.value = 'latest';
       reviewSortEl.addEventListener('change', async function(){
         reviewsSort = reviewSortEl.value;
