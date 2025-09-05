@@ -103,15 +103,28 @@
       .star:hover { transform: translateY(-3px); }
       .star.filled { color: #ffc107; }
 
-      /* small-screen responsive tweaks */
+      /* show status buttons on all sizes — on small screens they become a horizontal scrollable row.
+         keep mobile select as well (so user can use either). */
+      .status-btns .btn-group {
+        display: flex;
+        gap: .5rem;
+        align-items: center;
+        /* allow horizontal scroll on narrow screens so buttons don't wrap/overflow */
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px; /* gives some breathing room for the scrollbar area */
+      }
+
+      /* By default hide the mobile select (desktop) */
+      .status-mobile { display: none; }
+
+      /* responsive tweaks */
       @media (max-width: 768px) {
-        /* make controls full width and wrap */
         .controls-row { gap:.5rem; }
         .controls-row .form-control{ min-width: 100% !important; max-width: 100% !important; }
         .controls-row .form-select{ min-width: 100% !important; max-width: 100% !important; }
 
-        /* hide big-screen status buttons and show mobile select */
-        .status-btns .btn-group { display: none; }
+        /* show mobile select */
         .status-mobile { display: block; margin-bottom: .75rem; }
 
         /* compact action buttons: show icon only on small screens to avoid overflow */
@@ -144,13 +157,13 @@
         .btn .desktop-hide-text { display: inline; }
       }
 
-      /* Desktop: hide mobile select by default */
-      .status-mobile { display: none; }
-
       /* keep ellipsis shorter on mobile */
       @media (max-width: 420px) {
         .ellipsis { max-width: 110px; }
       }
+
+      /* small extra focus style for status scroller */
+      .status-btns .btn:focus { outline: 2px solid rgba(13,110,253,.12); outline-offset: 2px; }
     </style>
 </head>
 <body>

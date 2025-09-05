@@ -71,7 +71,7 @@
       box-shadow: var(--card-shadow);
       background: #ffffff;
     }
-    .table tbody tr td { transition: background-color .18s ease; }
+    .table tbody tr td { transition: background-color .18s ease; vertical-align: middle; }
 
     .btn-primary {
       transition: transform .12s ease, box-shadow .12s ease;
@@ -118,17 +118,84 @@
       animation: softPulse .9s ease-in-out;
     }
 
+    /*****************************************************************
+     * MOBILE-ONLY: apply **only** under 769px.                          *
+     * Desktop and tablet styles (>=769px) remain exactly as provided.  *
+     *****************************************************************/
     @media (max-width: 768px) {
+      /* reduce hover effects on mobile for performance & visual clarity */
       .table tbody tr:hover { transform: none; box-shadow: none; background: transparent; }
       .cart-img:hover { transform: none; box-shadow: none; }
       .product-link:hover { transform: none; }
+
+      /* slightly smaller images on phones to free space */
+      .cart-img { height: 52px; padding: 4px; }
+
+      /* Strong, robust mobile layout:
+         Convert table rows into stacked cards on mobile only.
+         This prevents overflow of controls while preserving desktop markup.
+      */
+      .table thead { display: none; }          /* hide header only on mobile */
+      .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
+      .table tr { margin-bottom: 12px; background: #fff; border-radius: 10px; padding: 10px; box-shadow: var(--card-shadow); border: 1px solid rgba(0,0,0,0.03); }
+      .table td { display: flex; justify-content: space-between; align-items: center; padding: 8px 6px; border: none; white-space: normal; gap: 8px; }
+      .table td:first-child { padding: 0 6px 8px 6px; }
+
+      /* Each cell shows a label (from data-label attribute) to mimic headers */
+      .table td[data-label]::before {
+        content: attr(data-label);
+        display: inline-block;
+        font-size: .82rem;
+        color: #6c757d;
+        font-weight:700;
+        width: 34%;
+        margin-right: 8px;
+        vertical-align: middle;
+      }
+
+      /* Product area: image + meta stacked nicely */
+      .product-compact { display:flex; gap:12px; align-items:center; }
+      .product-name { font-weight:700; }
+
+      /* Quantity controls: compact and wrap when needed */
+      .qty-controls { display:flex; gap:6px; align-items:center; width:100%; }
+      .qty-controls form { margin:0; display:inline-flex; align-items:center; }
+      .qty-controls .qty-box { width:72px !important; flex: 0 0 72px; padding: .25rem .5rem; font-size: .95rem; }
+
+      /* Make +/- and Set smaller and icon-focused */
+      .qty-controls .btn { padding: .32rem .45rem; min-width:36px; }
+      .qty-controls .btn i, .qty-controls .btn span { vertical-align: middle; }
+
+      /* Actions: compact icons with visually-hidden labels (for screen readers) */
+      .cell-action { display:flex; gap:8px; align-items:center; justify-content:flex-end; }
+      .cell-action .btn { padding: .28rem .45rem; font-size: .92rem; }
+      /* hide visible action text on phones; rely on icons */
+      .action-icon-only { display: inline-block !important; font-size: 1.06rem; }
+
+      /* Available text smaller and placed under controls to avoid overflow */
+      .muted-small.mt-1 { display:block; margin-top:8px; font-size:.82rem; }
+
+      /* Ensure subtotal and price wrap gracefully */
+      td[data-label="Price"], td[data-label="Subtotal"] { text-align: right; min-width: 90px; }
+
+      /* ensure summary card stacks below content (no sticky) */
+      .card-summary { position: static; margin-top: 12px; }
+
+      /* small adjustments to padding to avoid horizontal overflow */
+      .container { padding-left: 10px; padding-right: 10px; }
+      .cell-btn{
+        width: 25vw;
+      }
     }
 
-    /* -------------------------
-       Checkout buffering overlay (matches the "first code" buffer-card look)
-       - appears centered over the page (but not covering entire content permanently)
-       - shown briefly before navigating to checkout
-       ------------------------- */
+    /* ensure action text visible on md+ (desktop/tablet) — desktop unchanged */
+    @media (min-width: 769px) {
+      .cell-action .action-text { display:inline; }
+      .action-icon-only { display: none; }
+      .qty-box { width:120px; } /* keep original desktop width */
+    }
+
+    /* Checkout buffer overlay styles (unchanged) */
     #checkoutBufferOverlay {
       position: fixed;
       inset: 0;
@@ -270,7 +337,7 @@
               {% set prod_url = prod_url + '?variant_id=' + item.variant_id|string %}
             {% endif %}
             <tr>
-              <td>
+              <td data-label="">
                 <a class="product-link" href="{{ prod_url }}">
                   {% if item.image_path %}
                     <img src="{{ url_for('static', filename=item.image_path.replace('\\', '/')) }}" alt="{{ item.name }}" class="cart-img">
@@ -279,44 +346,70 @@
                   {% endif %}
                 </a>
               </td>
-              <td>
-                <a class="product-link" href="{{ prod_url }}">
-                  <div class="product-name">{{ item.name }}</div>
-                </a>
-                <div class="muted-small">SKU: {{ item.sku or '-' }} • Variant: {{ item.variant_id }}</div>
+
+              <td data-label="Product">
+                <div class="product-compact">
+                  <div>
+                    <a class="product-link" href="{{ prod_url }}">
+                      <div class="product-name">{{ item.name }}</div>
+                    </a>
+                    <div class="muted-small">SKU: {{ item.sku or '-' }} • Variant: {{ item.variant_id }}</div>
+                  </div>
+                </div>
               </td>
-              <td>₹{{ '%.2f'|format(item.price) }}</td>
-              <td>
-                <div class="d-flex align-items-center gap-2">
+
+              <td data-label="Price">₹{{ '%.2f'|format(item.price) }}</td>
+
+              <td data-label="Quantity">
+                <div class="d-flex align-items-center gap-2 qty-controls">
+                  <!-- decrease -->
                   <form method="POST" action="{{ url_for('main.update_cart_quantity') }}" style="display:inline;">
                     <input type="hidden" name="cart_item_id" value="{{ item.cart_item_id }}">
                     <button type="submit" name="action" value="decrease"
-                      class="btn btn-sm btn-outline-secondary">-</button>
+                      class="btn btn-sm btn-outline-secondary" aria-label="Decrease quantity">
+                      <span class="action-icon-only">−</span><span class="action-text"> −</span>
+                    </button>
                   </form>
 
+                  <!-- set qty -->
                   <form method="POST" action="{{ url_for('main.update_cart_quantity') }}" class="d-flex"
-                    style="gap:6px;">
+                    style="gap:6px; flex:1;">
                     <input type="hidden" name="cart_item_id" value="{{ item.cart_item_id }}">
                     <input type="hidden" name="action" value="set">
                     <input type="number" name="qty" value="{{ item.qty }}" min="1" max="{{ item.max_qty }}"
-                      class="form-control form-control-sm qty-box">
-                    <button type="submit" class="btn btn-sm btn-outline-primary">Set</button>
+                      class="form-control form-control-sm qty-box" aria-label="Quantity input">
+                    <button type="submit" class="btn btn-sm btn-outline-primary" aria-label="Set quantity">
+                      <span class="action-icon-only"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
+                      <span class="action-text"> Set</span>
+                    </button>
                   </form>
 
+                  <!-- increase -->
                   <form method="POST" action="{{ url_for('main.update_cart_quantity') }}" style="display:inline;">
                     <input type="hidden" name="cart_item_id" value="{{ item.cart_item_id }}">
                     <button type="submit" name="action" value="increase"
-                      class="btn btn-sm btn-outline-secondary">+</button>
+                      class="btn btn-sm btn-outline-secondary" aria-label="Increase quantity">
+                      <span class="action-icon-only">+</span><span class="action-text"> +</span>
+                    </button>
                   </form>
                 </div>
                 <div class="muted-small mt-1">Available: {{ item.max_qty }}</div>
               </td>
-              <td>₹{{ '%.2f'|format(item.price * item.qty) }}</td>
-              <td>
-                <form method="POST" action="{{ url_for('main.remove_cart_item') }}">
-                  <input type="hidden" name="cart_item_id" value="{{ item.cart_item_id }}">
-                  <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                </form>
+
+              <td data-label="Subtotal">₹{{ '%.2f'|format(item.price * item.qty) }}</td>
+
+              <td data-label="Action">
+                <div class="cell-action">
+                  
+
+                  <form method="POST" action="{{ url_for('main.remove_cart_item') }}">
+                    <input type="hidden" name="cart_item_id" value="{{ item.cart_item_id }}">
+                    <button type="submit" class="cell-btn btn btn-sm btn-danger" aria-label="Remove item">
+                      <span class="action-icon-only"><i class="bi bi-trash" aria-hidden="true"></i></span>
+                      <span class="action-text"> Delete</span>
+                    </button>
+                  </form>
+                </div>
               </td>
             </tr>
             {% endfor %}

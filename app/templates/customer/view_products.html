@@ -81,11 +81,7 @@
 
     /* ============================
        Star rating widget - robust repeating-background approach
-       - Outer: light (empty) star SVG repeated
-       - Inner: filled star SVG repeated and clipped by width (exact pixel width from template)
-       - Outer width = 140px (5 stars * 28px each)
-       - Inner width is calculated precisely in pixels in the inline style.
-       ============================ */
+    ============================ */
     .rating { --star-size-x: 28px; --star-size-y: 24px; display:inline-block; vertical-align:middle; font-size:0; line-height:0; }
 
     .stars-outer {
@@ -94,7 +90,6 @@
       width: 140px; /* 5 * 28 */
       height: var(--star-size-y);
       background-color: transparent;
-      /* light (empty) star as repeating background */
       background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='24' viewBox='0 0 22 22'><path fill='%23f1f3f5' d='M11 0l3.2 7.9L22 8.6l-5.5 4.2L18.6 22 11 18.2 3.4 22l2.1-9.2L0 8.6l7.8-.7L11 0z'/></svg>");
       background-repeat: repeat-x;
       background-size: 28px 24px;
@@ -107,7 +102,6 @@
       top:0;
       left:0;
       height:100%;
-      /* filled star as repeating background (simple single color - gradient would need an SVG gradient) */
       background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='24' viewBox='0 0 22 22'><path fill='%23ffc107' d='M11 0l3.2 7.9L22 8.6l-5.5 4.2L18.6 22 11 18.2 3.4 22l2.1-9.2L0 8.6l7.8-.7L11 0z'/></svg>");
       background-repeat: repeat-x;
       background-size: 28px 24px;
@@ -174,10 +168,89 @@
       50% { transform: translateY(-6px); }
       100% { transform: translateY(0); }
     }
+
+    /* ============================
+       MOBILE: Refine-by dropdown/panel
+       - does not change desktop layout/behavior
+    ============================ */
+    /* mobile trigger button (visible only on small screens) */
+    .mobile-refine-btn {
+      display: none; /* shown in media query for small screens only */
+      width: 100%;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-weight:600;
+    }
+    .mobile-refine-btn .chev {
+      transition: transform 240ms ease;
+      transform-origin: center;
+    }
+    .mobile-refine-btn.open .chev {
+      transform: rotate(180deg);
+    }
+
+    /* mobile panel (cloned sidebar content goes here) */
+    .mobile-filters-panel {
+      display: none; /* mobile only, controlled by JS */
+    }
+    .mobile-filters-panel.active {
+      display: block;
+    }
+
+    @media (max-width: 767.98px) {
+      /* show refine button on small screens */
+      .mobile-refine-btn { display:flex; }
+      /* hide original left column to avoid duplicate space; we will use cloned panel for mobile */
+      .col-lg-3 { display: none !important; }
+      /* the mobile panel will be a fixed, slide-down panel */
+      .mobile-filters-panel {
+        position: fixed;
+        top: 64px; /* adjust depending on your header height */
+        left: 8px;
+        right: 8px;
+        z-index: 4000;
+        border-radius: 10px;
+        box-shadow: 0 30px 80px rgba(2,6,23,0.12);
+        background: transparent;
+        transform: translateY(-120%);
+        transition: transform 320ms cubic-bezier(.2,.9,.2,1), opacity 220ms ease;
+        opacity: 0;
+      }
+      .mobile-filters-panel.active {
+        transform: translateY(0);
+        opacity: 1;
+      }
+      /* the cloned sidebar inside the mobile panel keeps .sidebar styles */
+      .mobile-filters-panel .sidebar {
+        padding: 14px;
+        border-radius: 10px;
+      }
+      /* keep the apply/reset buttons full width on small screen */
+      .mobile-filters-panel .d-grid { gap:8px; }
+    }
+
   </style>
 </head>
 <body>
   {% include 'customer/layout.html' %}
+
+  <!-- MOBILE: Refine-by trigger (only visible on small screens) -->
+  <div class="container-fluid mt-3 d-md-none">
+    <div class="row">
+      <div class="col-12 px-3">
+        <button id="mobileRefineBtn" class="btn btn-outline-secondary mobile-refine-btn" aria-controls="mobileFiltersPanel" aria-expanded="false" type="button">
+          <span>Refine By</span>
+          <!-- chevron icon -->
+          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div id="pageLoader"><div class="spinner"><div class="spinner-border" role="status"></div><div class="small text-muted">Loading…</div></div></div>
 
   <!-- Overlay shown when user opens product detail (buffering / catalog opener) -->
@@ -199,7 +272,7 @@
 
   <div class="container-fluid mt-4">
     <div class="row g-4">
-      <!-- LEFT SIDEBAR -->
+      <!-- LEFT SIDEBAR (kept for desktop; hidden on small screens via CSS) -->
       <div class="col-lg-3">
         <div class="sidebar">
           <h5 class="mb-3">Refine By</h5>
@@ -419,6 +492,9 @@
     </div>
   </div>
 
+  <!-- MOBILE PANEL: cloned copy of sidebar will be inserted here (JS) -->
+  <div id="mobileFiltersPanel" class="mobile-filters-panel d-md-none" aria-hidden="true"></div>
+
   {% include 'customer/footer.html' %}
   <!-- intentionally no bootstrap JS -->
 
@@ -429,28 +505,26 @@
       const applyBtn = document.getElementById('applyFiltersBtn');
       const searchForm = document.getElementById('searchForm');
       const filtersForm = document.getElementById('filtersForm');
+      const mobileRefineBtn = document.getElementById('mobileRefineBtn');
+      const mobilePanel = document.getElementById('mobileFiltersPanel');
 
       function showLoader() { if (loader) loader.style.display = 'flex'; }
       function hideLoader() { if (loader) loader.style.display = 'none'; }
       hideLoader();
 
       // Show the "opening product detail" overlay when user clicks a product link.
-      // Do not prevent navigation — simply display the overlay so user sees buffering UI.
       function attachOpenOverlayToProductLinks() {
-        // select anchors inside product cards that navigate to product detail
         const anchors = Array.from(document.querySelectorAll('.product-card a[href]'));
         anchors.forEach(a => {
           try {
             const href = a.getAttribute('href') || '';
-            // only attach if url pattern looks like product detail (contains '/prod/')
-            if (href.indexOf('/prod/') === -1) return;
+            // if url pattern looks like product detail (contains '/prod/' OR 'view_prod_detail') attach
+            if (href.indexOf('/prod/') === -1 && href.indexOf('/view_prod_detail') === -1) return;
             a.addEventListener('click', function (ev) {
-              // show overlay; actual navigation will proceed naturally
               if (openOverlay) {
                 openOverlay.style.display = 'flex';
                 openOverlay.setAttribute('aria-hidden', 'false');
               }
-              // small safety: in case the navigation is prevented or is AJAX, hide overlay after 6s
               setTimeout(function () {
                 if (openOverlay) {
                   openOverlay.style.display = 'none';
@@ -461,22 +535,24 @@
           } catch (e) { /* ignore */ }
         });
       }
-
       attachOpenOverlayToProductLinks();
 
-      // rating radio: allow deselecting by clicking again
-      document.querySelectorAll('.rating-filter').forEach(function (radio) {
-        radio._wasChecked = radio.checked;
-        radio.addEventListener('click', function () {
-          if (radio._wasChecked) radio.checked = false;
-          setTimeout(function () { radio._wasChecked = radio.checked; }, 0);
+      // rating radio: allow deselecting by clicking again (for desktop original)
+      function initRatingDeselect(root) {
+        (root || document).querySelectorAll('.rating-filter').forEach(function (radio) {
+          radio._wasChecked = radio.checked;
+          radio.addEventListener('click', function () {
+            if (radio._wasChecked) radio.checked = false;
+            setTimeout(function () { radio._wasChecked = radio.checked; }, 0);
+          });
         });
-      });
+      }
+      initRatingDeselect(document);
 
       // apply button shows loader (submits filters form normally)
       applyBtn && applyBtn.addEventListener('click', function () { showLoader(); });
 
-      // when Search is pressed, copy the CURRENT filters into the search form, then submit
+      // when Search is pressed, copy the CURRENT filters into the search form (looks at both desktop and mobile forms), then submit
       searchForm && searchForm.addEventListener('submit', function (e) {
         copyFiltersToSearchForm();
         showLoader();
@@ -485,7 +561,7 @@
 
       // Copy filters: remove previous filter hidden inputs (server-side or generated), then add current ones
       function copyFiltersToSearchForm() {
-        if (!filtersForm || !searchForm) return;
+        if (!searchForm) return;
 
         const filterNames = ['category','brand','tag','color','size','min_price','max_price','rating'];
 
@@ -497,32 +573,48 @@
           if (filterNames.includes(h.name)) h.remove();
         });
 
-        // gather current values from filtersForm
-        const inputs = filtersForm.querySelectorAll('input, select');
-        inputs.forEach(function (inp) {
-          if (!inp.name) return;
-          const type = inp.type;
-          if (type === 'checkbox' && inp.checked) {
-            const h = document.createElement('input');
-            h.type = 'hidden'; h.name = inp.name; h.value = inp.value; h.setAttribute('data-generated','true');
-            searchForm.appendChild(h);
-          } else if (type === 'radio' && inp.checked) {
-            const h = document.createElement('input');
-            h.type = 'hidden'; h.name = inp.name; h.value = inp.value; h.setAttribute('data-generated','true');
-            searchForm.appendChild(h);
-          } else if ((inp.name === 'min_price' || inp.name === 'max_price') && inp.value) {
-            const h = document.createElement('input');
-            h.type = 'hidden'; h.name = inp.name; h.value = inp.value; h.setAttribute('data-generated','true');
-            searchForm.appendChild(h);
-          }
-        });
+        // helper to gather inputs from a form-like root
+        function gatherFromRoot(root) {
+          if (!root) return;
+          const inputs = root.querySelectorAll('input, select');
+          inputs.forEach(function (inp) {
+            if (!inp.name) return;
+            const type = inp.type;
+            if (type === 'checkbox' && inp.checked) {
+              const h = document.createElement('input');
+              h.type = 'hidden'; h.name = inp.name; h.value = inp.value; h.setAttribute('data-generated','true');
+              searchForm.appendChild(h);
+            } else if (type === 'radio' && inp.checked) {
+              const h = document.createElement('input');
+              h.type = 'hidden'; h.name = inp.name; h.value = inp.value; h.setAttribute('data-generated','true');
+              searchForm.appendChild(h);
+            } else if ((inp.name === 'min_price' || inp.name === 'max_price') && inp.value) {
+              const h = document.createElement('input');
+              h.type = 'hidden'; h.name = inp.name; h.value = inp.value; h.setAttribute('data-generated','true');
+              searchForm.appendChild(h);
+            }
+          });
+        }
+
+        // gather from desktop filters form (if present)
+        gatherFromRoot(filtersForm);
+
+        // gather from mobile cloned filters form (if present)
+        const mobileForm = document.getElementById('filtersFormMobile');
+        gatherFromRoot(mobileForm);
       }
 
       // Custom collapse toggles (use data-collapsed and CSS transitions)
-      function toggleSection(btn) {
+      function toggleSection(btn, container) {
+        // container is the root to scope querySelector calls (so mobile clone toggles won't affect desktop)
         const targetSelector = btn.getAttribute('data-target');
         if (!targetSelector) return;
-        const body = document.querySelector(targetSelector);
+        // if targetSelector is an ID (e.g. #mobile_catBody), query within the container first
+        let body = null;
+        try {
+          if (container) body = container.querySelector(targetSelector);
+          if (!body) body = document.querySelector(targetSelector);
+        } catch (e) { body = document.querySelector(targetSelector); }
         const glyph = btn.querySelector('.collapse-glyph');
         if (!body) return;
         const isOpen = !body.hasAttribute('data-collapsed');
@@ -537,25 +629,158 @@
         }
       }
 
-      // initialize filter sections (default collapsed)
-      document.querySelectorAll('.filter-section').forEach(function (section) {
-        const btn = section.querySelector('.filter-toggle');
-        const targetSelector = btn && btn.getAttribute('data-target');
-        const body = targetSelector ? document.querySelector(targetSelector) : null;
-        if (body) {
-          // ensure default collapsed state
-          body.setAttribute('data-collapsed', 'true');
-          if (btn) { btn.setAttribute('aria-expanded', 'false'); const g = btn.querySelector('.collapse-glyph'); if (g) g.textContent = '+'; }
+      // initialize filter sections (default collapsed) for a given root element
+      function initFilterToggles(root) {
+        const rootEl = root || document;
+        rootEl.querySelectorAll('.filter-section').forEach(function (section) {
+          const btn = section.querySelector('.filter-toggle');
+          const targetSelector = btn && btn.getAttribute('data-target');
+          const body = targetSelector ? (section.querySelector(targetSelector) || document.querySelector(targetSelector)) : null;
+          // always set collapsed in component scope (we rely on matching IDs inside the root)
+          // if body exists inside section, use that; otherwise ensure global found body is collapsed too
+          const actualBody = section.querySelector(targetSelector) || document.querySelector(targetSelector);
+          if (actualBody) {
+            actualBody.setAttribute('data-collapsed', 'true');
+            if (btn) { btn.setAttribute('aria-expanded', 'false'); const g = btn.querySelector('.collapse-glyph'); if (g) g.textContent = '+'; }
+          }
+          if (btn) btn.addEventListener('click', function () { toggleSection(btn, section); });
+        });
+
+        // accessibility fallback (Enter/Space)
+        rootEl.querySelectorAll('.filter-toggle').forEach(function (b) {
+          b.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.click(); }
+          });
+        });
+      }
+
+      // initialize desktop toggles
+      initFilterToggles(document);
+
+      //
+      // ------------------------
+      // MOBILE: clone sidebar into mobile panel (only on small screens)
+      // ------------------------
+      //
+      function buildMobileClone() {
+        if (!mobilePanel || !filtersForm) return;
+        // clone entire sidebar (deep)
+        const originalSidebar = document.querySelector('.col-lg-3 .sidebar');
+        if (!originalSidebar) return;
+
+        // Create a container to hold cloned nodes
+        const cloneContainer = originalSidebar.cloneNode(true);
+
+        // We must avoid ID collisions: prefix all ids inside clone with 'mobile_'
+        const idMap = {};
+        const nodesWithId = cloneContainer.querySelectorAll('[id]');
+        nodesWithId.forEach(function (el) {
+          const oldId = el.getAttribute('id');
+          const newId = 'mobile_' + oldId;
+          idMap[oldId] = newId;
+          el.setAttribute('id', newId);
+        });
+
+        // Update references inside the clone: labels 'for', buttons' data-target="#old", aria-controls, etc.
+        const allElements = cloneContainer.querySelectorAll('*');
+        allElements.forEach(function (el) {
+          // data-target attributes that reference ids like "#catBody"
+          if (el.hasAttribute('data-target')) {
+            const dt = el.getAttribute('data-target');
+            if (dt && dt.charAt(0) === '#') {
+              const old = dt.slice(1);
+              if (idMap[old]) el.setAttribute('data-target', '#' + idMap[old]);
+            }
+          }
+          // aria-controls
+          if (el.hasAttribute('aria-controls')) {
+            const ac = el.getAttribute('aria-controls');
+            if (ac && idMap[ac]) el.setAttribute('aria-controls', idMap[ac]);
+          }
+          // for (label)
+          if (el.tagName.toLowerCase() === 'label' && el.hasAttribute('for')) {
+            const f = el.getAttribute('for');
+            if (f && idMap[f]) el.setAttribute('for', idMap[f]);
+          }
+        });
+
+        // Prevent duplicate IDs of forms/buttons: rename filtersForm -> filtersFormMobile and applyFiltersBtn -> applyFiltersBtnMobile
+        const clonedForm = cloneContainer.querySelector('form');
+        if (clonedForm) {
+          clonedForm.setAttribute('id', 'filtersFormMobile');
+          clonedForm.setAttribute('aria-label', 'Mobile filters');
         }
-        if (btn) btn.addEventListener('click', function () { toggleSection(btn); });
+        const clonedApplyBtn = cloneContainer.querySelector('#applyFiltersBtn');
+        if (clonedApplyBtn) {
+          clonedApplyBtn.setAttribute('id', 'applyFiltersBtnMobile');
+        }
+
+        // insert into mobile panel
+        mobilePanel.innerHTML = '';
+        mobilePanel.appendChild(cloneContainer);
+
+        // initialize toggles, rating deselectors inside mobile clone
+        initFilterToggles(cloneContainer);
+        initRatingDeselect(cloneContainer);
+
+        // wire the cloned apply button to show loader
+        const mobileApply = document.getElementById('applyFiltersBtnMobile');
+        if (mobileApply) {
+          mobileApply.addEventListener('click', function () { showLoader(); });
+        }
+
+        // when a filter inside mobile clone changes and user hits Enter in search, we want copyFiltersToSearchForm to pick it up (gathering reads filtersFormMobile)
+      }
+
+      // build clone now (safe even if not visible; it will be used only on small screens)
+      buildMobileClone();
+
+      // Mobile refine button toggles panel
+      function openMobilePanel() {
+        if (!mobilePanel) return;
+        mobilePanel.classList.add('active');
+        mobilePanel.setAttribute('aria-hidden', 'false');
+        if (mobileRefineBtn) { mobileRefineBtn.classList.add('open'); mobileRefineBtn.setAttribute('aria-expanded', 'true'); }
+        // push focus into first input for accessibility
+        setTimeout(function () {
+          const firstInput = mobilePanel.querySelector('input, select, button, textarea');
+          if (firstInput) firstInput.focus();
+        }, 260);
+      }
+      function closeMobilePanel() {
+        if (!mobilePanel) return;
+        mobilePanel.classList.remove('active');
+        mobilePanel.setAttribute('aria-hidden', 'true');
+        if (mobileRefineBtn) { mobileRefineBtn.classList.remove('open'); mobileRefineBtn.setAttribute('aria-expanded', 'false'); }
+      }
+
+      if (mobileRefineBtn) {
+        mobileRefineBtn.addEventListener('click', function (ev) {
+          const isOpen = mobilePanel.classList.contains('active');
+          if (isOpen) closeMobilePanel();
+          else openMobilePanel();
+        });
+      }
+
+      // click outside to close mobile panel (but not when clicking the panel or button)
+      document.addEventListener('click', function (ev) {
+        const target = ev.target;
+        if (!mobilePanel || !mobileRefineBtn) return;
+        if (!mobilePanel.classList.contains('active')) return;
+        if (mobilePanel.contains(target) || mobileRefineBtn.contains(target)) return;
+        closeMobilePanel();
+      }, { passive: true });
+
+      // close panel on escape
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && mobilePanel && mobilePanel.classList.contains('active')) {
+          closeMobilePanel();
+          if (mobileRefineBtn) mobileRefineBtn.focus();
+        }
       });
 
-      // accessibility fallback
-      document.querySelectorAll('.filter-toggle').forEach(function (b) {
-        b.addEventListener('keydown', function (e) {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); b.click(); }
-        });
-      });
+      // Re-run attachOpenOverlayToProductLinks after any dynamic changes (no change expected but safe)
+      attachOpenOverlayToProductLinks();
 
     });
   </script>
