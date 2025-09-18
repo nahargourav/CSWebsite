@@ -14,29 +14,24 @@ def get_db():
     Expects an environment variable named DATABASE_URL (e.g. provided by Render).
     Returns a psycopg2 connection or None on failure.
     """
-    # --- Local DB connection settings ---------------------------------
-    # Use a local PostgreSQL instance for development.
-    # Credentials: database=myapp_db, user=postgres, password=password
-    # Adjust HOST/PORT if your local DB uses a different socket/port.
+    database_url = "postgresql://my_user:QCigpYVrdZ6HUeMKlRTZMcwiACsp1fNE@dpg-d2so6s75r7bs73ambfmg-a.singapore-postgres.render.com/myapp_db_acmo"
+    if not database_url:
+        print("DATABASE_URL not set; cannot connect.")
+        return None
+
+    # Some providers return "postgres://..." — normalize to "postgresql://"
+    if database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+
     try:
-        conn = psycopg2.connect(
-            host=os.environ.get('DB_HOST', 'localhost'),
-            port=int(os.environ.get('DB_PORT', 5432)),
-            database=os.environ.get('DB_NAME', 'myapp_db'),
-            user=os.environ.get('DB_USER', 'postgres'),
-            password=os.environ.get('DB_PASSWORD', 'password'),
-            connect_timeout=10
-        )
+        # simple connect using the full URL
+        conn = psycopg2.connect(database_url, connect_timeout=10)
+
+
+
+
+
+
         return conn
     except Exception as e:
-        print(f"Error connecting to local PostgreSQL: {e}")
-        # Fallback (commented out): original DATABASE_URL logic kept for reference
-        # database_url = os.environ.get('DATABASE_URL') or "postgresql://..."
-        # if database_url and database_url.startswith("postgres://"):
-        #     database_url = database_url.replace("postgres://", "postgresql://", 1)
-        # try:
-        #     conn = psycopg2.connect(database_url, connect_timeout=10)
-        #     return conn
-        # except Exception as e2:
-        #     print(f"Error connecting using DATABASE_URL fallback: {e2}")
-        return None
+        print(f"Error connecting to PostgreSQL using DATABASE_URL: {e}"

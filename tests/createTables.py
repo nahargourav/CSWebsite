@@ -39,6 +39,7 @@ DROP TABLE IF EXISTS public.products CASCADE;
 DROP TABLE IF EXISTS public.owners CASCADE;
 DROP TABLE IF EXISTS public.customers CASCADE;
 DROP TABLE IF EXISTS public.registration_otps CASCADE;
+DROP TABLE IF EXISTS public.wishlist CASCADE;
 
 -- Re-create tables (timestamps store India local wall-clock time via DEFAULT (now() AT TIME ZONE 'Asia/Kolkata'))
 -- Note: foreign keys will be added later via idempotent ALTER / DO blocks to avoid ordering issues.
@@ -389,8 +390,6 @@ CREATE INDEX idx_wishlist_customer_created ON public.wishlist (customer_id, crea
 -- Index to support queries by variant
 CREATE INDEX idx_wishlist_variant ON public.wishlist (variant_id);
 
--- Optional: a small partial index for quickly finding recent wishlist entries (helps if you paginate)
-CREATE INDEX idx_wishlist_customer_recent ON public.wishlist (customer_id, created_at DESC) WHERE created_at > (now() - interval '365 days');
 
 
 """
