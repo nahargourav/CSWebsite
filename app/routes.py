@@ -69,14 +69,20 @@ class _CursorWrapper:
         try:
             sql_str = (sql or '').strip().lower()
             if sql_str.startswith('insert'):
-                # use a temporary cursor to fetch LASTVAL()
+                # use a temporary cursor from the raw connection to fetch LASTVAL()
                 tmp = self._parent_conn.cursor()
                 try:
                     tmp.execute("SELECT LASTVAL()")
                     row = tmp.fetchone()
                     if row:
-                        # row might be a tuple like (123,)
-                        self._lastrowid = row[0]
+                        # row might be a tuple like (123,) or a dict-like if using RealDictCursor
+                        if isinstance(row, (list, tuple)):
+                            self._lastrowid = row[0]
+                        elif isinstance(row, dict):
+                            # RealDictCursor might return dict-like; take first value
+                            self._lastrowid = next(iter(row.values()))
+                        else:
+                            self._lastrowid = row
                 finally:
                     try:
                         tmp.close()
@@ -90,6 +96,21 @@ class _CursorWrapper:
     def __getattr__(self, name):
         return getattr(self._cur, name)
 
+    def fetchone(self):
+        return self._cur.fetchone()
+
+    def fetchall(self):
+        return self._cur.fetchall()
+
+    def fetchmany(self, size=None):
+        return self._cur.fetchmany(size) if size is not None else self._cur.fetchmany()
+
+    def close(self):
+        try:
+            return self._cur.close()
+        except Exception:
+            pass
+
     @property
     def lastrowid(self):
         return self._lastrowid
@@ -99,15 +120,36 @@ class _ConnWrapper:
     def __init__(self, conn):
         self._conn = conn
 
-    def cursor(self, dictionary=False):
-        # Provide MySQL-like dictionary cursor when requested
+    def cursor(self, dictionary=False, *args, **kwargs):
+        """
+        Accepts:
+          - dictionary=True  => use RealDictCursor when no explicit cursor_factory passed
+          - cursor_factory=... => pass through to psycopg2 connection
+          - arbitrary *args/**kwargs forwarded to underlying .cursor()
+        """
         try:
-            if dictionary:
-                return _CursorWrapper(self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor), self._conn)
+            # Allow callers to pass 'cursor_factory' (psycopg2 style)
+            cf = kwargs.pop('cursor_factory', None)
+
+            # If dictionary requested and no explicit cursor_factory supplied, use RealDictCursor
+            if dictionary and cf is None:
+                cf = psycopg2.extras.RealDictCursor
+
+            if cf is not None:
+                # Pass the factory into the raw connection
+                cur = self._conn.cursor(cursor_factory=cf)
+            else:
+                # No factory specified, forward other args/kwargs
+                cur = self._conn.cursor(*args, **kwargs)
+
+            return _CursorWrapper(cur, self._conn)
         except Exception:
-            # fallback if RealDictCursor not available
-            pass
-        return _CursorWrapper(self._conn.cursor(), self._conn)
+            # Fallback to a plain cursor wrapper if anything goes wrong
+            try:
+                return _CursorWrapper(self._conn.cursor(), self._conn)
+            except Exception:
+                # as a last resort, re-raise so calling code sees the original error
+                raise
 
     def __getattr__(self, name):
         return getattr(self._conn, name)
@@ -1265,7 +1307,8 @@ def cart_add():
                     return jsonify({
                         'ok': False,
                         'message': f"Cannot add more — already at maximum available stock ({max_avail}).",
-                        'cart_count': sum(int(i.get('qty', 0)) for i in cart)
+                        'cart_count': sum(int(i.get('qty', 0)) for i in cart),
+                        'cart_item_qty': existing_qty
                     }), 409
                 # non-AJAX fallback
                 flash(f"Cannot add more — already at maximum available stock ({max_avail}).", "warning")
@@ -1289,7 +1332,8 @@ def cart_add():
                         'message': f"Quantity reduced to available stock ({max_avail}). Item added to cart.",
                         'cart_count': cart_count,
                         'product_id': product_id,
-                        'variant_id': variant_id
+                        'variant_id': variant_id,
+                        'cart_item_qty': item.get('qty', 0)
                     }), 200
                 # non-AJAX
                 flash(f"Quantity reduced to available stock ({max_avail}).", "info")
@@ -1308,7 +1352,8 @@ def cart_add():
                     'message': 'Added to cart.',
                     'cart_count': cart_count,
                     'product_id': product_id,
-                    'variant_id': variant_id
+                    'variant_id': variant_id,
+                    'cart_item_qty': item.get('qty', 0)
                 }), 200
             flash("Added to cart", "success")
             return redirect(url_for('main.view_prod_detail', product_id=product_id, variant_id=variant_id))
@@ -1336,12 +1381,19 @@ def cart_add():
             message = "Added to cart"
             if clamped:
                 message = f"Quantity reduced to available stock ({max_avail}). Item added to cart."
+            # find the cart item qty to return
+            cart_item_qty = 0
+            for it in session.get('cart', []):
+                if str(it.get('variant_id')) == str(variant_id) and str(it.get('product_id')) == str(product_id):
+                    cart_item_qty = int(it.get('qty', 0))
+                    break
             return jsonify({
                 'ok': True,
                 'message': message,
                 'cart_count': cart_count,
                 'product_id': product_id,
                 'variant_id': variant_id,
+                'cart_item_qty': cart_item_qty,
                 'redirect_url': url_for('main.view_cart')
             }), 200
 
@@ -1350,6 +1402,289 @@ def cart_add():
             flash(f"Quantity reduced to available stock ({max_avail}).", "info")
         flash("Added to cart", "success")
         return redirect(url_for('main.view_prod_detail', product_id=product_id, variant_id=variant_id))
+
+
+# NEW endpoint: update cart item quantity (AJAX)
+@main.route('/cart/update_qty', methods=['POST'])
+@nocache
+def cart_update_qty():
+    # requires login for cart operations
+    if 'customer_id' not in session:
+        return jsonify({'ok': False, 'message': 'Please login to update cart.'}), 401
+
+    product_id = request.form.get('product_id')
+    variant_id = request.form.get('variant_id')
+    qty_raw = request.form.get('qty')
+
+    if not product_id or not variant_id or qty_raw is None:
+        return jsonify({'ok': False, 'message': 'Missing parameters.'}), 400
+
+    try:
+        new_qty = int(qty_raw)
+    except (ValueError, TypeError):
+        return jsonify({'ok': False, 'message': 'Invalid quantity.'}), 400
+
+    if new_qty < 0:
+        return jsonify({'ok': False, 'message': 'Invalid quantity.'}), 400
+
+    # fetch variant to check stock
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(
+        "SELECT * FROM product_variants WHERE variant_id = %s AND product_id = %s",
+        (variant_id, product_id)
+    )
+    variant = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not variant:
+        return jsonify({'ok': False, 'message': 'Variant not found.'}), 404
+
+    max_avail = int(variant.get('stock_count') or 0)
+    if new_qty > max_avail:
+        return jsonify({'ok': False, 'message': f'Requested quantity exceeds available stock ({max_avail}).', 'max_qty': max_avail}), 409
+
+    cart = session.get('cart', [])
+
+    found = False
+    for item in cart:
+        if str(item.get('variant_id')) == str(variant_id) and str(item.get('product_id')) == str(product_id):
+            found = True
+            if new_qty == 0:
+                # remove item
+                cart.remove(item)
+            else:
+                item['qty'] = new_qty
+                item['max_qty'] = max_avail
+            break
+
+    if not found and new_qty > 0:
+        # create new cart item (client asked to set >0 for an item not currently present)
+        price = float(variant.get('price') or 0.0)
+        sku = variant.get('sku') or ''
+        # try to fetch product name/image path
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT name, image_path FROM products WHERE product_id = %s", (product_id,))
+        p = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        image_path = p.get('image_path') if p and p.get('image_path') else None
+        cart_item = {
+            'cart_item_id': uuid.uuid4().hex,
+            'product_id': int(product_id),
+            'variant_id': int(variant_id),
+            'sku': sku,
+            'name': p.get('name') if p else '',
+            'price': price,
+            'qty': new_qty,
+            'image_path': image_path,
+            'max_qty': max_avail
+        }
+        cart.append(cart_item)
+
+    session['cart'] = cart
+    session.modified = True
+
+    cart_count = sum(int(i.get('qty', 0)) for i in session.get('cart', []))
+    # find the current qty for this item (0 if not present)
+    current_qty = 0
+    for it in session.get('cart', []):
+        if str(it.get('variant_id')) == str(variant_id) and str(it.get('product_id')) == str(product_id):
+            current_qty = int(it.get('qty', 0))
+            break
+
+    return jsonify({'ok': True, 'message': 'Cart updated.', 'cart_count': cart_count, 'cart_item_qty': current_qty}), 200
+
+
+# NEW endpoint: check cart item status (quick, read-only)
+@main.route('/cart/item_status', methods=['GET'])
+@nocache
+def cart_item_status():
+    product_id = request.args.get('product_id')
+    variant_id = request.args.get('variant_id')
+
+    if not product_id or not variant_id:
+        return jsonify({'ok': False, 'message': 'Missing parameters.'}), 400
+
+    cart = session.get('cart', [])
+    current_qty = 0
+    for it in cart:
+        if str(it.get('variant_id')) == str(variant_id) and str(it.get('product_id')) == str(product_id):
+            current_qty = int(it.get('qty', 0))
+            break
+    cart_count = sum(int(i.get('qty', 0)) for i in cart)
+
+    return jsonify({'ok': True, 'cart_item_qty': current_qty, 'cart_count': cart_count}), 200
+
+
+
+# ------------------ wishlist routes (drop in to your routes file) ------------------
+
+
+# ...existing code...
+@main.route('/wishlist/toggle', methods=['POST'])
+def wishlist_toggle():
+    customer_id = session.get('customer_id')
+    if not customer_id:
+        # if XHR, return 401; else redirect to login
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify(ok=False, message="authentication required"), 401
+        return redirect(url_for('auth.login', next=request.url))
+
+    variant_id = request.form.get('variant_id') or (request.json and request.json.get('variant_id'))
+    product_id = request.form.get('product_id') or (request.json and request.json.get('product_id'))
+    if not variant_id or not product_id:
+        return jsonify(ok=False, message="missing variant_id or product_id"), 400
+
+    try:
+        vid = int(variant_id)
+        pid = int(product_id)
+    except Exception:
+        return jsonify(ok=False, message="invalid IDs"), 400
+
+    conn = None
+    cur = None
+    try:
+        conn = get_db()
+        # use DictCursor for convenience if psycopg2 available
+        cur = conn.cursor(cursor_factory=getattr(psycopg2.extras, 'DictCursor', None))
+        # check existing entry
+        cur.execute("SELECT wishlist_id FROM public.wishlist WHERE customer_id = %s AND variant_id = %s", (customer_id, vid))
+        row = cur.fetchone()
+        if row:
+            # remove existing
+            # row may be tuple or dict depending on cursor; handle both
+            existing_id = row['wishlist_id'] if isinstance(row, dict) else row[0]
+            cur.execute("DELETE FROM public.wishlist WHERE wishlist_id = %s", (existing_id,))
+            conn.commit()
+            action = 'removed'
+        else:
+            # insert new
+            # For Postgres RETURNING wishlist_id is useful; for MySQL the wrapper will not return - but commit anyway
+            try:
+                cur.execute("INSERT INTO public.wishlist (customer_id, product_id, variant_id, created_at) VALUES (%s, %s, %s, CURRENT_TIMESTAMP) RETURNING wishlist_id", (customer_id, pid, vid))
+                new_row = cur.fetchone()
+                # ensure cursor consumed for RETURNING
+            except Exception:
+                # fallback for DBs without RETURNING (MySQL)
+                cur.execute("INSERT INTO public.wishlist (customer_id, product_id, variant_id, created_at) VALUES (%s, %s, %s, CURRENT_TIMESTAMP)", (customer_id, pid, vid))
+            conn.commit()
+            action = 'added'
+
+        # get updated count
+        cur.execute("SELECT count(*) AS cnt FROM public.wishlist WHERE customer_id = %s", (customer_id,))
+        cnt_row = cur.fetchone()
+        count = int(cnt_row['cnt'] if isinstance(cnt_row, dict) and 'cnt' in cnt_row else (cnt_row[0] if cnt_row else 0))
+        return jsonify(ok=True, action=action, wishlist_count=count)
+    except Exception as e:
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+        current_app.logger.exception("wishlist toggle failed: %s", e)
+        return jsonify(ok=False, message="server error"), 500
+    finally:
+        try:
+            if cur:
+                cur.close()
+        except Exception:
+            pass
+        try:
+            if conn:
+                conn.close()
+        except Exception:
+            pass
+# ...existing code...
+
+
+@main.route('/wishlist/status', methods=['GET'])
+def wishlist_status():
+    customer_id = session.get('customer_id')
+    variant_id = request.args.get('variant_id')
+    if not variant_id:
+        return jsonify(ok=False, message='Missing variant_id'), 400
+    try:
+        vid = int(variant_id)
+    except Exception:
+        return jsonify(ok=False, message='Invalid variant_id'), 400
+
+    if not customer_id:
+        # not logged in -> not wished
+        return jsonify(ok=True, wished=False)
+
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur.execute("SELECT 1 FROM public.wishlist WHERE customer_id = %s AND variant_id = %s LIMIT 1", (customer_id, vid))
+    r = cur.fetchone()
+    wished = bool(r)
+    return jsonify(ok=True, wished=wished)
+
+
+
+# ---- Check wishlist status for variant (used by product detail JS) ----
+@main.route('/wishlist', methods=['GET'])
+def wishlist_page():
+    customer_id = session.get('customer_id')
+    if not customer_id:
+        return redirect(url_for('auth.login', next=request.path))
+
+    conn = get_db()
+    # DictCursor when available
+    cur = conn.cursor(cursor_factory=getattr(psycopg2.extras, 'DictCursor', None))
+
+    # Query wishlist items and join product + variant + one thumbnail image
+    cur.execute("""
+      SELECT w.wishlist_id, w.created_at,
+             p.product_id, p.name as product_name, p.image_path,
+             p.rating_avg, p.reviews_count,
+             v.variant_id, v.price, v.size, v.color,
+             COALESCE(
+               (SELECT pi.path
+                FROM public.product_images pi
+                WHERE pi.variant_id = v.variant_id
+                ORDER BY pi.is_primary DESC, pi.position ASC
+                LIMIT 1),
+               p.image_path
+             ) AS thumb_path
+      FROM public.wishlist w
+      JOIN public.product_variants v ON v.variant_id = w.variant_id
+      JOIN public.products p ON p.product_id = w.product_id
+      WHERE w.customer_id = %s
+      ORDER BY w.created_at DESC
+      """, (customer_id,))
+    rows = cur.fetchall()
+
+    wishlist_items = []
+    for r in rows:
+        wishlist_items.append({
+            'wishlist_id': r['wishlist_id'],
+            'added_at': r['created_at'],
+            'added_at_str': r['created_at'].strftime('%d %b %Y') if r['created_at'] else '',
+            'product': {
+                'product_id': r['product_id'],
+                'name': r['product_name'],
+                'image_path': r['image_path'],
+                'rating_avg': float(r['rating_avg']) if r.get('rating_avg') is not None else 0.0,
+                'reviews_count': int(r['reviews_count']) if r.get('reviews_count') is not None else 0
+            },
+            'variant': {
+                'variant_id': r['variant_id'],
+                'price': float(r['price']) if r['price'] is not None else 0.0,
+                'size': r['size'],
+                'color': r['color']
+            },
+            'thumb': r['thumb_path']
+        })
+
+    # Pass count
+    cur.execute("SELECT count(*) as cnt FROM public.wishlist WHERE customer_id = %s", (customer_id,))
+    cnt_row = cur.fetchone()
+    wishlist_count = int(cnt_row['cnt']) if cnt_row else 0
+
+    return render_template('customer/wishlist.html', wishlist_items=wishlist_items, wishlist_count=wishlist_count)
 
 
 
@@ -2279,6 +2614,8 @@ def download_invoice():
 
 # -----------------view orders--------------
 
+from collections import OrderedDict
+
 @main.route('/orders')
 @nocache
 def view_orders():
@@ -2286,10 +2623,18 @@ def view_orders():
         flash("Please log in to view orders.", "warning")
         return redirect('/login')
 
-    customer_id = session['customer_id']
+    customer_id = int(session['customer_id'])
     status = request.args.get('status')  # e.g. processing,confirmed,out for delivery,delivered,cancelled,refunded
-    q = request.args.get('q','').strip()
+    q = (request.args.get('q') or '').strip()
     sort = request.args.get('sort','date_desc')  # date_desc,date_asc,total_desc,total_asc
+
+    # pagination
+    try:
+        page = max(1, int(request.args.get('page', 1)))
+    except Exception:
+        page = 1
+    per_page = 5
+    offset = (page - 1) * per_page
 
     order_by_map = {
         'date_desc': 'o.order_date DESC, o.order_id DESC',
@@ -2299,6 +2644,7 @@ def view_orders():
     }
     order_by = order_by_map.get(sort, order_by_map['date_desc'])
 
+    # Build filter clauses
     where_clauses = ["o.customer_id = %s"]
     params = [customer_id]
 
@@ -2306,224 +2652,301 @@ def view_orders():
         where_clauses.append("o.status = %s")
         params.append(status)
 
+    # Case-insensitive search (Postgres uses TEXT)
     if q:
-        like = f"%{q}%"
-        where_clauses.append("(CAST(o.order_id AS CHAR) LIKE %s OR p.name LIKE %s OR pv.sku LIKE %s OR ai.name LIKE %s OR ai.line1 LIKE %s)")
-        params.extend([like, like, like, like, like])
+        q_lower = f"%{q.lower()}%"
+        where_clauses.append("""(
+            LOWER(CAST(o.order_id AS TEXT)) LIKE %s
+            OR LOWER(p.name) LIKE %s
+            OR LOWER(pv.sku) LIKE %s
+            OR LOWER(ai.name) LIKE %s
+            OR LOWER(ai.line1) LIKE %s
+        )""")
+        params.extend([q_lower, q_lower, q_lower, q_lower, q_lower])
 
     where_sql = " AND ".join(where_clauses)
 
-    sql = f"""
-        SELECT
-            o.order_id,
-            o.order_date,
-            o.total_amount,
-            o.currency,
-            o.payment_status,
-            o.payment_gateway,
-            o.shipping_cost,
-            o.status AS order_status,
-            o.last_payment_id,
-            ai.address_id AS shipping_address_id,
-            ai.name AS shipping_name,
-            ai.phone AS shipping_phone,
-            ai.line1 AS shipping_line1,
-            ai.line2 AS shipping_line2,
-            ai.city AS shipping_city,
-            ai.state AS shipping_state,
-            ai.postal_code AS shipping_postal_code,
-            ai.country AS shipping_country,
-            oi.order_item_id,
-            oi.product_id,
-            oi.variant_id,
-            oi.quantity,
-            oi.unit_price,
-            oi.total_price,
-            p.name AS product_name,
-            p.image_path,
-            pv.sku AS variant_sku,
-            pv.size AS variant_size,
-            pv.color AS variant_color
-        FROM orders o
-        JOIN order_items oi ON o.order_id = oi.order_id
-        JOIN products p ON oi.product_id = p.product_id
-        LEFT JOIN product_variants pv ON oi.variant_id = pv.variant_id
-        LEFT JOIN addresses ai ON o.shipping_address_id = ai.address_id
-        WHERE {where_sql}
-        ORDER BY {order_by}
-        LIMIT 500
-    """
-
-    conn = get_db()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute(sql, tuple(params))
-    rows = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    # -----------------------------
-    # Fetch variant/product images:
-    # For each variant_id, prefer the first product_images row for that variant
-    # (ordered by is_primary desc, position asc, image_id asc).
-    # If no variant image exists, prefer product-level product_images (variant_id IS NULL).
-    # Finally, fall back to products.image_path (already in the rows).
-    # -----------------------------
-    variant_ids = set()
-    product_ids = set()
-    for r in rows:
-        if r.get('variant_id') not in (None, 0):
-            try:
-                variant_ids.add(int(r.get('variant_id')))
-            except Exception:
-                pass
-        try:
-            product_ids.add(int(r.get('product_id')))
-        except Exception:
-            pass
-
-    variant_image_map = {}   # variant_id -> path
-    product_image_map = {}   # product_id -> path (product-level images where variant_id IS NULL)
-
-    if variant_ids or product_ids:
-        try:
-            conn = get_db()
-            cur = conn.cursor(dictionary=True)
-            # Build placeholders safely
-            clauses = []
-            params_imgs = []
-            if variant_ids:
-                placeholders = ','.join(['%s'] * len(variant_ids))
-                clauses.append(f"variant_id IN ({placeholders})")
-                params_imgs.extend(list(variant_ids))
-            if product_ids:
-                placeholders2 = ','.join(['%s'] * len(product_ids))
-                # product-level images (variant_id IS NULL)
-                clauses.append(f"(variant_id IS NULL AND product_id IN ({placeholders2}))")
-                params_imgs.extend(list(product_ids))
-            where_img = " OR ".join(clauses)
-            qimg = f"""
-                SELECT product_id, variant_id, path, is_primary, position, image_id
-                FROM product_images
-                WHERE {where_img}
-                ORDER BY is_primary DESC, position ASC, image_id ASC
-            """
-            cur.execute(qimg, tuple(params_imgs))
-            img_rows = cur.fetchall()
-            cur.close()
-            conn.close()
-
-            # pick first per variant_id (prefer variant-specific). For product-level images pick first per product.
-            for ir in img_rows:
-                vid = ir.get('variant_id')
-                pid = ir.get('product_id')
-                path = ir.get('path')
-                if vid not in (None, 0):
-                    # first seen for this variant wins (ordered by is_primary/position above)
-                    if vid not in variant_image_map:
-                        variant_image_map[vid] = path
-                else:
-                    # product-level fallback
-                    if pid not in product_image_map:
-                        product_image_map[pid] = path
-        except Exception as e:
-            # don't fail page display on image lookup errors; fall back to existing p.image_path
-            current_app.logger.exception("Could not fetch product images for orders view: %s", str(e))
-
-    # group items by order_id
-    orders = OrderedDict()
-    for r in rows:
-        oid = r['order_id']
-        if oid not in orders:
-            orders[oid] = {
-                "order_date": r['order_date'],
-                "total_amount": r['total_amount'],
-                "currency": r.get('currency') or 'INR',
-                "payment_status": r.get('payment_status'),
-                "payment_gateway": r.get('payment_gateway'),
-                "shipping_cost": r.get('shipping_cost') or 0.00,
-                "order_status": r.get('order_status'),
-                "last_payment_id": r.get('last_payment_id'),
-                "shipping_address": {
-                    "address_id": r.get('shipping_address_id'),
-                    "name": r.get('shipping_name'),
-                    "phone": r.get('shipping_phone'),
-                    "line1": r.get('shipping_line1'),
-                    "line2": r.get('shipping_line2'),
-                    "city": r.get('shipping_city'),
-                    "state": r.get('shipping_state'),
-                    "postal_code": r.get('shipping_postal_code'),
-                    "country": r.get('shipping_country'),
-                },
-                "items": []
-            }
-
-        # Determine image for this item:
-        chosen_image = None
-        vid = r.get('variant_id')
-        pid = r.get('product_id')
-        if vid not in (None, 0) and vid in variant_image_map:
-            chosen_image = variant_image_map.get(vid)
-        elif pid in product_image_map:
-            chosen_image = product_image_map.get(pid)
-        else:
-            # final fallback to the original products.image_path column (so template doesn't need changes)
-            chosen_image = r.get('image_path')
-
-        orders[oid]['items'].append({
-            "order_item_id": r['order_item_id'],
-            "product_id": r['product_id'],
-            "variant_id": r.get('variant_id'),
-            "product_name": r['product_name'],
-            "image_path": chosen_image,
-            "quantity": r['quantity'],
-            "unit_price": float(r['unit_price']) if r['unit_price'] is not None else None,
-            "total_price": float(r['total_price']) if r['total_price'] is not None else (float(r['unit_price'] or 0) * int(r['quantity'] or 0)),
-            "variant": {
-                "sku": r.get('variant_sku'),
-                "size": r.get('variant_size'),
-                "color": r.get('variant_color')
-            },
-            # default reviewed flag (will mark later)
-            "reviewed": False
-        })
-
-    # --- Mark items that already have reviews for that order by this customer ---
+    # First: fetch order_ids for this page. Use a subquery so ORDER BY expressions are present in select list
+    order_ids = []
+    has_more = False
     try:
-        order_ids = list(orders.keys())
-        if order_ids:
+        conn = get_db()
+        cur = conn.cursor()
+        # ask for per_page+1 to detect has_more
+        q_order_ids = f"""
+            SELECT oids.order_id FROM (
+                SELECT o.order_id, o.order_date, o.total_amount
+                FROM orders o
+                JOIN order_items oi ON o.order_id = oi.order_id
+                JOIN products p ON oi.product_id = p.product_id
+                LEFT JOIN product_variants pv ON oi.variant_id = pv.variant_id
+                LEFT JOIN addresses ai ON o.shipping_address_id = ai.address_id
+                WHERE {where_sql}
+                GROUP BY o.order_id, o.order_date, o.total_amount
+                ORDER BY {order_by}
+            ) AS oids
+            LIMIT %s OFFSET %s
+        """
+        params_page = list(params) + [per_page + 1, offset]
+        cur.execute(q_order_ids, tuple(params_page))
+        rows_ids = cur.fetchall()
+        cur.close()
+        conn.close()
+        if rows_ids:
+            order_ids = [r[0] for r in rows_ids]
+    except Exception as e:
+        current_app.logger.exception("Could not fetch order ids for pagination: %s", str(e))
+        order_ids = []
+
+    if len(order_ids) > per_page:
+        has_more = True
+        order_ids = order_ids[:per_page]
+
+    orders = OrderedDict()
+    if order_ids:
+        try:
             conn = get_db()
             cur = conn.cursor(dictionary=True)
+
             placeholders = ','.join(['%s'] * len(order_ids))
-            # first param is customer_id, then the order ids
-            params = [customer_id] + order_ids
-            qrev = f"SELECT product_id, order_id FROM product_reviews WHERE customer_id = %s AND order_id IN ({placeholders})"
-            cur.execute(qrev, tuple(params))
-            rev_rows = cur.fetchall()
+
+            # preserve page order using CASE WHEN ... THEN index END
+            case_parts = []
+            case_params = []
+            for idx, oid in enumerate(order_ids):
+                case_parts.append(f"WHEN o.order_id = %s THEN {idx}")
+                case_params.append(oid)
+            case_sql = "CASE " + " ".join(case_parts) + f" ELSE {len(order_ids)} END"
+
+            sql = f"""
+                SELECT
+                    o.order_id,
+                    o.order_date,
+                    o.total_amount,
+                    o.currency,
+                    o.payment_status,
+                    o.payment_gateway,
+                    o.shipping_cost,
+                    o.status AS order_status,
+                    o.last_payment_id,
+                    ai.address_id AS shipping_address_id,
+                    ai.name AS shipping_name,
+                    ai.phone AS shipping_phone,
+                    ai.line1 AS shipping_line1,
+                    ai.line2 AS shipping_line2,
+                    ai.city AS shipping_city,
+                    ai.state AS shipping_state,
+                    ai.postal_code AS shipping_postal_code,
+                    ai.country AS shipping_country,
+                    oi.order_item_id,
+                    oi.product_id,
+                    oi.variant_id,
+                    oi.quantity,
+                    oi.unit_price,
+                    oi.total_price,
+                    p.name AS product_name,
+                    p.image_path,
+                    pv.sku AS variant_sku,
+                    pv.size AS variant_size,
+                    pv.color AS variant_color
+                FROM orders o
+                JOIN order_items oi ON o.order_id = oi.order_id
+                JOIN products p ON oi.product_id = p.product_id
+                LEFT JOIN product_variants pv ON oi.variant_id = pv.variant_id
+                LEFT JOIN addresses ai ON o.shipping_address_id = ai.address_id
+                WHERE o.order_id IN ({placeholders})
+                ORDER BY {case_sql}
+            """
+            cur.execute(sql, tuple(order_ids + case_params))
+            rows = cur.fetchall()
             cur.close()
             conn.close()
+        except Exception as e:
+            current_app.logger.exception("Could not fetch order rows: %s", str(e))
+            rows = []
 
-            reviewed_pairs = set()
-            for rr in rev_rows:
+        # Fetch images
+        variant_ids = set()
+        product_ids = set()
+        for r in rows:
+            if r.get('variant_id') not in (None, 0):
                 try:
-                    reviewed_pairs.add((int(rr['order_id']), int(rr['product_id'])))
+                    variant_ids.add(int(r.get('variant_id')))
                 except Exception:
                     pass
+            try:
+                product_ids.add(int(r.get('product_id')))
+            except Exception:
+                pass
 
-            for oid, order in orders.items():
-                for it in order['items']:
-                    pair = (int(oid), int(it['product_id']))
-                    it['reviewed'] = pair in reviewed_pairs
-    except Exception as e:
-        # don't fail page display on review-marking errors
-        current_app.logger.exception("Could not mark reviewed items: %s", str(e))
+        variant_image_map = {}
+        product_image_map = {}
 
+        if variant_ids or product_ids:
+            try:
+                conn = get_db()
+                cur = conn.cursor(dictionary=True)
+                clauses = []
+                params_imgs = []
+                if variant_ids:
+                    placeholders_v = ','.join(['%s'] * len(variant_ids))
+                    clauses.append(f"variant_id IN ({placeholders_v})")
+                    params_imgs.extend(list(variant_ids))
+                if product_ids:
+                    placeholders_p = ','.join(['%s'] * len(product_ids))
+                    clauses.append(f"(variant_id IS NULL AND product_id IN ({placeholders_p}))")
+                    params_imgs.extend(list(product_ids))
+                where_img = " OR ".join(clauses)
+                qimg = f"""
+                    SELECT product_id, variant_id, path, is_primary, position, image_id
+                    FROM product_images
+                    WHERE {where_img}
+                    ORDER BY is_primary DESC, position ASC, image_id ASC
+                """
+                cur.execute(qimg, tuple(params_imgs))
+                img_rows = cur.fetchall()
+                cur.close()
+                conn.close()
+
+                for ir in img_rows:
+                    vid = ir.get('variant_id')
+                    pid = ir.get('product_id')
+                    path = ir.get('path')
+                    if vid not in (None, 0):
+                        if vid not in variant_image_map:
+                            variant_image_map[vid] = path
+                    else:
+                        if pid not in product_image_map:
+                            product_image_map[pid] = path
+            except Exception as e:
+                current_app.logger.exception("Could not fetch product images for orders view: %s", str(e))
+
+        # group items by order_id
+        for r in rows:
+            oid = r['order_id']
+            if oid not in orders:
+                orders[oid] = {
+                    "order_date": r['order_date'],
+                    "total_amount": r['total_amount'],
+                    "currency": r.get('currency') or 'INR',
+                    "payment_status": r.get('payment_status'),
+                    "payment_gateway": r.get('payment_gateway'),
+                    "shipping_cost": r.get('shipping_cost') or 0.00,
+                    "order_status": r.get('order_status'),
+                    "last_payment_id": r.get('last_payment_id'),
+                    "shipping_address": {
+                        "address_id": r.get('shipping_address_id'),
+                        "name": r.get('shipping_name'),
+                        "phone": r.get('shipping_phone'),
+                        "line1": r.get('shipping_line1'),
+                        "line2": r.get('shipping_line2'),
+                        "city": r.get('shipping_city'),
+                        "state": r.get('shipping_state'),
+                        "postal_code": r.get('shipping_postal_code'),
+                        "country": r.get('shipping_country'),
+                    },
+                    "items": []
+                }
+
+            chosen_image = None
+            vid = r.get('variant_id')
+            pid = r.get('product_id')
+            if vid not in (None, 0) and vid in variant_image_map:
+                chosen_image = variant_image_map.get(vid)
+            elif pid in product_image_map:
+                chosen_image = product_image_map.get(pid)
+            else:
+                chosen_image = r.get('image_path')
+
+            orders[oid]['items'].append({
+                "order_item_id": r['order_item_id'],
+                "product_id": r['product_id'],
+                "variant_id": r.get('variant_id'),
+                "product_name": r['product_name'],
+                "image_path": chosen_image,
+                "quantity": r['quantity'],
+                "unit_price": float(r['unit_price']) if r['unit_price'] is not None else None,
+                "total_price": float(r['total_price']) if r['total_price'] is not None else (float(r['unit_price'] or 0) * int(r['quantity'] or 0)),
+                "variant": {
+                    "sku": r.get('variant_sku'),
+                    "size": r.get('variant_size'),
+                    "color": r.get('variant_color')
+                },
+                "reviewed": False,
+                "rating": None,
+                "review": None
+            })
+
+        # --- Fetch existing reviews (if any) for these order_ids for THIS customer ---
+        try:
+            order_ids_list = list(orders.keys())
+            if order_ids_list:
+                conn = get_db()
+                cur = conn.cursor(dictionary=True)
+                placeholders = ','.join(['%s'] * len(order_ids_list))
+                params_rev = [customer_id] + order_ids_list
+                qrev = f"""
+                    SELECT product_id, order_id, rating, title, body, created_at
+                    FROM product_reviews
+                    WHERE customer_id = %s AND order_id IN ({placeholders})
+                    ORDER BY created_at DESC
+                """
+                cur.execute(qrev, tuple(params_rev))
+                rev_rows = cur.fetchall()
+                cur.close()
+                conn.close()
+
+                review_map = {}
+                for rr in rev_rows:
+                    try:
+                        key = (int(rr['order_id']), int(rr['product_id']))
+                    except Exception:
+                        continue
+                    if key not in review_map:
+                        review_map[key] = {
+                            'rating': int(rr['rating']) if rr.get('rating') is not None else None,
+                            'title': rr.get('title'),
+                            'body': rr.get('body'),
+                            'created_at': rr.get('created_at')
+                        }
+
+                for oid, order in orders.items():
+                    for it in order['items']:
+                        key = (int(oid), int(it['product_id']))
+                        rev = review_map.get(key)
+                        if rev:
+                            it['reviewed'] = True
+                            it['rating'] = rev.get('rating')
+                            it['review'] = rev
+                        else:
+                            it['reviewed'] = False
+                            it['rating'] = None
+                            it['review'] = None
+        except Exception as e:
+            current_app.logger.exception("Could not fetch/attach reviews for orders view: %s", str(e))
+
+    # If AJAX request: return rendered HTML fragment + has_more
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            rendered = render_template('customer/_orders_fragment.html', orders=orders)
+            return jsonify(success=True, html=rendered, has_more=has_more), 200
+        except Exception as e:
+            current_app.logger.exception("Error rendering orders fragment: %s", str(e))
+            return jsonify(success=False, message="Rendering error"), 500
+
+    # Non-AJAX full render
     return render_template(
         "customer/view_orders.html",
         orders=orders,
         current_status=(status or 'all'),
         q=q,
-        sort=sort
+        sort=sort,
+        page=page,
+        per_page=per_page,
+        has_more=has_more
     )
+
+
 
 
 
@@ -2531,6 +2954,8 @@ def view_orders():
 @nocache
 def submit_review():
     if 'customer_id' not in session:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify(success=False, message="Please login to submit a review."), 401
         flash("Please login to submit a review.", "warning")
         return redirect(url_for('main.login'))
 
@@ -2543,10 +2968,14 @@ def submit_review():
     body = (request.form.get('body') or '').strip()
 
     if not product_id or not order_id:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify(success=False, message="Missing product or order information."), 400
         flash("Missing product or order information.", "danger")
         return redirect(url_for('main.view_orders'))
 
     if not rating or rating < 1 or rating > 5:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify(success=False, message="Rating must be between 1 and 5."), 400
         flash("Rating must be between 1 and 5.", "warning")
         return redirect(url_for('main.view_orders'))
 
@@ -2557,15 +2986,21 @@ def submit_review():
         cur.execute("SELECT status, customer_id FROM orders WHERE order_id = %s LIMIT 1", (order_id,))
         row = cur.fetchone()
         if not row:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=False, message="Order not found."), 404
             flash("Order not found.", "danger")
             return redirect(url_for('main.view_orders'))
 
         if int(row.get('customer_id')) != customer_id:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=False, message="You are not authorized to review for this order."), 403
             flash("You are not authorized to review for this order.", "danger")
             return redirect(url_for('main.view_orders'))
 
         order_status = (row.get('status') or '').strip().lower()
         if order_status != 'delivered':
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=False, message="You can only review products from delivered orders."), 400
             flash("You can only review products from delivered orders.", "warning")
             return redirect(url_for('main.view_orders'))
 
@@ -2576,6 +3011,8 @@ def submit_review():
         else:
             cur.execute("SELECT 1 FROM order_items WHERE order_id = %s AND product_id = %s LIMIT 1", (order_id, product_id))
         if not cur.fetchone():
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=False, message="This product was not part of the selected order."), 400
             flash("This product was not part of the selected order.", "danger")
             return redirect(url_for('main.view_orders'))
 
@@ -2583,6 +3020,8 @@ def submit_review():
         cur.execute("SELECT 1 FROM product_reviews WHERE product_id = %s AND customer_id = %s AND order_id = %s LIMIT 1",
                     (product_id, customer_id, order_id))
         if cur.fetchone():
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=False, message="You have already reviewed this product for that order."), 409
             flash("You have already reviewed this product for that order.", "info")
             return redirect(url_for('main.view_orders'))
 
@@ -2592,19 +3031,69 @@ def submit_review():
               (product_id, customer_id, rating, title, body, is_verified_purchase, order_id, created_at)
             VALUES (%s,%s,%s,%s,%s,%s,%s,NOW())
         """, (product_id, customer_id, rating, title or None, body or None, 1, order_id))
+
+        # Recalculate aggregate rating and count for the product and update products table.
+        cur.execute("""
+            SELECT COUNT(*) AS cnt, AVG(rating) AS avg_rating
+            FROM product_reviews
+            WHERE product_id = %s
+        """, (product_id,))
+        agg = cur.fetchone()
+        if isinstance(agg, dict):
+            cnt = int(agg.get('cnt') or 0)
+            avg = float(agg.get('avg_rating')) if agg.get('avg_rating') is not None else 0.0
+        else:
+            cnt = int(agg[0]) if agg and agg[0] is not None else 0
+            avg = float(agg[1]) if agg and agg[1] is not None else 0.0
+
+        avg_rounded = round(avg, 2)
+
+        cur.execute("""
+            UPDATE products
+            SET rating_avg = %s,
+                reviews_count = %s,
+                updated_at = NOW()
+            WHERE product_id = %s
+        """, (avg_rounded, cnt, product_id))
+
         conn.commit()
+
+        # If AJAX -> return JSON payload with info for frontend to update inline stars
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            created_at = datetime.utcnow().isoformat() + 'Z'
+            return jsonify(success=True,
+                           message="Thank you — your review has been submitted.",
+                           product_id=int(product_id),
+                           variant_id=(int(variant_id) if variant_id else ""),
+                           order_id=int(order_id),
+                           rating=int(rating),
+                           title=title or None,
+                           body=body or None,
+                           created_at=created_at), 200
+
+        # Non-AJAX fallback: original behavior
         flash("Thank you — your review has been submitted.", "success")
+        return redirect(url_for('main.view_orders'))
+
     except Exception as e:
-        conn.rollback()
-        current_app.logger.exception("Error saving review: %s", str(e))
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        current_app.logger.exception("Error saving review and updating product aggregates: %s", str(e))
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify(success=False, message="An error occurred while saving your review. Please try again."), 500
+
         flash("An error occurred while saving your review. Please try again.", "danger")
+        return redirect(url_for('main.view_orders'))
     finally:
         try: cur.close()
         except: pass
         try: conn.close()
         except: pass
 
-    return redirect(url_for('main.view_orders'))
+
 
 
 # -------------------------request order cancellation---------------
@@ -2615,23 +3104,30 @@ def submit_review():
 def request_order_cancellation():
     # ensure logged-in
     if 'customer_id' not in session:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify(success=False, message="Please log in."), 401
         return redirect(url_for('main.login'))
 
     # fetch order_id from frontend form
     order_id = request.form.get('order_id', type=int)
     if not order_id:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify(success=False, message='Invalid order id.'), 400
         flash('Invalid order id.', 'warning')
         return redirect(url_for('main.view_orders'))
 
-    # get customer id from session (safe cast to int)
     try:
         customer_id = int(session.get('customer_id'))
     except (TypeError, ValueError):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify(success=False, message='Session error. Please log in again.'), 401
         flash('Session error. Please log in again.', 'warning')
         return redirect(url_for('main.login'))
 
     conn = get_db()
     if conn is None:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify(success=False, message='Database connection error.'), 500
         flash('Database connection error.', 'danger')
         return redirect(url_for('main.view_orders'))
 
@@ -2642,6 +3138,8 @@ def request_order_cancellation():
         cur.execute("SELECT status, customer_id FROM orders WHERE order_id = %s", (order_id,))
         row = cur.fetchone()
         if not row:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=False, message='Order not found.'), 404
             flash('Order not found.', 'warning')
             return redirect(url_for('main.view_orders'))
 
@@ -2649,6 +3147,8 @@ def request_order_cancellation():
 
         # ensure the logged-in customer owns this order
         if owner_id != customer_id:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=False, message='You are not authorized to modify this order.'), 403
             flash('You are not authorized to modify this order.', 'warning')
             return redirect(url_for('main.view_orders'))
 
@@ -2666,21 +3166,39 @@ def request_order_cancellation():
             conn.commit()
 
             if cur.rowcount:
-                flash('Cancellation request submitted successfully. We will review and update your order shortly.', 'success')
+                msg = 'Cancellation request submitted successfully. We will review and update your order shortly.'
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return jsonify(success=True, message=msg, order_id=order_id, new_status='cancellation-request'), 200
+                flash(msg, 'success')
             else:
-                # unexpected: nothing updated
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return jsonify(success=False, message='Unable to update order. Please try again.'), 500
                 flash('Unable to update order. Please try again.', 'danger')
+
         elif curr in ('cancellation-request', 'cancellation requested'):
-            flash('A cancellation request is already in progress for this order.', 'info')
+            msg = 'A cancellation request is already in progress for this order.'
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=False, message=msg, order_id=order_id, new_status=curr), 409
+            flash(msg, 'info')
+        elif curr in ('cancelled', 'refunded'):
+            msg = 'This order has already been cancelled.'
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=False, message=msg, order_id=order_id, new_status=curr), 400
+            flash(msg, 'warning')
         else:
-            flash('This order cannot be cancelled at its current stage.', 'warning')
+            msg = 'This order cannot be cancelled at its current stage.'
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=False, message=msg, order_id=order_id, new_status=curr), 400
+            flash(msg, 'warning')
 
     except Exception as e:
-        # log e if you have logging; rollback to be safe
         try:
             conn.rollback()
         except Exception:
             pass
+        current_app.logger.exception("Error while processing cancellation request: %s", str(e))
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify(success=False, message='An error occurred while processing your request. Please try again later.'), 500
         flash('An error occurred while processing your request. Please try again later.', 'danger')
     finally:
         if cur:
@@ -2688,11 +3206,13 @@ def request_order_cancellation():
                 cur.close()
             except Exception:
                 pass
+        try:
+            conn.close()
+        except Exception:
+            pass
 
+    # Non-AJAX fallback — redirect to orders page
     return redirect(url_for('main.view_orders'))
-
-
-
 
 
 #---------------------------------------------------owner section---------------------------------------------------

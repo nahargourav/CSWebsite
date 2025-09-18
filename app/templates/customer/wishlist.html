@@ -1,0 +1,354 @@
+<!-- templates/customer/wishlist.html -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Your Wishlist</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+  <style>
+    :root{
+      --accent: #ff7f66;
+      --muted: #7b7b7b;
+      --card-bg: #fff;
+      --shadow: rgba(2,6,23,0.06);
+    }
+
+    body { background: #fff; font-family: "Helvetica Neue", Arial, sans-serif; color:#222; }
+
+    .wishlist-hero {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin:22px auto 12px;
+      max-width:1260px;
+      padding:0 20px;
+    }
+    .wishlist-hero h1 { margin:0; font-weight:800; letter-spacing: -0.2px; }
+    .wishlist-hero .muted { color:var(--muted); margin-top:6px; }
+
+    /* Grid */
+    .wish-grid {
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 28px;
+      max-width: 1260px;
+      margin: 12px auto 60px;
+      padding: 0 20px;
+    }
+
+    @media (max-width: 1200px) {
+      .wish-grid { grid-template-columns: repeat(3, 1fr); gap:20px; }
+    }
+    @media (max-width: 900px) {
+      .wish-grid { grid-template-columns: repeat(2, 1fr); gap:18px; }
+    }
+    @media (max-width: 560px) {
+      .wish-grid { grid-template-columns: 1fr; gap:16px; }
+    }
+
+    /* Card */
+    .wish-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      overflow: visible;
+      box-shadow: 0 12px 28px var(--shadow);
+      border: 1px solid rgba(243,236,236,0.6);
+      display:flex;
+      flex-direction:column;
+      min-height: 420px;
+    }
+
+    .wish-media {
+      position: relative;
+      background: #faf7f6;
+      border-radius: 12px 12px 0 0;
+      overflow: hidden;
+      aspect-ratio: 3/4;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .wish-media img {
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+      transition: transform 240ms ease;
+    }
+    .wish-media:hover img { transform: scale(1.03); }
+
+    /* heart overlay */
+    .heart-overlay {
+      position:absolute;
+      right: 14px;
+      bottom: 14px;
+      width:46px;
+      height:46px;
+      background: #fff;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 8px 20px rgba(2,6,23,0.08);
+      cursor:pointer;
+      transition: transform 140ms ease, background 140ms ease;
+      border: 1px solid rgba(244, 238, 236, 0.9);
+    }
+    .heart-overlay:hover { transform: translateY(-4px); }
+
+    .heart-overlay svg { width:22px; height:22px; display:block; }
+
+    /* Card body content */
+    .wish-body {
+      padding: 18px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+      flex:1;
+    }
+
+    .wish-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color:#2b2b2b;
+      margin:0;
+      line-height:1.2;
+      text-overflow:ellipsis;
+      overflow:hidden;
+      white-space:nowrap;
+    }
+    .wish-sub { color:var(--muted); font-size:0.92rem; margin-top:2px; }
+
+    .wish-rating {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin-top:6px;
+    }
+
+    /* Fractional stars: gray background text with gold->coral gradient overlay whose width is set inline */
+    .star-rating {
+      position: relative;
+      display: inline-block;
+      font-size: 14px;
+      line-height: 1;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      letter-spacing: 1px;
+      height: 1em;
+      user-select: none;
+    }
+    .star-rating .star-back {
+      color: #e9e9e9;
+    }
+    .star-rating .star-front {
+      position: absolute;
+      top: 0;
+      left: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      /* gradient color similar to your provided sample (warm gold → coral) */
+      background: linear-gradient(90deg, #f4c150 0%, #ff7f66 60%, #ff5f6a 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      pointer-events: none;
+    }
+
+    .wish-price {
+      margin-top:8px;
+      font-weight:900;
+      font-size:1.05rem;
+      color:#111;
+    }
+
+    .wish-meta-row { display:flex; align-items:center; gap:8px; justify-content:space-between; }
+
+    /* Add to cart full width button */
+    .wish-actions {
+      margin-top:auto;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .btn-wish-cart {
+      background: linear-gradient(180deg, #ff8f77, #ff6b6b);
+      border: none;
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 8px;
+      width:100%;
+      box-shadow: 0 12px 30px rgba(255,127,102,0.12);
+      font-weight:800;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      cursor:pointer;
+      transition: transform 120ms ease;
+    }
+    .btn-wish-cart:active { transform: translateY(1px); }
+
+    /* empty state */
+    .empty-wishlist {
+      max-width:900px;
+      margin:40px auto;
+      padding:40px;
+      text-align:center;
+      border-radius:12px;
+      background:#fff;
+      box-shadow:0 12px 28px rgba(2,6,23,0.04);
+      border:1px solid #f3ecec;
+    }
+
+  </style>
+</head>
+<body>
+  {% include 'customer/layout.html' %}
+
+  <main>
+    <div class="wishlist-hero">
+      <div>
+        <h1>Your Wishlist</h1>
+        <div class="muted">Items you saved for later. <span id="wishlistCountText">({{ wishlist_count }})</span></div>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;">
+        <a class="btn btn-outline-secondary" href="{{ url_for('main.place_order') }}" style="border-radius:10px;">Continue shopping</a>
+      </div>
+    </div>
+
+    {% if wishlist_items and wishlist_items|length %}
+      <section class="wish-grid" id="wishlistContainer">
+        {% for item in wishlist_items %}
+          <article class="wish-card" data-variant-id="{{ item.variant.variant_id }}" data-product-id="{{ item.product.product_id }}">
+            <div class="wish-media">
+              <a href="{{ url_for('main.view_prod_detail', product_id=item.product.product_id, variant_id=item.variant.variant_id) }}" style="display:block; width:100%; height:100%;">
+                <img alt="{{ item.product.name }}" src="{{ url_for('static', filename=(item.thumb or item.product.image_path or 'uploads/placeholder.png')) }}">
+              </a>
+
+              <!-- Heart overlay (remove/unwish). Keep data attrs for JS. -->
+              <button class="heart-overlay remove-wish" data-variant-id="{{ item.variant.variant_id }}" aria-label="Remove from wishlist" title="Remove from wishlist">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                        fill="url(#hgrad)" stroke="rgba(0,0,0,0.04)" stroke-width="0.5"/>
+                  <defs>
+                    <linearGradient id="hgrad" x1="0" x2="1">
+                      <stop offset="0" stop-color="#ff7f66"/>
+                      <stop offset="1" stop-color="#ff3d6b"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </button>
+            </div>
+
+            <div class="wish-body">
+              <div>
+                <a class="wish-title" href="{{ url_for('main.view_prod_detail', product_id=item.product.product_id, variant_id=item.variant.variant_id) }}">{{ item.product.name }}</a>
+                <div class="wish-sub">{{ item.variant.size or '' }}{% if item.variant.size and item.variant.color %} • {% endif %}{{ item.variant.color or '' }}</div>
+
+                <div class="wish-meta-row">
+                  <div class="wish-rating" aria-hidden="true">
+                    {# fractional star rendering: overlay width = (rating/5)*100% #}
+                    {% set rating = (item.product.rating_avg|default(0)|float) %}
+                    {% set pct = (rating / 5.0) * 100 %}
+                    <div class="star-rating" title="{{ '%.2f'|format(rating) }} out of 5">
+                      <div class="star-back">★★★★★</div>
+                      <div class="star-front" style="width:{{ '%.2f'|format(pct) }}%;">★★★★★</div>
+                    </div>
+                  </div>
+                  <div class="wish-price">₹{{ '%.2f'|format(item.variant.price) }}</div>
+                </div>
+              </div>
+
+              <div class="wish-actions">
+                <form method="POST" action="{{ url_for('main.cart_add') }}" style="display:flex; gap:10px; width:100%;">
+                  <input type="hidden" name="product_id" value="{{ item.product.product_id }}">
+                  <input type="hidden" name="variant_id" value="{{ item.variant.variant_id }}">
+                  <input type="hidden" name="qty" value="1">
+                  <button class="btn-wish-cart" type="submit" aria-label="Add to cart">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="opacity:0.95" xmlns="http://www.w3.org/2000/svg"><path d="M3 3h2.4l1.8 9.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 6H6" stroke="rgba(255,255,255,0.95)" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    ADD TO CART
+                  </button>
+                </form>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      </section>
+
+    {% else %}
+      <div class="empty-wishlist">
+        <h3>Your Wishlist is empty</h3>
+        <p class="muted-small text-muted">Browse products and add items to your wishlist. We'll save them here for you.</p>
+        <a class="btn btn-outline-primary "style ="background: linear-gradient(90deg, #ff7f66, #ff3d6b);color: white; border: none;" href="{{ url_for('main.place_order') }}">Continue shopping</a>
+      </div>
+    {% endif %}
+  </main>
+
+  <script>
+    // Remove wishlist entry via AJAX and update UI. No confirmation.
+    document.addEventListener('DOMContentLoaded', function () {
+      const wishlistContainer = document.getElementById('wishlistContainer');
+
+      async function handleRemove(btn) {
+        const vid = btn.dataset.variantId || btn.getAttribute('data-variant-id') || btn.closest('.wish-card')?.dataset.variantId;
+        const pid = btn.closest('.wish-card')?.dataset.productId || '';
+
+        if (!vid) return;
+
+        const fd = new FormData();
+        fd.append('variant_id', String(vid));
+        fd.append('product_id', String(pid || ''));
+
+        try {
+          const res = await fetch('/wishlist/toggle', {
+            method: 'POST',
+            body: fd,
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+          });
+
+          const data = await res.json().catch(()=>null);
+
+          if (res.ok && data && data.ok) {
+            const card = btn.closest('.wish-card');
+            if (card) card.remove();
+
+            const countEl = document.getElementById('wishlistCount');
+            const countText = document.getElementById('wishlistCountText');
+            if (countEl && typeof data.wishlist_count !== 'undefined') countEl.textContent = String(data.wishlist_count);
+            if (countText && typeof data.wishlist_count !== 'undefined') countText.textContent = '(' + String(data.wishlist_count) + ')';
+
+            if (wishlistContainer) {
+              if (wishlistContainer.querySelectorAll('.wish-card').length === 0) {
+                wishlistContainer.innerHTML = `
+                  <div class="empty-wishlist" style="margin:24px auto;">
+                    <h3>Your Wishlist is empty</h3>
+                    <p class="muted-small text-muted">Browse products and add items to your wishlist. We'll save them here for you.</p>
+                    <a class="btn btn-outline-primary" style ="background: linear-gradient(90deg, #ff7f66, #ff3d6b);color: white; border: none;" href="{{ url_for('main.place_order') }}">Continue shopping</a>
+                  </div>`;
+              }
+            }
+          } else {
+            console.warn('Could not toggle wishlist', data);
+          }
+        } catch (err) {
+          console.error('Network error toggling wishlist', err);
+        }
+      }
+
+      // delegate clicks for current and future remove buttons (heart overlay)
+      document.body.addEventListener('click', function(e){
+        const btn = e.target.closest('.remove-wish');
+        if (!btn) return;
+        e.preventDefault();
+        handleRemove(btn);
+      });
+    });
+  </script>
+
+  {% include 'customer/footer.html' %}
+</body>
+</html>

@@ -8,232 +8,397 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="{{ url_for('static', filename='owner/view_products.css') }}">
   <style>
-    body { background:#f7f7f9; }
-    .sidebar { background:#fff; border-radius:8px; padding:18px; box-shadow:0 2px 6px rgba(0,0,0,0.06); }
-    .filter-section { padding:8px 0; border-bottom:1px solid #eee; }
-    .filter-section:last-child { border-bottom:none; }
-    .product-card { border-radius:10px; transition:transform .15s ease; }
-    .product-card:hover { transform:translateY(-4px); box-shadow:0 8px 20px rgba(0,0,0,.06); }
-    .search-bar { max-width:540px; width:100%; }
-    .small-muted { color:#6c757d; font-size:.9rem; }
-    .price-strong { font-weight:700; color:#111; }
-    .out-of-stock { color:#dc3545; font-weight:700; }
-    .filter-count { color:#6c757d; font-size:.85rem; margin-left:6px; }
+  /* ======= MERGED & DEDUPED STYLES ======= */
+  /* Base */
+  body {
+    background: #fff5ee; /* merged choice: warm off-white */
+    font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    color: #222;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    background-color: #fff5ee;
+  }
 
-    /* Custom collapse UI (no Bootstrap JS) */
-    .filter-toggle {
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      width:100%;
-      padding:8px 0;
-      background:transparent;
-      border:none;
-      font-size:1rem;
-      text-align:left;
-    }
-    .filter-toggle:focus { outline:2px solid rgba(13,110,253,0.18); border-radius:4px; }
+  /* ---------- Sidebar / Filters ---------- */
+  .sidebar {
+    background: #fff5ee;
+    border-radius: 8px;
+    padding: 18px;
+     margin-left: 23%;
+  }
+  .filter-section {
+    padding: 8px 0;
+    border-bottom: 0.5px solid #110b0b;
+    background-color: #ffe4d1;
+    cursor: pointer;
+        padding: 10px;
+        background: #ffe4d1;
+        border-radius: 8px;
+        margin-bottom: 5px;
+  }
+  .filter-section:last-child { border-bottom: none; }
+  .filter-toggle:first-child { font-weight: 500; }
 
-    /* animated collapse body using max-height and opacity */
-    .filter-body {
-      padding-top:6px; padding-bottom:6px;
-      overflow:hidden;
-      max-height:0;
-      opacity:0;
-      transition: max-height 280ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease;
-    }
-    /* when opened (no data-collapsed attr) expand */
-    .filter-body:not([data-collapsed="true"]) {
-      max-height: 600px; /* big enough to accommodate content */
-      opacity:1;
-    }
+  /* Filter toggle (keeps keyboard focus style) */
+  .filter-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 8px 0;
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+    text-align: left;
+    cursor: pointer;
+  }
+  .filter-toggle:focus {
+    outline: 2px solid rgba(13,110,253,0.18);
+    border-radius: 4px;
+  }
+  .collapse-glyph { font-weight: 700; margin-left: 8px; }
 
-    .collapse-glyph { font-weight:700; margin-left:8px; }
+  /* Animated collapse body (no JS required for the open state if JS toggles data-collapsed attr) */
+  .filter-body {
+    padding-top: 6px;
+    padding-bottom: 6px;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 280ms cubic-bezier(.2,.9,.2,1), opacity 200ms ease;
+  }
+  .filter-body:not([data-collapsed="true"]) {
+    max-height: 600px;
+    opacity: 1;
+  }
 
-    /* NEW: centered right-side section title */
-    .section-title {
-      text-align: center;
-      margin-bottom: 18px;
-    }
-    .section-title h2 {
-      font-size: 1.6rem;
-      margin: 0;
-      font-weight: 700;
-      letter-spacing: -0.2px;
-      color: #212529;
-    }
-    .section-title p {
-      margin: 6px 0 0;
-      color: #6c757d;
-      font-size: 0.95rem;
-    }
-    .section-title .underline {
-      width: 56px;
-      height: 3px;
-      background: linear-gradient(90deg,#0d6efd,#6610f2);
-      margin: 10px auto 0;
-      border-radius: 3px;
-    }
+  /* helper */
+  .filter-count { color: #6c757d; font-size: .85rem; margin-left: 6px; }
 
-    @media (min-width: 992px) {
-      .section-title h2 { font-size: 1.8rem; }
-    }
+  /* ---------- Search / Select ---------- */
+  .search-bar {
+    max-width: 720px; /* prefer larger size for wide layouts */
+    width: 100%;
+    display: flex;
+    gap: 10px;
+  }
+  .search-wrap { position: relative; flex: 1; }
+  .search-input {
+    width: 100%;
+    padding: 12px 44px 12px 16px;
+    border-radius: 999px;
+    border: 1px solid #e7dcd6;
+    background: #fff;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+  .search-icon {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4a261;
+    border: none;
+    cursor: pointer;
+  }
+  .search-icon svg { width: 18px; height: 18px; }
 
-    /* ============================
-       Star rating widget - robust repeating-background approach
-    ============================ */
-    .rating { --star-size-x: 28px; --star-size-y: 24px; display:inline-block; vertical-align:middle; font-size:0; line-height:0; }
+  /* Select with chevron */
+  .select-wrap { position: relative; display: inline-block; }
+  .select-wrap select {
+    appearance: none; -webkit-appearance: none; -moz-appearance: none;
+    padding: 8px 36px 8px 12px;
+    border-radius: 999px;
+    border: 1px solid #e7dcd6;
+    background: #fff;
+  }
+  .select-wrap::after {
+    content: "\25BE";
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #6c757d;
+    font-size: 12px;
+  }
 
-    .stars-outer {
-      position:relative;
-      display:inline-block;
-      width: 140px; /* 5 * 28 */
-      height: var(--star-size-y);
-      background-color: transparent;
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='24' viewBox='0 0 22 22'><path fill='%23f1f3f5' d='M11 0l3.2 7.9L22 8.6l-5.5 4.2L18.6 22 11 18.2 3.4 22l2.1-9.2L0 8.6l7.8-.7L11 0z'/></svg>");
-      background-repeat: repeat-x;
-      background-size: 28px 24px;
-      overflow: hidden;
-      border-radius: 6px;
-    }
+  /* ---------- Product Cards / Frames ---------- */
+  .product-card {
+    border-radius: 10px;
+    transition: transform .15s ease;
+    background: transparent;
+    border: 0;
+    overflow: visible;
+    background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        text-align: center;
+  }
+  .product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,.06);
+  }
+  .product-frame {
+    background: #fff; /* product box white for clarity */
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 14px 40px rgba(8,8,8,0.04);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .product-frame img {
+    width: 100%;
+    height: 374px; /* default image height */
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+  }
+  .card-body { padding-top: 12px; text-align: center; }
+  .product-title { font-size: 1rem; font-weight: 700; margin-bottom: 6px; text-transform: capitalize; }
+  .product-meta { color: #6c757d; font-size: .92rem; margin-bottom: 8px; }
 
-    .stars-inner {
-      position:absolute;
-      top:0;
-      left:0;
-      height:100%;
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='24' viewBox='0 0 22 22'><path fill='%23ffc107' d='M11 0l3.2 7.9L22 8.6l-5.5 4.2L18.6 22 11 18.2 3.4 22l2.1-9.2L0 8.6l7.8-.7L11 0z'/></svg>");
-      background-repeat: repeat-x;
-      background-size: 28px 24px;
-      width: 0px; /* controlled inline for precise fractional star rendering */
-      transition: width 380ms cubic-bezier(.2,.9,.2,1);
-      box-shadow: 0 2px 8px rgba(255,180,30,0.12) inset;
-      filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06));
-      pointer-events: none;
-    }
+  .product-col { padding-left: 8px; padding-right: 8px; }
 
-    /* rating number text */
-    .rating-num { margin-left:10px; font-size:0.92rem; color:#495057; vertical-align:middle; display:inline-block; font-weight:600; }
+  /* show/hide backend stock info visually */
+  .product-stock { display: none; }
 
-    .existing-image { display:inline-flex; flex-direction:column; gap:6px; align-items:center; margin:6px; }
-    .existing-image img { width:84px; height:84px; object-fit:cover; border-radius:8px; border:1px solid #e9ecef; }
-    .existing-image .delete-now { font-size:12px; }
+  /* wishlist heart button overlay */
+  .wish-btn {
+    position: absolute;
+    right: 14px;
+    top: 14px;
+    z-index: 5;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: inline-grid;
+    place-items: center;
+    background: rgba(255,255,255,0.96);
+    box-shadow: 0 6px 18px rgba(20,20,20,0.06);
+    border: 0;
+  }
 
-    #pageLoader { position:fixed; inset:0; background:rgba(255,255,255,0.65); display:none; align-items:center; justify-content:center; z-index:2000; }
-    #pageLoader .spinner { width:84px; height:84px; border-radius:12px; background:#fff; box-shadow:0 8px 30px rgba(2,6,23,0.08); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:8px; padding:14px; }
+  /* ---------- Prices / Text ---------- */
+  .price-strong { font-weight: 700; color: #111; font-size: 1.02rem; }
+  .price-sub { color: #6c757d; font-size: 0.9rem; }
+  .out-of-stock { color: #dc3545; font-weight: 700; }
+  .small-muted { color: #6c757d; font-size: .9rem; }
 
-    /* Overlay shown while opening product details (buffering overlay) */
-    #openOverlay {
-      position: fixed;
-      inset: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(6,10,15,0.48);
-      z-index: 3000;
-      -webkit-backdrop-filter: blur(6px);
-      backdrop-filter: blur(6px);
-    }
-    #openOverlay .box {
-      background: linear-gradient(180deg,#ffffff, #f8fbff);
-      border-radius: 14px;
-      padding: 20px 22px;
-      display:flex;
-      gap:14px;
-      align-items:center;
-      max-width: 520px;
-      width: calc(100% - 40px);
-      box-shadow: 0 30px 80px rgba(2,6,23,0.18);
-      border: 1px solid rgba(13,110,253,0.06);
-    }
-    #openOverlay .box .text h4 { margin:0 0 6px 0; font-size:1.05rem; }
-    #openOverlay .box .text p { margin:0; color:#57606f; font-size:0.95rem; }
+  /* ---------- Rating widget (consolidated & enhanced) ---------- */
+  .rating {
+    --star-size-x: 28px;
+    --star-size-y: 24px;
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 0;
+    line-height: 0;
+    margin: 0 auto; /* center horizontally */
+  }
+  .stars-outer {
+    position: relative;
+    display: inline-block;
+    width: 140px; /* 5 * 28 */
+    height: var(--star-size-y);
+    background-color: transparent;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='24' viewBox='0 0 22 22'><path fill='%23f1f3f5' d='M11 0l3.2 7.9L22 8.6l-5.5 4.2L18.6 22 11 18.2 3.4 22l2.1-9.2L0 8.6l7.8-.7L11 0z'/></svg>");
+    background-repeat: repeat-x;
+    background-size: 28px 24px;
+    overflow: hidden;
+    border-radius: 6px;
+  }
+  .stars-inner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='24' viewBox='0 0 22 22'><path fill='%23ffc107' d='M11 0l3.2 7.9L22 8.6l-5.5 4.2L18.6 22 11 18.2 3.4 22l2.1-9.2L0 8.6l7.8-.7L11 0z'/></svg>");
+    background-repeat: repeat-x;
+    background-size: 28px 24px;
+    width: 0; /* controlled inline for precise fractional star rendering */
+    transition: width 380ms cubic-bezier(.2,.9,.2,1);
+    box-shadow: 0 2px 8px rgba(255,180,30,0.12) inset;
+    filter: drop-shadow(0 1px 0 rgba(0,0,0,0.06));
+    pointer-events: none;
+  }
+  .rating-num {
+    margin-left: 10px;
+    font-size: 0.92rem;
+    color: #495057;
+    vertical-align: middle;
+    display: inline-block;
+    font-weight: 600;
+  }
 
-    /* subtle animated icon */
-    #openOverlay .pulse {
-      width:52px;
-      height:52px;
-      border-radius:10px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background: linear-gradient(90deg,#0d6efd,#6610f2);
-      color:white;
-      box-shadow: 0 10px 30px rgba(13,110,253,0.18);
-      transform: translateZ(0);
-      animation: float 2000ms infinite ease-in-out;
-    }
-    @keyframes float {
-      0% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
-      100% { transform: translateY(0); }
-    }
+  /* New: rating meta below stars, centered */
+  .rating-block { text-align: center; }
+  .rating-meta { margin-top: 6px; color: #6c757d; font-size: .9rem; font-weight: 600; }
 
-    /* ============================
-       MOBILE: Refine-by dropdown/panel
-       - does not change desktop layout/behavior
-    ============================ */
-    /* mobile trigger button (visible only on small screens) */
-    .mobile-refine-btn {
-      display: none; /* shown in media query for small screens only */
-      width: 100%;
-      justify-content: space-between;
-      align-items: center;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-weight:600;
-    }
-    .mobile-refine-btn .chev {
-      transition: transform 240ms ease;
-      transform-origin: center;
-    }
-    .mobile-refine-btn.open .chev {
-      transform: rotate(180deg);
-    }
+  /* ---------- Misc UI ---------- */
+  .existing-image { display: inline-flex; flex-direction: column; gap: 6px; align-items: center; margin: 6px; }
+  .existing-image img { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; border: 1px solid #e9ecef; }
+  .existing-image .delete-now { font-size: 12px; }
 
-    /* mobile panel (cloned sidebar content goes here) */
+  /* Section title (centered full width) */
+  .section-title { text-align: center; margin-bottom: 18px; }
+  .section-title h2 {
+    font-size: 1.6rem;
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    color: #212529;
+  }
+  .section-title p { margin: 6px 0 0; color: #6c757d; font-size: 0.95rem; }
+  .section-title .underline {
+    width: 56px;
+    height: 3px;
+    background: linear-gradient(90deg,#0d6efd,#6610f2);
+    margin: 10px auto 0;
+    border-radius: 3px;
+  }
+  @media (min-width: 992px) {
+    .section-title h2 { font-size: 1.8rem; }
+  }
+
+  /* Page loader & overlays */
+  #pageLoader {
+    position: fixed;
+    inset: 0;
+    background: rgba(255,255,255,0.65);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  }
+  #pageLoader .spinner {
+    width: 84px;
+    height: 84px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 8px 30px rgba(2,6,23,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+  }
+
+  /* Overlay shown while opening product details */
+  #openOverlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(6,10,15,0.48);
+    z-index: 3000;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+  }
+  #openOverlay .box {
+    background: linear-gradient(180deg,#ffffff, #f8fbff);
+    border-radius: 14px;
+    padding: 20px 22px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    max-width: 520px;
+    width: calc(100% - 40px);
+    box-shadow: 0 30px 80px rgba(2,6,23,0.18);
+    border: 1px solid rgba(13,110,253,0.06);
+  }
+  #openOverlay .box .text h4 { margin: 0 0 6px 0; font-size: 1.05rem; }
+  #openOverlay .box .text p { margin: 0; color: #57606f; font-size: 0.95rem; }
+  #openOverlay .pulse {
+    width: 52px;
+    height: 52px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(90deg,#0d6efd,#6610f2);
+    color: white;
+    box-shadow: 0 10px 30px rgba(13,110,253,0.18);
+    transform: translateZ(0);
+    animation: float 2000ms infinite ease-in-out;
+  }
+  @keyframes float {
+    0% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+    100% { transform: translateY(0); }
+  }
+
+  /* ---------- Mobile: Refine-by dropdown/panel ---------- */
+  /* mobile trigger button (visible only on small screens) */
+  .mobile-refine-btn {
+    display: none; /* enabled under mobile media query */
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    background: transparent;
+    border: 0;
+  }
+  .mobile-refine-btn .chev {
+    transition: transform 240ms ease;
+    transform-origin: center;
+  }
+  .mobile-refine-btn.open .chev { transform: rotate(180deg); }
+
+  /* mobile panel (cloned sidebar content goes here) */
+  .mobile-filters-panel { display: none; }
+  .mobile-filters-panel.active { display: block; }
+
+  @media (max-width: 767.98px) {
+    /* hide desktop left column (consistent across both files) */
+    .col-lg-3 { display: none !important; }
+
+    /* adjust image heights on mobile */
+    .product-frame img { height: 300px; }
+
+    /* show refine button on small screens */
+    .mobile-refine-btn { display: flex; }
+
+    /* the mobile panel will be a fixed, slide-down panel */
     .mobile-filters-panel {
-      display: none; /* mobile only, controlled by JS */
+      position: fixed;
+      top: 64px; /* adjust depending on your header height */
+      left: 8px;
+      right: 8px;
+      z-index: 4000;
+      border-radius: 10px;
+      box-shadow: 0 30px 80px rgba(2,6,23,0.12);
+      background: transparent;
+      transform: translateY(-120%);
+      transition: transform 320ms cubic-bezier(.2,.9,.2,1), opacity 220ms ease;
+      opacity: 0;
     }
-    .mobile-filters-panel.active {
-      display: block;
-    }
+    .mobile-filters-panel.active { transform: translateY(0); opacity: 1; }
 
-    @media (max-width: 767.98px) {
-      /* show refine button on small screens */
-      .mobile-refine-btn { display:flex; }
-      /* hide original left column to avoid duplicate space; we will use cloned panel for mobile */
-      .col-lg-3 { display: none !important; }
-      /* the mobile panel will be a fixed, slide-down panel */
-      .mobile-filters-panel {
-        position: fixed;
-        top: 64px; /* adjust depending on your header height */
-        left: 8px;
-        right: 8px;
-        z-index: 4000;
-        border-radius: 10px;
-        box-shadow: 0 30px 80px rgba(2,6,23,0.12);
-        background: transparent;
-        transform: translateY(-120%);
-        transition: transform 320ms cubic-bezier(.2,.9,.2,1), opacity 220ms ease;
-        opacity: 0;
-      }
-      .mobile-filters-panel.active {
-        transform: translateY(0);
-        opacity: 1;
-      }
-      /* the cloned sidebar inside the mobile panel keeps .sidebar styles */
-      .mobile-filters-panel .sidebar {
-        padding: 14px;
-        border-radius: 10px;
-      }
-      /* keep the apply/reset buttons full width on small screen */
-      .mobile-filters-panel .d-grid { gap:8px; }
-    }
+    /* the cloned sidebar inside the mobile panel keeps .sidebar styles */
+    .mobile-filters-panel .sidebar { padding: 14px; border-radius: 10px; }
+
+    /* keep apply/reset buttons full width */
+    .mobile-filters-panel .d-grid { gap: 8px; }
+  }
+
+  /* small utility */
+  .hidden { display: none !important; }
 
   </style>
 </head>
-<body>
+<body >
   {% include 'customer/layout.html' %}
 
   <!-- MOBILE: Refine-by trigger (only visible on small screens) -->
@@ -253,25 +418,21 @@
 
   <div id="pageLoader"><div class="spinner"><div class="spinner-border" role="status"></div><div class="small text-muted">Loading…</div></div></div>
 
-  <!-- Overlay shown when user opens product detail (buffering / catalog opener) -->
-  <div id="openOverlay" aria-hidden="true" role="status" aria-live="polite">
-    <div class="box" role="dialog" aria-label="Opening product catalog">
-      <div class="pulse" aria-hidden="true">
-        <!-- simple icon (box) -->
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-          <path d="M3 7l9-4 9 4-9 4L3 7z" fill="rgba(255,255,255,0.95)"/>
-          <path d="M21 7v7a2 2 0 0 1-1 1.73L12 20l-8-4.27A2 2 0 0 1 3 14V7" stroke="rgba(255,255,255,0.9)" stroke-width="0.6" opacity="0.9"/>
-        </svg>
-      </div>
-      <div class="text">
-        <h4>Opening the catalog…</h4>
-        <p>A catalogue you'll have never seen before — loading product details & visuals.</p>
+  <!-- SECTION TITLE: moved outside the columns so it is centered across whole page -->
+  <div class="container-fluid mt-4">
+    <div class="row">
+      <div class="col-12">
+        <div class="section-title">
+          <h2>Our Collection</h2>
+          <p>Beautifully curated ethnic wear — search, sort and refine to find your look.</p>
+          <div class="underline" aria-hidden="true"></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="container-fluid mt-4">
-    <div class="row g-4">
+  <div class="container-fluid">
+    <div class="row g-4 mt-2">
       <!-- LEFT SIDEBAR (kept for desktop; hidden on small screens via CSS) -->
       <div class="col-lg-3">
         <div class="sidebar">
@@ -393,24 +554,16 @@
             </div>
 
             <div class="mt-3 d-grid">
-              <button type="submit" class="btn btn-primary" id="applyFiltersBtn">Apply Filters</button>
-              <a href="{{ url_for('main.place_order') }}" class="btn btn-link mt-2">Reset</a>
+              <button type="submit" class="btn btn-primary" id="applyFiltersBtn" style="background: #ffb347;border: 0px;">Apply Filters</button>
+              <a href="{{ url_for('main.place_order') }}" class="btn btn-link mt-2" style="color: #110b0b;" >Reset</a>
             </div>
           </form>
         </div>
       </div>
 
-      <!-- RIGHT: products list -->
       <div class="col-lg-9">
-        <!-- CENTERED SECTION TITLE -->
-        <div class="section-title">
-          <h2>Our Products</h2>
-          <p>Explore our catalog — search, sort and apply filters to quickly find items.</p>
-          <div class="underline" aria-hidden="true"></div>
-        </div>
-
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <form method="GET" class="d-flex w-100 me-3" id="searchForm" style="gap:12px;">
+          <form method="GET" class="d-flex w-100 me-3" id="searchForm" style="gap:12px; align-items:center;">
             <!-- server-side preserved hidden inputs for accessibility/non-JS fallback -->
             {% for k, vals in selected.items() %}
               {% if vals and k not in ['q','sort','min_price','max_price','rating'] %}
@@ -420,14 +573,23 @@
               {% endif %}
             {% endfor %}
 
-            <input name="q" type="text" class="form-control search-bar" placeholder="Search products (name, brand, description)" value="{{ selected.q or '' }}">
-            <select name="sort" class="form-select w-auto" onchange="this.form.submit()">
-              <option value="newest" {% if selected.sort=='newest' %}selected{% endif %}>Newest</option>
-              <option value="low" {% if selected.sort=='low' %}selected{% endif %}>Price: Low to High</option>
-              <option value="high" {% if selected.sort=='high' %}selected{% endif %}>Price: High to Low</option>
-              <option value="rating" {% if selected.sort=='rating' %}selected{% endif %}>Rating</option>
-            </select>
-            <button type="submit" class="btn btn-outline-secondary">Search</button>
+            <div class="search-bar">
+              <div class="search-wrap">
+                <input name="q" type="text" class="search-input" placeholder="Search products (name, brand, description)" value="{{ selected.q or '' }}">
+                <button type="submit" class="search-icon" aria-label="Search">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-4.35-4.35" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="11" r="6" stroke="#fff" stroke-width="2"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="select-wrap">
+              <select name="sort" class="form-select w-auto" onchange="this.form.submit()">
+                <option value="newest" {% if selected.sort=='newest' %}selected{% endif %}>Newest</option>
+                <option value="low" {% if selected.sort=='low' %}selected{% endif %}>Price: Low to High</option>
+                <option value="high" {% if selected.sort=='high' %}selected{% endif %}>Price: High to Low</option>
+                <option value="rating" {% if selected.sort=='rating' %}selected{% endif %}>Rating</option>
+              </select>
+            </div>
           </form>
         </div>
 
@@ -435,37 +597,40 @@
         <div class="row g-3">
           {% if products %}
             {% for product in products %}
-            <div class="col-md-4">
-              <div class="card product-card h-100">
-                <a href="{{ url_for('main.view_prod_detail', product_id=product.product_id) }}">
-                  <img src="{{ url_for('static', filename=(product.image_path or 'uploads/placeholder.png')) }}" class="card-img-top" style="height:220px; object-fit:contain; background:#fff;">
-                </a>
+            <div class="col-lg-3 col-md-4 col-sm-6 product-col">
+              <div class="product-card h-100 position-relative">
+                <div class="product-frame">
+                  <button class="wish-btn" aria-label="Add to wishlist">
+                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20.8 7.2c0 4.2-8.8 11-8.8 11s-8.8-6.9-8.8-11a5 5 0 0 1 8.8-3.2A5 5 0 0 1 20.8 7.2z" stroke="#ff6b6b" stroke-width="1.2" fill="rgba(255,107,107,0.06)"/></svg>
+                  </button>
+
+                  <a href="{{ url_for('main.view_prod_detail', product_id=product.product_id) }}" style="width:100%; display:block;">
+                    <img src="{{ url_for('static', filename=(product.image_path or 'uploads/placeholder.png')) }}" alt="{{ product.name }}" class="img-fluid">
+                  </a>
+                </div>
                 <div class="card-body">
-                  <h6 class="mb-1">{{ product.name }}</h6>
-                  <div class="small-muted mb-2">{{ product.brand or '—' }} • {{ product.category or '—' }}</div>
+                  <div class="product-title">{{ product.name }}</div>
+                  <div class="product-meta">{{ product.brand or '—' }} • {{ product.category or '—' }}</div>
 
                   <!-- rating widget (robust pixel-precise fill) -->
-                  <div class="mb-2 d-flex align-items-center">
+                  <div class="mb-2 rating-block">
                     <div class="rating" title="{{ ('%.2f' % product.rating_avg) if product.rating_avg is not none else '0.0' }}">
                       <div class="stars-outer" aria-hidden="true">
-                        <!-- compute exact pixel width: 5 stars => 140px total -->
                         <div class="stars-inner" style="width: {{ ((product.rating_avg|float(0) / 5.0) * 140.0)|round(2) }}px;"></div>
                       </div>
                     </div>
-
-                    <div class="rating-num">
-                      {{ (product.reviews_count or 0) }} rating{{ 's' if (product.reviews_count or 0) != 1 else '' }} • {{ (product.rating_avg|float(0)|round(2)) }}
-                    </div>
+                    <div class="rating-meta">{{ (product.reviews_count or 0) }} reviews • {{ (product.rating_avg|float(0)|round(2)) }}</div>
                   </div>
 
-                  <div class="d-flex justify-content-between align-items-center">
+                  <div class="d-flex justify-content-center align-items-center gap-3">
                     <div>
                       <div class="price-strong">₹{{ '%.2f' % product.price_range.min }}</div>
                       {% if product.price_range.has_range %}
-                        <div class="small text-muted">up to ₹{{ '%.2f' % product.price_range.max }}</div>
+                        <div class="price-sub">up to ₹{{ '%.2f' % product.price_range.max }}</div>
                       {% endif %}
                     </div>
-                    <div>
+
+                    <div class="product-stock">
                       {% if product.stats.total_stock <= 0 %}
                         <div class="out-of-stock">Out of stock</div>
                       {% else %}
@@ -474,10 +639,8 @@
                     </div>
                   </div>
                 </div>
-                <div class="card-footer bg-white">
-                  <div class="d-grid gap-2">
-                    <a href="{{ url_for('main.view_prod_detail', product_id=product.product_id) }}" class="btn btn-outline-primary btn-sm">View</a>
-                  </div>
+                <div class="card-footer">
+                  <!-- View button removed per earlier request -->
                 </div>
               </div>
             </div>
@@ -508,32 +671,21 @@
       const mobileRefineBtn = document.getElementById('mobileRefineBtn');
       const mobilePanel = document.getElementById('mobileFiltersPanel');
 
-      function showLoader() { if (loader) loader.style.display = 'flex'; }
-      function hideLoader() { if (loader) loader.style.display = 'none'; }
+      // NOTE: loader/openOverlay display functions intentionally made NO-OP
+      function showLoader() {
+        // disabled on user request — do not show buffering overlay
+        try { if (loader) loader.style.display = 'none'; } catch(e) {}
+      }
+      function hideLoader() {
+        try { if (loader) loader.style.display = 'none'; } catch(e) {}
+      }
       hideLoader();
 
       // Show the "opening product detail" overlay when user clicks a product link.
+      // Disabled per request (no buffering overlay when product opened).
       function attachOpenOverlayToProductLinks() {
-        const anchors = Array.from(document.querySelectorAll('.product-card a[href]'));
-        anchors.forEach(a => {
-          try {
-            const href = a.getAttribute('href') || '';
-            // if url pattern looks like product detail (contains '/prod/' OR 'view_prod_detail') attach
-            if (href.indexOf('/prod/') === -1 && href.indexOf('/view_prod_detail') === -1) return;
-            a.addEventListener('click', function (ev) {
-              if (openOverlay) {
-                openOverlay.style.display = 'flex';
-                openOverlay.setAttribute('aria-hidden', 'false');
-              }
-              setTimeout(function () {
-                if (openOverlay) {
-                  openOverlay.style.display = 'none';
-                  openOverlay.setAttribute('aria-hidden', 'true');
-                }
-              }, 6000);
-            }, { passive: true });
-          } catch (e) { /* ignore */ }
-        });
+        // Intentionally left blank to prevent overlay from showing.
+        // (we keep this function as a no-op so no events are attached)
       }
       attachOpenOverlayToProductLinks();
 
@@ -549,7 +701,7 @@
       }
       initRatingDeselect(document);
 
-      // apply button shows loader (submits filters form normally)
+      // apply button shows loader (submits filters form normally) - loader is no-op now
       applyBtn && applyBtn.addEventListener('click', function () { showLoader(); });
 
       // when Search is pressed, copy the CURRENT filters into the search form (looks at both desktop and mobile forms), then submit
@@ -568,40 +720,57 @@
         // remove previously generated hidden inputs
         searchForm.querySelectorAll('input[data-generated="true"]').forEach(function (el) { el.remove(); });
 
-        // remove any hidden inputs in searchForm that match filterNames (these may be server-rendered old selections)
-        searchForm.querySelectorAll('input[type="hidden"]').forEach(function (h) {
-          if (filterNames.includes(h.name)) h.remove();
+        // remove any existing inputs in searchForm that match filterNames (these may be server-rendered old selections)
+        // Use querySelectorAll of elements with a name to be robust
+        Array.from(searchForm.querySelectorAll('input[name]')).forEach(function (h) {
+          const nm = h.getAttribute('name');
+          if (filterNames.includes(nm)) h.remove();
         });
+
+        // We'll track which name::value combos we've already appended to avoid duplicates
+        const added = new Set();
+
+        function appendHidden(name, value) {
+          const key = name + '::' + value;
+          if (added.has(key)) return;
+          added.add(key);
+          const h = document.createElement('input');
+          h.type = 'hidden'; h.name = name; h.value = value; h.setAttribute('data-generated','true');
+          searchForm.appendChild(h);
+        }
 
         // helper to gather inputs from a form-like root
         function gatherFromRoot(root) {
           if (!root) return;
+          // gather checkboxes, radios, and min/max fields
           const inputs = root.querySelectorAll('input, select');
           inputs.forEach(function (inp) {
             if (!inp.name) return;
             const type = inp.type;
             if (type === 'checkbox' && inp.checked) {
-              const h = document.createElement('input');
-              h.type = 'hidden'; h.name = inp.name; h.value = inp.value; h.setAttribute('data-generated','true');
-              searchForm.appendChild(h);
+              appendHidden(inp.name, inp.value);
             } else if (type === 'radio' && inp.checked) {
-              const h = document.createElement('input');
-              h.type = 'hidden'; h.name = inp.name; h.value = inp.value; h.setAttribute('data-generated','true');
-              searchForm.appendChild(h);
+              appendHidden(inp.name, inp.value);
             } else if ((inp.name === 'min_price' || inp.name === 'max_price') && inp.value) {
-              const h = document.createElement('input');
-              h.type = 'hidden'; h.name = inp.name; h.value = inp.value; h.setAttribute('data-generated','true');
-              searchForm.appendChild(h);
+              appendHidden(inp.name, inp.value);
             }
           });
         }
 
-        // gather from desktop filters form (if present)
-        gatherFromRoot(filtersForm);
-
-        // gather from mobile cloned filters form (if present)
+        // gather from desktop filters form OR mobile cloned form — choose the active one to avoid duplicates
         const mobileForm = document.getElementById('filtersFormMobile');
-        gatherFromRoot(mobileForm);
+        try {
+          if (mobileForm && mobilePanel && mobilePanel.classList.contains('active')) {
+            // mobile filter panel is open — prefer mobile form inputs
+            gatherFromRoot(mobileForm);
+          } else {
+            // otherwise use desktop filters form
+            gatherFromRoot(filtersForm);
+          }
+        } catch (e) {
+          // fallback to desktop form if something goes wrong
+          gatherFromRoot(filtersForm);
+        }
       }
 
       // Custom collapse toggles (use data-collapsed and CSS transitions)
@@ -723,7 +892,7 @@
         initFilterToggles(cloneContainer);
         initRatingDeselect(cloneContainer);
 
-        // wire the cloned apply button to show loader
+        // wire the cloned apply button to show loader (disabled showLoader is no-op)
         const mobileApply = document.getElementById('applyFiltersBtnMobile');
         if (mobileApply) {
           mobileApply.addEventListener('click', function () { showLoader(); });

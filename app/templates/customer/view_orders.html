@@ -1,508 +1,616 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Your Orders</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <!-- optional: bootstrap icons for small icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='customer/view_orders.css') }}">
-    <style>
-      /* --- layout helpers (kept from your original) --- */
-      .order-img{height:70px;width:70px;object-fit:cover;border-radius:8px}
-      .controls-row .form-control{min-width:220px}
-      .controls-row .form-select{min-width:180px}
-      .status-btns .btn{min-width:110px}
-      .card-header small.meta{font-weight:600;color:#444}
-      .no-image-box{height:70px;width:70px;border-radius:8px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;color:#999}
-      .ellipsis{max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:inline-block;vertical-align:middle}
-      .clickable-item{cursor:pointer}
-      .clickable-item:focus{outline:2px solid rgba(13,110,253,.12);outline-offset:2px}
+  <meta charset="utf-8" />
+  <title>Your Orders</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/locomotive-scroll@4.1.4/dist/locomotive-scroll.min.css" />
+  <style>
+    :root{
+      --accent: #ff7f66;
+      --accent-2: #ff6b6b;
+      --accent-3: #ff4d6d;
+      --muted: #6b7280;
+      --card-bg: #ffffff;
+      --soft-shadow: 0 18px 48px rgba(2,6,23,0.06);
+      --soft-shadow-2: 0 8px 24px rgba(2,6,23,0.06);
+      --sep: rgba(15,23,36,0.04);
+      --radius: 14px;
+      --max-width: 1260px;
+      font-family: 'Poppins', system-ui, -apple-system, "Helvetica Neue", Arial;
+    }
 
-      /* --- status badges with specified colors --- */
-      .status-badge {
-        display:inline-block;
-        padding:6px 10px;
-        border-radius:999px;
-        font-weight:600;
-        font-size:.85rem;
-        color:#fff;
-        text-transform:capitalize;
-        box-shadow:0 2px 6px rgba(0,0,0,.06);
-      }
-      .status-processing{ background: linear-gradient(180deg,#ffc107,#e0a800); color:#111; } /* yellow (processing) */
-      .status-confirmed{ background: linear-gradient(180deg,#28a745,#1e7e34); } /* green (confirmed) */
-      .status-out-for-delivery{ background: linear-gradient(180deg,#fd7e14,#e06b06); } /* orange */
-      .status-delivered{ background: linear-gradient(180deg,#0dcaf0,#0aa5c1); } /* blue-ish (delivered) */
-      .status-cancellation-request{ background: linear-gradient(180deg,#dc3545,#b02a37); } /* red family */
-      .status-cancelled{ background: linear-gradient(180deg,#b02a37,#8b222c); } /* darker red for cancelled */
-      .status-refunded{ background: linear-gradient(180deg,#dc3545,#a81f2a); } /* refunded in red family */
+    body { background: #fff7f5; color: #111827; margin:0; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+    
+    /* Style for Locomotive Scroll container */
+    [data-scroll-container] {
+      overflow: visible;
+    }
 
-      /* --- modern button styles --- */
-      .btn-modern {
-        border: none;
-        border-radius: 14px;
-        padding: .45rem .9rem;
-        font-weight:600;
-        box-shadow: 0 6px 18px rgba(13,110,253,.12);
-        transition: transform .12s ease, box-shadow .12s ease;
-        display:inline-flex;
-        align-items:center;
-        gap:.5rem;
-      }
-      .btn-modern:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(13,110,253,.14); }
-      .btn-modern:active { transform: translateY(-1px); }
-      .btn-gradient {
-        background: linear-gradient(90deg,#4f46e5,#06b6d4);
-        color: #fff;
-      }
-      .btn-ghost {
-        background:transparent;
-        border:1px solid rgba(13,110,253,.12);
-        color: #0d6efd;
-        box-shadow:none;
-      }
-      .btn-danger-modern {
-        background: linear-gradient(90deg,#f43f5e,#ef4444);
-        color:#fff;
-      }
-      .btn-disabled {
-        opacity:.6;
-        cursor: not-allowed;
-        transform:none;
-        box-shadow:none;
-      }
+    .container-centered {
+      max-width: var(--max-width);
+      margin: 34px auto;
+      padding: 0 20px;
+    }
 
-      /* subtle pulse for primary action (not too flashy) */
-      @keyframes softPulse {
-        0% { transform: translateY(0); }
-        50% { transform: translateY(-2px); }
-        100% { transform: translateY(0); }
-      }
-      .btn-animate { animation: none; }
-      .btn-animate:hover { animation: softPulse .8s ease-in-out; }
+    /* ensure there is space at the bottom so last card can fully reveal and footer shows */
+    main[data-scroll-container] {
+      padding-bottom: 140px;
+      z-index: 0; /* keep scroller behind footer */
+    }
 
-      /* order item hover / focus lift */
-      .order-card { transition: transform .18s ease, box-shadow .18s ease; }
-      .order-card:hover { transform: translateY(-6px); box-shadow: 0 20px 40px rgba(2,6,23,.08); }
-      .order-item { transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease; }
-      .order-item:hover { transform: translateY(-4px); box-shadow: 0 10px 24px rgba(2,6,23,.06); background: linear-gradient(180deg, #ffffff, #fbfbfd); }
-      .order-item:active { transform: translateY(-2px); }
+    /* ensure footer is on top of transformed scroller */
+    footer, .site-footer, #site-footer, .footer {
+      position: relative;
+      z-index: 60 !important;
+    }
 
-      /* small visual tweak for card header layout */
-      .card-header .order-actions { display:flex; gap:.5rem; align-items:center; }
+    h1.page-title { font-size: 28px; margin: 6px 0 14px; font-weight:800; letter-spacing:-0.3px; color:#111827; }
 
-      /* review button and modal styles */
-      .review-btn { min-width:140px; border-radius:10px; }
-      .reviewed-badge { background: linear-gradient(90deg,#6c757d,#495057); padding:6px 10px; border-radius:999px; color:#fff; font-weight:700; }
+    .controls-row {
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      align-items:center;
+      margin-bottom:22px;
+      flex-wrap:wrap;
+    }
 
-      /* star rating */
-      .stars { display:flex; gap:6px; align-items:center; }
-      .star { font-size:1.4rem; color:#ddd; cursor:pointer; transition: transform .08s ease, color .12s ease; }
-      .star:hover { transform: translateY(-3px); }
-      .star.filled { color: #ffc107; }
+    .search-pill {
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background: #fff;
+      border-radius: 999px;
+      padding: 8px 12px;
+      box-shadow: 0 8px 28px rgba(2,6,23,0.04);
+      border:1px solid rgba(243,236,236,0.9);
+      width: min(560px, 62%);
+      max-width: 100%;
+    }
+    .search-pill .search-icon {
+      width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+      border-radius: 999px; box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+      font-size:18px; color:var(--muted);
+    }
+    .search-pill input[type="search"] {
+      border: none; outline: none; padding: 10px 8px; font-size: 15px; background:transparent; width:100%;
+    }
 
-      /* show status buttons on all sizes — on small screens they become a horizontal scrollable row.
-         keep mobile select as well (so user can use either). */
-      .status-btns .btn-group {
-        display: flex;
-        gap: .5rem;
-        align-items: center;
-        /* allow horizontal scroll on narrow screens so buttons don't wrap/overflow */
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 4px; /* gives some breathing room for the scrollbar area */
-      }
+    .sort-select {
+      min-width: 180px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+      border: 1px solid rgba(243,236,236,0.9);
+      padding: 6px 8px;
+      background: #fff;
+    }
 
-      /* By default hide the mobile select (desktop) */
-      .status-mobile { display: none; }
+    .status-center {
+      display:flex;
+      justify-content:center;
+      gap:10px;
+      margin: 8px 0 26px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .status-primary {
+      background: linear-gradient(90deg,var(--accent-2),var(--accent));
+      color: white; border: none; padding:8px 14px; border-radius: 999px; font-weight:700; box-shadow: var(--soft-shadow-2);
+    }
+    .status-ghost {
+      background:transparent; border:1px solid rgba(13,110,253,0.06); color:var(--muted); padding:8px 12px; border-radius:999px; font-weight:600;
+    }
+    .status-extra {
+      border-radius: 10px; padding:8px 10px; background:#fff; border:1px solid rgba(243,236,236,0.9);
+      box-shadow: 0 8px 20px rgba(2,6,23,0.03);
+    }
 
-      /* responsive tweaks */
-      @media (max-width: 768px) {
-        .controls-row { gap:.5rem; }
-        .controls-row .form-control{ min-width: 100% !important; max-width: 100% !important; }
-        .controls-row .form-select{ min-width: 100% !important; max-width: 100% !important; }
+    .orders-grid {
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:20px;
+    }
+    @media(min-width: 980px) {
+      .orders-grid { grid-template-columns: 1fr 340px; gap:28px; align-items:start; }
+    }
 
-        /* show mobile select */
-        .status-mobile { display: block; margin-bottom: .75rem; }
+    /* =========================
+       Visual changes start here
+       ========================= */
 
-        /* compact action buttons: show icon only on small screens to avoid overflow */
-        .order-actions .btn { white-space:nowrap; }
-        .order-actions .btn i { font-size:1.05rem; }
-        /* hide long labels on very small screens, show only icon */
-        .btn .mobile-hide-text { display: none; }
-        .btn { padding: .45rem .6rem; font-size: .9rem; }
-        .btn-modern { padding: .35rem .6rem; border-radius:10px; gap:.35rem; box-shadow:none; }
+    .order-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,1));
+      border-radius: var(--radius);
+      padding: 12px;
+      box-shadow: 0 10px 30px rgba(2,6,23,0.04);
+      border: 1px solid rgba(243,236,236,0.9);
+      overflow: visible;
+      will-change: transform, opacity;
+      position: relative;
+      transition: transform .22s cubic-bezier(.2,.9,.2,1), box-shadow .22s ease, border-color .18s ease;
+    }
+    .order-card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 8px;
+      bottom: 8px;
+      width: 4px;
+      border-top-left-radius: 10px;
+      border-bottom-left-radius: 10px;
+      background: linear-gradient(180deg, rgba(255,127,102,0.14), rgba(255,107,107,0.10));
+      pointer-events: none;
+    }
+    .order-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 28px 70px rgba(2,6,23,0.08);
+      border-color: rgba(235,230,230,0.98);
+    }
 
-        /* Make review/download/cancel stack beneath item when needed */
-        .order-item { flex-direction: column; align-items: stretch; gap:.5rem; }
-        .order-item img, .order-item .no-image-box { margin-right: 0 !important; margin-bottom:.5rem; align-self:flex-start; }
-        .order-item .flex-grow-1 { order: 2; }
-        .order-item .ms-3 { order: 3; align-self:flex-end; min-width: auto; text-align:right; }
+    .order-top { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+    .order-meta { display:flex; gap:12px; align-items:center; }
+    .order-id { font-weight:700; color:#111827; font-size:15px; }
+    .order-date { color:var(--muted); font-size:13px; }
+    .order-total { font-weight:800; color:#0b365a; font-size:16px; }
 
-        /* adjust right summary card to appear full width below items (Bootstrap already stacks, but ensure padding) */
-        .card-header { flex-direction: column; align-items: flex-start; gap:.5rem; }
+    .thumb-row { display:flex; gap:10px; align-items:center; margin-top:12px; }
+    .thumb {
+      width:64px; height:64px; border-radius:10px; overflow:hidden; flex:0 0 64px;
+      box-shadow: 0 8px 18px rgba(2,6,23,0.04); background:#faf7f6; display:flex; align-items:center; justify-content:center;
+      border: 1px solid var(--sep);
+      transition: transform .22s ease, box-shadow .22s ease, border-color .18s ease;
+    }
+    .thumb:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 20px 44px rgba(2,6,23,0.08);
+      border-color: rgba(255,127,102,0.14);
+    }
+    .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
 
-        /* status badge shrink */
-        .status-badge { padding:5px 8px; font-size:.78rem; }
+    .btn-ghost .bi-file-earmark-pdf {
+      font-size: 1.25rem;
+      line-height: 1;
+    }
 
-        /* smaller review button */
-        .review-btn { min-width: auto; width:100%; display:inline-flex; justify-content:center; }
+    .order-details {
+      margin-top: 8px;
+      padding-top: 12px;
+      border-top: 1px solid var(--sep);
+    }
 
-        /* All Orders Summary table scroll responsive */
-        .col-lg-3 { margin-top: 1rem; } /* give some breathing room when stacked */
+    .items-list { display:flex; flex-direction:column; gap:12px; margin-top:12px; }
+    .item-row {
+      display:flex; gap:12px; align-items:center; padding:12px; border-radius:10px;
+      background: linear-gradient(180deg,#fff,#fbfbfd);
+      box-shadow: 0 6px 20px rgba(2,6,23,0.03);
+      cursor: pointer;
+      transition: transform .16s ease, box-shadow .16s ease, background .18s ease, border-color .18s ease;
+      border: 1px solid transparent;
+      position: relative;
+    }
+    .item-row + .item-row { border-top: 1px solid var(--sep); }
+    .item-row::before {
+      content: "";
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      bottom: 12px;
+      width: 3px;
+      border-radius: 2px;
+      background: transparent;
+      transition: background .18s ease, transform .18s ease, opacity .18s ease;
+      opacity: 0;
+      transform: translateX(-4px);
+    }
+    .item-row:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 22px 48px rgba(2,6,23,0.06);
+      background: linear-gradient(90deg, rgba(255,127,102,0.02), #fff);
+      border-color: rgba(255,127,102,0.06);
+    }
+    .item-row:hover::before,
+    .item-row:focus::before {
+      background: linear-gradient(180deg,var(--accent-2),var(--accent));
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .item-thumb { width:84px; height:84px; border-radius:10px; overflow:hidden; flex:0 0 84px; background:#fff; display:flex; align-items:center; justify-content:center; border:1px solid var(--sep); }
+    .item-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
 
-        /* make invoice button show icon + hide text */
-        .btn .desktop-hide-text { display: inline; }
-      }
+    .item-main { flex:1; display:flex; flex-direction:column; gap:6px; }
+    .item-title { font-weight:700; font-size:15px; color:#111827; }
+    .item-variant { color:var(--muted); font-size:13px; }
 
-      /* keep ellipsis shorter on mobile */
-      @media (max-width: 420px) {
-        .ellipsis { max-width: 110px; }
-      }
+    .item-actions { display:flex; gap:10px; align-items:center; justify-content:flex-end; min-width:160px; }
+    .stars-inline { display:flex; gap:6px; align-items:center; }
+    .stars-inline .star {
+      font-size:1.25rem; color:#e9e9e9; cursor:pointer; transition: transform .08s ease, color .12s ease;
+      user-select: none;
+    }
+    .stars-inline .star.filled { color: #ffc107; transform: translateY(-2px); }
 
-      /* small extra focus style for status scroller */
-      .status-btns .btn:focus { outline: 2px solid rgba(13,110,253,.12); outline-offset: 2px; }
-    </style>
+    /* Modal star styles */
+    .stars .star {
+      font-size: 1.4rem;
+      color: #e9e9e9;
+      cursor: pointer;
+      transition: color .12s ease, transform .08s ease;
+      user-select: none;
+      display: inline-block;
+      line-height: 1;
+    }
+    .stars .star.filled {
+      color: #ffc107;
+      transform: translateY(-2px);
+    }
+    .stars .star:focus { outline: none; text-shadow: 0 0 6px rgba(255,193,7,0.08); }
+
+    /* readonly state for modal stars */
+    .stars.readonly .star { pointer-events: none; cursor: default; }
+    .stars.readonly .star:focus { outline: none; }
+
+    .summary-card {
+      background: linear-gradient(180deg,#fff,#fff);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: 0 12px 36px rgba(2,6,23,0.04);
+      border: 1px solid rgba(243,236,236,0.9);
+    }
+    .summary-card { border-left: 4px solid rgba(255,107,107,0.06); }
+
+    .address-compact {
+      border-radius:10px;
+      padding:10px;
+      background: linear-gradient(180deg,#fff,#fff);
+      border:1px solid rgba(243,236,236,0.9);
+      box-shadow:0 6px 20px rgba(2,6,23,0.03);
+      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+    }
+    .address-compact:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 44px rgba(2,6,23,0.06);
+      border-color: rgba(255,127,102,0.08);
+    }
+    .address-title { font-weight:700; }
+
+    .btn-ghost {
+      background:transparent;
+      border:1px solid rgba(13,110,253,0.06);
+      color:#0d6efd;
+      padding:8px 12px;
+      border-radius:10px;
+      transition: background .12s ease, color .12s ease, transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+    }
+    .btn-ghost:hover {
+      background: rgba(255,127,102,0.06);
+      color: var(--accent-3);
+      border-color: rgba(255,127,102,0.10);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(255,127,102,0.06);
+    }
+
+    .btn-danger-modern {
+      background: linear-gradient(90deg,#f43f5e,#ef4444);
+      color:#fff;
+      padding:8px 12px;
+      border-radius:10px;
+      border:none;
+      transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+    }
+    .btn-danger-modern:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 48px rgba(244,63,94,0.14);
+      filter: brightness(1.03);
+    }
+
+    .btn-modern {
+      border-radius:999px;
+      background: linear-gradient(90deg,var(--accent),var(--accent-2));
+      color:#fff;
+      padding:8px 14px;
+      font-weight:700;
+      transition: transform .12s ease, box-shadow .12s ease;
+    }
+    .btn-modern:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 48px rgba(255,127,102,0.12);
+    }
+
+    /* inline-message / toast (non-modal) */
+    .inline-msg {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 28px;
+      background: rgba(17,24,39,0.96);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      box-shadow: 0 8px 36px rgba(2,6,23,0.25);
+      z-index: 9999;
+      opacity: 0;
+      transition: opacity .22s ease, transform .22s ease;
+      pointer-events: none;
+    }
+    .inline-msg.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+
+    .empty-state { text-align:center; padding:36px; background:#fff; border-radius:12px; box-shadow: 0 12px 28px rgba(2,6,23,0.04); border:1px solid rgba(243,236,236,0.9); }
+
+    /* New status classes for cancellation-request and cancelled */
+    .status-badge {
+      font-weight:700; padding:6px 10px; border-radius:10px; font-size:13px;
+    }
+    .status-processing { background: #fff9f3; color: #8a4b2a; border:1px solid rgba(138,75,42,0.06); }
+    .status-confirmed { background: #eef9ff; color: #0b5fb8; border:1px solid rgba(11,95,184,0.06); }
+    .status-delivered { background: #f3fff7; color: #106b3f; border:1px solid rgba(16,107,63,0.06); }
+    .status-cancellation-request { background: #fff7ef; color: #b35200; border:1px solid rgba(179,82,0,0.06); }
+    .status-cancelled { background: #fff1f2; color: #8b1f2d; border:1px solid rgba(139,31,45,0.06); }
+    .status-refunded { background: #f6f9ff; color: #334b8a; border:1px solid rgba(51,75,138,0.06); }
+
+    @media(max-width: 880px) {
+      .orders-grid { grid-template-columns: 1fr; }
+      .search-pill { width:100%; }
+      .summary-card { order: 3; }
+    }
+  </style>
 </head>
 <body>
-  <div id="main-wrapper">
-    {% include 'customer/layout.html' %}
-    <div id="main-content">
-      <div class="container mt-5">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-              </div>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+  {% include 'customer/layout.html' %}
 
-        <h2 class="text-center mb-4">Your Orders</h2>
+  <main class="container-centered" data-scroll-container>
+    <h1 class="page-title text-center" data-scroll-section>Your Orders</h1>
 
-        <!-- Controls -->
-        <form id="orders-controls" method="get" class="mb-3 controls-row d-flex flex-wrap gap-2 align-items-center">
-          <input type="search" name="q" value="{{ q }}" placeholder="Search orders,product,sku,address" class="form-control" style="max-width:420px">
-          <select name="sort" class="form-select" onchange="this.form.submit()">
-            <option value="date_desc" {% if sort=='date_desc' %}selected{% endif %}>Newest to Oldest</option>
-            <option value="date_asc" {% if sort=='date_asc' %}selected{% endif %}>Oldest to Newest</option>
-            <option value="total_desc" {% if sort=='total_desc' %}selected{% endif %}>Total High to Low</option>
-            <option value="total_asc" {% if sort=='total_asc' %}selected{% endif %}>Total Low to High</option>
-          </select>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> <span class="d-none d-md-inline">Search</span></button>
-          <a href="{{ url_for('main.view_orders') }}" class="btn btn-ghost btn-modern"><i class="bi bi-arrow-clockwise"></i> <span class="d-none d-md-inline">Reset</span></a>
-        </form>
+    <form id="orders-controls" method="get" class="controls-row" role="search" aria-label="Orders search and sort" data-scroll-section>
+      <div class="search-pill" style="flex:1;max-width:760px;">
+        <div class="search-icon" aria-hidden="true"><i class="bi bi-search"></i></div>
+        <input id="search-input" type="search" name="q" value="{{ q }}" placeholder="Search orders, products, address..." aria-label="Search orders" />
+        <button type="submit" class="btn btn-modern" style="border-radius:999px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#fff; border:none; font-weight:700; padding:8px 14px;">Search</button>
+      </div>
 
-        <!-- Status filter: desktop buttons + mobile select with description above -->
-        <div class="mb-4 status-btns">
-          {% set statuses = ['all','processing','confirmed','out for delivery','delivered','cancellation-request','cancelled','refunded'] %}
-          <div class="d-none d-md-block">  {# desktop: keep original btn-group #}
-            <div class="btn-group" role="group" aria-label="status-filters">
-              {% for s in statuses %}
-                <a href="{{ url_for('main.view_orders', status=(None if s=='all' else s), q=q or None, sort=sort or None) }}"
-                   class="btn {% if current_status==s %}btn-primary{% else %}btn-outline-primary{% endif %} btn-sm text-capitalize">
-                   {% if s == 'cancellation-request' %}
-                     cancellation requests
-                   {% else %}
-                     {{ s }}
-                   {% endif %}
-                </a>
-              {% endfor %}
-            </div>
-          </div>
+      <select id="sort-select" name="sort" class="sort-select" aria-label="Sort orders" onchange="this.form.submit()">
+        <option value="date_desc" {% if sort=='date_desc' %}selected{% endif %}>Newest to Oldest</option>
+        <option value="date_asc" {% if sort=='date_asc' %}selected{% endif %}>Oldest to Newest</option>
+        <option value="total_desc" {% if sort=='total_desc' %}selected{% endif %}>Total High to Low</option>
+        <option value="total_asc" {% if sort=='total_asc' %}selected{% endif %}>Total Low to High</option>
+      </select>
+      <a href="{{ url_for('main.view_orders') }}" class="btn btn-ghost" title="Reset filters"><i class="bi bi-arrow-clockwise"></i></a>
+    </form>
 
-          <!-- mobile: status dropdown + description -->
-          <div class="status-mobile">
-            <label for="status-mobile-select" class="form-label small mb-1">Filter by status</label>
-            <select id="status-mobile-select" class="form-select" aria-label="Filter orders by status">
-              {% for s in statuses %}
-                {# build URL for each option #}
-                {% set href = url_for('main.view_orders', status=(None if s=='all' else s), q=q or None, sort=sort or None) %}
-                {% if s == 'all' %}
-                  {% set desc = 'Show all orders' %}
-                {% elif s == 'processing' %}
-                  {% set desc = 'Order received and being prepared.' %}
-                {% elif s == 'confirmed' %}
-                  {% set desc = 'Order confirmed by the seller.' %}
-                {% elif s == 'out for delivery' %}
-                  {% set desc = 'Order is with the delivery partner.' %}
-                {% elif s == 'delivered' %}
-                  {% set desc = 'Order delivered to you.' %}
-                {% elif s == 'cancellation-request' %}
-                  {% set desc = 'You requested cancellation; awaiting review.' %}
-                {% elif s == 'cancelled' %}
-                  {% set desc = 'Order has been cancelled.' %}
-                {% elif s == 'refunded' %}
-                  {% set desc = 'Amount refunded for this order.' %}
-                {% else %}
-                  {% set desc = '' %}
-                {% endif %}
-                <option value="{{ href }}" data-desc="{{ desc }}" {% if current_status==s %}selected{% endif %}>
-                  {% if s == 'cancellation-request' %}cancellation requests{% else %}{{ s }}{% endif %}
-                </option>
-              {% endfor %}
-            </select>
-            <div id="status-desc" class="small text-muted mt-2 mb-1">
-              {# initial description: map current_status to text (fallback) #}
-              {% if not current_status or current_status=='all' %}
-                Show all orders
-              {% elif current_status=='processing' %}
-                Order received and being prepared.
-              {% elif current_status=='confirmed' %}
-                Order confirmed by the seller.
-              {% elif current_status=='out for delivery' %}
-                Order is with the delivery partner.
-              {% elif current_status=='delivered' %}
-                Order delivered to you.
-              {% elif current_status=='cancellation-request' %}
-                You requested cancellation; awaiting review.
-              {% elif current_status=='cancelled' %}
-                Order has been cancelled.
-              {% elif current_status=='refunded' %}
-                Amount refunded for this order.
-              {% else %}
-                &nbsp;
-              {% endif %}
-            </div>
-          </div>
-        </div>
+    <div class="status-center" role="toolbar" aria-label="Order status filters" data-scroll-section>
+      <a href="{{ url_for('main.view_orders', status=None if 'all'=='all' else 'all', q=q or None, sort=sort or None) }}"
+         class="{{ 'status-primary' if current_status=='all' else 'status-ghost' }}">All</a>
 
-        <div class="row">
-          <div class="col-lg-9">
-            {% if orders %}
-              {% for order_id, order in orders.items() %}
-                <div class="card mb-4 shadow-sm order-card">
-                  <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                      <strong>Order ID:</strong> {{ order_id }} &nbsp; | &nbsp;
-                      <small class="meta">Date:</small> {{ order.order_date }}
-                    </div>
-                    <div class="text-end">
-                      <div><strong>Total:</strong> {{ order.currency }} {{ order.total_amount }}</div>
+      <a href="{{ url_for('main.view_orders', status='confirmed', q=q or None, sort=sort or None) }}"
+         class="{{ 'status-primary' if current_status=='confirmed' else 'status-ghost' }}">Confirmed</a>
 
-                      <!-- Status badge shown instead of plain text -->
-                      <div class="mt-1 d-flex align-items-center justify-content-end gap-2">
-                        <div class="small text-muted">Payment: {{ order.payment_status }}</div>
-                        <div>
-                          {# sanitize class name: lowercase and replace spaces with hyphen #}
-                          <span class="status-badge status-{{ order.order_status|lower|replace(' ', '-') }}">
-                            {{ order.order_status }}
-                          </span>
-                        </div>
+      <a href="{{ url_for('main.view_orders', status='delivered', q=q or None, sort=sort or None) }}"
+         class="{{ 'status-primary' if current_status=='delivered' else 'status-ghost' }}">Delivered</a>
 
-                        <!-- Order-level actions: Request cancellation (only when allowed) -->
-                        <div class="order-actions ms-2">
-                          {% set eligible = order.order_status in ['processing','confirmed'] %}
-                          {% set cancellation_requested = order.order_status == 'cancellation-request' or order.order_status == 'cancellation requested' %}
-                          <form id="cancel-form-{{ order_id }}" method="POST" action="{{ url_for('main.request_order_cancellation') }}" onsubmit="event.stopPropagation();">
-                            <input type="hidden" name="order_id" value="{{ order_id }}">
-                            {% if eligible %}
-                              <button
-                                type="submit"
-                                class="btn btn-modern btn-danger-modern btn-animate request-cancel-btn"
-                                onclick="event.stopPropagation();"
-                                title="Request cancellation for this order">
-                                <i class="bi bi-x-circle-fill" aria-hidden="true"></i>
-                                <span class="mobile-hide-text"> Request Cancellation</span>
-                              </button>
-                            {% elif cancellation_requested %}
-                              <button type="button" class="btn btn-modern btn-danger-modern btn-disabled" disabled onclick="event.stopPropagation();">
-                                <i class="bi bi-clock-history" aria-hidden="true"></i>
-                                <span class="mobile-hide-text"> Cancellation Requested</span>
-                              </button>
-                            {% else %}
-                              <button type="button" class="btn btn-modern btn-ghost btn-disabled" disabled onclick="event.stopPropagation();">
-                                <i class="bi bi-x-circle" aria-hidden="true"></i>
-                                <span class="mobile-hide-text"> Request Cancellation</span>
-                              </button>
-                            {% endif %}
-                          </form>
-                        </div>
-
-                        <!-- Download invoice action (POST) -->
-                        <div class="order-actions ms-2">
-                          <form method="POST" action="{{ url_for('main.download_invoice') }}" onsubmit="event.stopPropagation();" style="display:inline-block;">
-                            <input type="hidden" name="order_id" value="{{ order_id }}">
-                            <button type="submit" class="btn btn-modern btn-ghost" title="Download invoice">
-                              <i class="bi bi-file-earmark-pdf" aria-hidden="true"></i>
-                              <span class="mobile-hide-text"> Download Invoice</span>
-                            </button>
-                          </form>
-                        </div>
-
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="card-body">
-                    <div class="row">
-                      <!-- Left: Items -->
-                      <div class="col-md-8">
-                        {% for item in order['items'] %}
-                          {# clickable item container navigates to product page via delegated handler (no inline onclick) #}
-                          <div
-                            class="d-flex align-items-center mb-3 border rounded p-2 bg-light order-item clickable-item"
-                            role="button"
-                            tabindex="0"
-                            data-product-id="{{ item.product_id }}"
-                            data-variant-id="{{ item.variant_id or '' }}"
-                          >
-                            {% if item.image_path %}
-                              <img src="{{ url_for('static', filename=item.image_path.replace('\\','/')) }}" class="order-img me-3" alt="{{ item.product_name }}">
-                            {% else %}
-                              <div class="no-image-box me-3">No Image</div>
-                            {% endif %}
-
-                            <div class="flex-grow-1">
-                              <h6 class="mb-1">{{ item.product_name }}</h6>
-                              {% if item.variant.sku or item.variant.size or item.variant.color %}
-                                <div class="small text-muted">
-                                  Variant:
-                                  {% if item.variant.sku %} SKU: <span class="ellipsis">{{ item.variant.sku }}</span>{% endif %}
-                                  {% if item.variant.size %} , Size: {{ item.variant.size }}{% endif %}
-                                  {% if item.variant.color %} , Color: {{ item.variant.color }}{% endif %}
-                                </div>
-                              {% endif %}
-                              <div class="small text-muted">Quantity: {{ item.quantity }}</div>
-                              <div class="small text-muted">Unit Price: {{ order.currency }} {{ item.unit_price }}</div>
-                              <div class="small text-muted">Subtotal: {{ order.currency }} {{ item.total_price }}</div>
-                            </div>
-
-                            <!-- Review / Reviewed UI (only for delivered orders) -->
-                            <div class="ms-3 text-end" style="min-width:160px;">
-                              {% set status_lc = order.order_status|lower %}
-                              {% if status_lc == 'delivered' %}
-                                {% if item.reviewed %}
-                                  <div class="reviewed-badge">Reviewed</div>
-                                {% else %}
-                                  <!-- Button opens review modal; using data-* to pass ids -->
-                                  <button
-                                    type="button"
-                                    class="btn btn-outline-primary review-btn"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#reviewModal"
-                                    data-product_id="{{ item.product_id }}"
-                                    data-variant_id="{{ item.variant_id }}"
-                                    data-order_id="{{ order_id }}"
-                                    data-product_name="{{ item.product_name|e }}"
-                                  >
-                                    <i class="bi bi-star-fill" aria-hidden="true"></i>
-                                    <span class="mobile-hide-text"> Write Review</span>
-                                  </button>
-                                {% endif %}
-                              {% else %}
-                                <!-- not delivered yet -->
-                                <div class="small text-muted">Reviews available after delivery</div>
-                              {% endif %}
-                            </div>
-
-                          </div>
-                        {% endfor %}
-                      </div>
-
-                      <!-- Right: Summary -->
-                      <div class="col-md-4">
-                        <div class="card h-100 p-3 border-0">
-                          <h6 class="mb-3">Order Summary</h6>
-                          <table class="table table-sm mb-2">
-                            <thead>
-                              <tr>
-                                <th>Item</th>
-                                <th>Qty</th>
-                                <th>Total</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {% for item in order['items'] %}
-                                <tr>
-                                  <td style="max-width:120px"><span class="ellipsis">{{ item.product_name }}</span></td>
-                                  <td>{{ item.quantity }}</td>
-                                  <td>{{ order.currency }} {{ item.total_price }}</td>
-                                </tr>
-                              {% endfor %}
-                              <tr>
-                                <td colspan="2" class="text-end">Shipping:</td>
-                                <td>{{ order.currency }} {{ order.shipping_cost }}</td>
-                              </tr>
-                              <tr>
-                                <th colspan="2" class="text-end">Grand Total:</th>
-                                <th>{{ order.currency }} {{ order.total_amount }}</th>
-                              </tr>
-                            </tbody>
-                          </table>
-
-                          <div class="mt-3 small">
-                            <strong>Shipping Address</strong><br>
-                            {% if order.shipping_address.name %}{{ order.shipping_address.name }}<br>{% endif %}
-                            {{ order.shipping_address.line1 }}{% if order.shipping_address.line2 %}, {{ order.shipping_address.line2 }}{% endif %}<br>
-                            {{ order.shipping_address.city }}, {{ order.shipping_address.state }} - {{ order.shipping_address.postal_code }}<br>
-                            {{ order.shipping_address.country }}<br>
-                            {% if order.shipping_address.phone %}Phone: {{ order.shipping_address.phone }}{% endif %}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              {% endfor %}
-            {% else %}
-              <p class="text-center">You haven't placed any orders yet.</p>
-            {% endif %}
-          </div>
-
-          <!-- Right sidebar: All orders summary -->
-          <div class="col-lg-3">
-            <div class="card shadow p-3 mb-4">
-              <h6 class="mb-3">All Orders Summary</h6>
-              {% if orders %}
-                <div style="max-height:420px;overflow:auto">
-                  <table class="table table-bordered table-sm mb-0">
-                    <thead>
-                      <tr><th>Order ID</th><th>Date</th><th>Total</th></tr>
-                    </thead>
-                    <tbody>
-                      {% for order_id, order in orders.items() %}
-                        <tr>
-                          <td>{{ order_id }}</td>
-                          <td>{{ order.order_date }}</td>
-                          <td>{{ order.currency }} {{ order.total_amount }}</td>
-                        </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-                <div class="fw-bold text-end mt-2">
-                  Grand Total: {{ orders.values()|map(attribute='total_amount')|sum }}
-                </div>
-              {% else %}
-                <p>No orders yet.</p>
-              {% endif %}
-            </div>
-          </div>
-        </div>
+      <div class="status-extra">
+        <select onchange="if(this.value) window.location.href=this.value" aria-label="More status filters" style="border:none;background:transparent;">
+          <option value="">More</option>
+          {% for s in ['processing','out for delivery','cancellation-request','cancelled','refunded'] %}
+            <option value="{{ url_for('main.view_orders', status=s, q=q or None, sort=sort or None) }}"
+              {% if current_status==s %}selected{% endif %}>
+              {{ s.replace('-', ' ') }}
+            </option>
+          {% endfor %}
+        </select>
       </div>
     </div>
 
-    <div class="sticky-footer">
-      {% include 'customer/footer.html' %}
-    </div>
-  </div>
+    <div class="orders-grid" data-scroll-section>
+      <div>
+        <!-- orders-list: articles appended here (initial page rendered server-side) -->
+        <div id="orders-list" data-page="{{ page|default(1) }}" data-has-more="{{ '1' if has_more else '0' }}">
+        {% if orders %}
+          {% for order_id, order in orders.items() %}
+            <article style="margin-bottom: 20px;" class="order-card" tabindex="0" aria-labelledby="order-{{ order_id }}-title" data-order-index="{{ loop.index0 }}" data-order-id="{{ order_id }}">
+              <div class="order-top">
+                <div class="order-meta">
+                  <div class="order-id" id="order-{{ order_id }}-title">Order #{{ order_id }}</div>
+                  <div class="order-date">{{ order.order_date }}</div>
+                  <div style="display:inline-flex;align-items:center;gap:8px;">
+                    <span class="order-total">{{ order.currency }} {{ '%.2f'|format(order.total_amount) }}</span>
+                    <span class="small text-muted">•</span>
+                    <span class="small text-muted">Payment: {{ order.payment_status }}</span>
+                  </div>
+                </div>
 
-  <!-- Confirm cancellation modal (kept as-is) -->
-  <div class="modal fade" id="confirmCancelModal" tabindex="-1" aria-labelledby="confirmCancelModalLabel" aria-hidden="true">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  {% set sclass = 'status-' + (order.order_status|lower|replace(' ', '-')) %}
+                  <span class="status-badge {{ sclass }}">{{ order.order_status }}</span>
+
+                  <div style="display:flex;gap:8px;align-items:center">
+                    <form id="cancel-form-{{ order_id }}" method="POST" action="{{ url_for('main.request_order_cancellation') }}" onsubmit="event.stopPropagation();">
+                      <input type="hidden" name="order_id" value="{{ order_id }}">
+                      {% set eligible = order.order_status in ['processing','confirmed'] %}
+                      {% set cancellation_requested = order.order_status in ['cancellation-request','cancellation requested'] %}
+                      {% set cancelled_state = order.order_status in ['cancelled','refunded'] %}
+                      {% set delivered_state = order.order_status|lower == 'delivered' %}
+                      {% if eligible %}
+                        <button type="submit" class="btn btn-danger-modern" title="Request cancellation"><i class="bi bi-x-circle"></i>&nbsp;<span class="d-none d-md-inline">Cancel</span></button>
+                      {% else %}
+                        {# don't render cancel button for cancellation-request, cancelled/refunded, or delivered #}
+                      {% endif %}
+                    </form>
+
+                    <form method="POST" action="{{ url_for('main.download_invoice') }}" onsubmit="event.stopPropagation();">
+                      <input type="hidden" name="order_id" value="{{ order_id }}">
+                      <button type="submit" class="btn btn-ghost" title="Download invoice"><i class="bi bi-file-earmark-pdf"></i></button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+              <div class="order-details" aria-hidden="false">
+                <div class="items-list">
+                  {% for item in order['items'] %}
+                    {% set vid_attr = item.variant_id if item.variant_id is not none else '' %}
+                    <div id="item-{{ order_id }}-{{ item.product_id }}{% if vid_attr %}-{{ vid_attr }}{% endif %}"
+                         class="item-row"
+                         role="group"
+                         aria-label="Item {{ item.product_name }}"
+                         data-product-id="{{ item.product_id }}"
+                         data-variant-id="{{ item.variant_id or '' }}"
+                         data-reviewed="{{ '1' if item.reviewed else '0' }}"
+                         data-rating="{{ item.rating if item.rating is not none else '' }}"
+                         data-review-title="{{ item.review.title if item.review else '' }}"
+                         data-review-body="{{ item.review.body if item.review else '' }}">
+                      <div class="item-thumb">
+                        {% if item.image_path %}
+                          <img src="{{ url_for('static', filename=item.image_path.replace('\\','/')) }}" alt="{{ item.product_name }}">
+                        {% else %}
+                          <div style="padding:10px;color:var(--muted)"><i class="bi bi-image"></i></div>
+                        {% endif %}
+                      </div>
+
+                      <div class="item-main">
+                        <div class="item-title">{{ item.product_name }}</div>
+                        <div class="item-variant">
+                          {% if item.variant.size %}Size: {{ item.variant.size }}{% endif %}
+                          {% if item.variant.color %} {% if item.variant.size %}•{% endif %} Color: {{ item.variant.color }}{% endif %}
+                        </div>
+                        <div class="item-meta" style="display:flex;gap:12px;color:var(--muted);font-size:13px;margin-top:6px;">
+                          <div>Qty: {{ item.quantity }}</div>
+                          <div>Item total: {{ order.currency }} {{ '%.2f'|format(item.total_price) }}</div>
+                        </div>
+                      </div>
+
+                      <div class="item-actions">
+                        {% set status_lc = order.order_status|lower %}
+                        {% if status_lc == 'delivered' %}
+                          <div class="stars-inline" role="radiogroup" aria-label="Rate {{ item.product_name }}">
+                            {% set r = item.rating if item.rating is defined and item.rating is not none else (item.review.rating if item.review is defined and item.review else None) %}
+                            {% for s in range(1,6) %}
+                              {% set filled = (r is not none and s <= r) %}
+                              <span tabindex="0"
+                                    class="star {% if filled %}filled{% endif %} inline-star"
+                                    role="radio"
+                                    aria-checked="{{ 'true' if filled else 'false' }}"
+                                    data-product="{{ item.product_id }}"
+                                    data-variant="{{ item.variant_id or '' }}"
+                                    data-order="{{ order_id }}"
+                                    data-rating="{{ s }}"
+                                    data-reviewed="{{ '1' if item.reviewed else '0' }}"
+                                    data-review-title="{{ item.review.title if item.review }}"{% if item.review and item.review.body %} data-review-body="{{ item.review.body|e }}" {% endif %}>
+                                  ★
+                              </span>
+                            {% endfor %}
+                          </div>
+                        {% else %}
+                          <div class="small text-muted">Reviews allowed after delivery</div>
+                        {% endif %}
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+
+                <div style="display:flex; gap:12px; margin-top:14px; align-items:flex-start;">
+                  <div style="flex:1;">
+                    <div class="address-compact" tabindex="0" role="button" aria-label="Shipping address for order {{ order_id }}">
+                      <div class="address-title">Shipping Address</div>
+                      <div class="small text-muted" style="margin-top:6px;">
+                        {% if order.shipping_address.name %}<strong>{{ order.shipping_address.name }}</strong><br>{% endif %}
+                        {{ order.shipping_address.line1 }}{% if order.shipping_address.line2 %}, {{ order.shipping_address.line2 }}{% endif %}<br>
+                        {{ order.shipping_address.city }}, {{ order.shipping_address.state }} - {{ order.shipping_address.postal_code }}<br>
+                        {{ order.shipping_address.country }}{% if order.shipping_address.phone %}<br>Phone: {{ order.shipping_address.phone }}{% endif %}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style="width:320px;">
+                    <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid rgba(243,236,236,0.9); box-shadow:0 8px 24px rgba(2,6,23,0.03);">
+                      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                        <div style="font-weight:700">Order Summary</div>
+                        <div class="small text-muted">{{ order.currency }}</div>
+                      </div>
+                      <table style="width:100%;font-size:14px;">
+                        <tbody>
+                          {% for item in order['items'] %}
+                            <tr>
+                              <td style="padding:6px 4px; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ item.product_name }}</td>
+                              <td style="text-align:center; padding:6px 4px;">x{{ item.quantity }}</td>
+                              <td style="text-align:right; padding:6px 4px;">{{ order.currency }} {{ '%.2f'|format(item.total_price) }}</td>
+                            </tr>
+                          {% endfor %}
+                          <tr>
+                            <td colspan="2" style="text-align:right;padding-top:8px;"><strong>Shipping</strong></td>
+                            <td style="text-align:right;padding-top:8px;">{{ order.currency }} {{ '%.2f'|format(order.shipping_cost or 0.0) }}</td>
+                          </tr>
+                          <tr>
+                            <td colspan="2" style="text-align:right;padding-top:8px;"><strong>Grand total</strong></td>
+                            <td style="text-align:right;padding-top:8px;"><strong>{{ order.currency }} {{ '%.2f'|format(order.total_amount) }}</strong></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+
+              </div> </article>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">
+            <h4>No orders yet</h4>
+            <p class="text-muted">You haven't placed any orders yet. Browse products and place your first order.</p>
+            <a class="btn btn-modern" href="{{ url_for('main.place_order') }}" style="background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:#fff;">Continue shopping</a>
+          </div>
+        {% endif %}
+        </div>
+
+        <!-- loader -->
+        <div id="orders-loader" style="text-align:center; padding:14px; display:none;">
+          <div class="small text-muted">Loading more orders…</div>
+        </div>
+
+      </div>
+
+      <aside>
+        <div class="summary-card">
+          <h5>Your Recent Orders</h5>
+          <div style="max-height:520px; overflow:auto; margin-top:8px;">
+            <table class="summary-table" role="table" aria-label="All orders summary">
+              <tbody>
+                {% if orders %}
+                  {% for order_id, order in orders.items() %}
+                    <tr>
+                      <td style="padding:8px 6px; width:65%"><div style="font-weight:700; font-size:14px;">#{{ order_id }}</div><div class="small text-muted">{{ order.order_date }}</div></td>
+                      <td style="padding:8px 6px; text-align:right;"><div class="summary-item">{{ order.currency }} {{ '%.2f'|format(order.total_amount) }}</div></td>
+                    </tr>
+                  {% endfor %}
+                {% else %}
+                  <tr><td>No recent orders</td></tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+
+          {% if orders %}
+            <div style="display:flex;justify-content:space-between; align-items:center; margin-top:12px;">
+              <div class="small text-muted">Total across shown orders</div>
+              <div style="font-weight:800;">{{ orders.values()|map(attribute='total_amount')|sum }}</div>
+            </div>
+          {% endif %}
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Cancel confirmation modal -->
+  <div class="modal fade" id="confirmCancelModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="confirmCancelModalLabel">Confirm Cancellation Request</h5>
+          <h5 class="modal-title">Confirm Cancellation</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          Are you sure you want to request cancellation for order <strong>#<span class="modal-order-id"></span></strong>?
-          <div class="mt-2 text-muted small">This will send a cancellation request to the store. We will review and update the order status.</div>
+          Are you sure you want to request cancellation for order <strong>#<span id="modal-order-id">?</span></strong>?
+          <div class="small text-muted mt-2">We will review the request and update the order status.</div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">No, go back</button>
@@ -512,8 +620,8 @@
     </div>
   </div>
 
-  <!-- Review Modal -->
-  <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+  <!-- Review modal -->
+  <div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-md modal-dialog-centered">
       <div class="modal-content">
         <form id="reviewForm" method="POST" action="{{ url_for('main.submit_review') }}">
@@ -521,6 +629,7 @@
             <h5 class="modal-title" id="reviewModalLabel">Write a review</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
+
           <div class="modal-body">
             <input type="hidden" name="product_id" id="rv-product-id" value="">
             <input type="hidden" name="variant_id" id="rv-variant-id" value="">
@@ -532,6 +641,7 @@
 
             <div class="mb-3">
               <label class="form-label small">Your rating</label>
+              <!-- rv-stars gets 'readonly' class when already reviewed -->
               <div class="stars" id="rv-stars" role="radiogroup" aria-label="Rating">
                 <span class="star" data-value="1" role="radio" aria-checked="false" tabindex="0">★</span>
                 <span class="star" data-value="2" role="radio" aria-checked="false" tabindex="0">★</span>
@@ -542,9 +652,13 @@
               <input type="hidden" name="rating" id="rv-rating" value="">
             </div>
 
+            <div id="rv-readonly-msg" class="mb-2" style="display:none;">
+              <div class="badge bg-secondary">Reviewed — read-only</div>
+            </div>
+
             <div class="mb-3">
               <label class="form-label">Title (short)</label>
-              <input type="text" name="title" id="rv-title" class="form-control" maxlength="255" placeholder="Summary (optional)">
+              <input type="text" name="title" id="rv-title" class="form-control" maxlength="255" placeholder="Summary (optional)" />
             </div>
 
             <div class="mb-3">
@@ -554,174 +668,690 @@
 
             <div class="small text-muted">Note: reviews from verified purchases are labeled as such.</div>
           </div>
+
           <div class="modal-footer">
             <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" id="rv-submit-btn" class="btn btn-primary">Submit review</button>
+            <button type="submit" id="rv-submit-btn" class="btn btn-modern" style="background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;">Submit review</button>
           </div>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- scripts -->
+  {% include 'customer/footer.html' %}
+
+  <!-- inline message element (reused for disabled-cancel messages) -->
+  <div id="inlineMessage" class="inline-msg" role="status" aria-live="polite"></div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/locomotive-scroll@4.1.4/dist/locomotive-scroll.min.js"></script>
+
+  <!-- Main interactive script (handles animations, infinite scroll, AJAX cancel/review) -->
   <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      // --- Cancel confirmation logic (unchanged) ---
-      let formToSubmit = null;
-      const modalEl = document.getElementById('confirmCancelModal');
-      const modalOrderIdSpan = modalEl.querySelector('.modal-order-id');
-      const confirmBtn = document.getElementById('confirmCancelBtn');
-      let bsCancelModal = null;
-      document.querySelectorAll('form[id^="cancel-form-"]').forEach(function(form){
-        const submitBtn = form.querySelector('.request-cancel-btn');
-        if (!submitBtn) return;
-        form.addEventListener('submit', function (e) {
-          e.preventDefault(); e.stopPropagation();
-          formToSubmit = this;
-          const orderIdInput = form.querySelector('input[name="order_id"]');
-          const orderId = orderIdInput ? orderIdInput.value : '';
-          modalOrderIdSpan.textContent = orderId || '';
-          if (!bsCancelModal) bsCancelModal = new bootstrap.Modal(modalEl);
-          bsCancelModal.show();
-        });
-      });
-      confirmBtn.addEventListener('click', function () {
-        if (!formToSubmit) return;
-        confirmBtn.disabled = true;
-        if (bsCancelModal) bsCancelModal.hide();
-        setTimeout(function(){ formToSubmit.submit(); }, 150);
-      });
-      modalEl.addEventListener('hidden.bs.modal', function () { confirmBtn.disabled = false; });
+  document.addEventListener('DOMContentLoaded', function () {
+    // ---------- Cinematic scroll + GSAP + Locomotive Scroll integration ----------
+    gsap.registerPlugin(ScrollTrigger);
 
-      // --- Review modal logic (keeps your previous) ---
-      const reviewModal = document.getElementById('reviewModal');
-      const rvProductId = document.getElementById('rv-product-id');
-      const rvVariantId = document.getElementById('rv-variant-id');
-      const rvOrderId = document.getElementById('rv-order-id');
-      const rvProductName = document.getElementById('rv-product-name');
-      const rvRatingInput = document.getElementById('rv-rating');
-      const rvStars = document.getElementById('rv-stars');
-      const rvForm = document.getElementById('reviewForm');
-      const rvSubmitBtn = document.getElementById('rv-submit-btn');
-
-      reviewModal.addEventListener('show.bs.modal', function (evt) {
-        const button = evt.relatedTarget;
-        if (!button) return;
-        const pid = button.getAttribute('data-product_id') || '';
-        const vid = button.getAttribute('data-variant_id') || '';
-        const oid = button.getAttribute('data-order_id') || '';
-        const pname = button.getAttribute('data-product_name') || '';
-
-        rvProductId.value = pid;
-        rvVariantId.value = vid;
-        rvOrderId.value = oid;
-        rvProductName.textContent = pname;
-
-        rvRatingInput.value = '';
-        document.getElementById('rv-title').value = '';
-        document.getElementById('rv-body').value = '';
-        Array.from(rvStars.querySelectorAll('.star')).forEach(s => {
-          s.classList.remove('filled');
-          s.setAttribute('aria-checked', 'false');
-        });
+    const scrollerEl = document.querySelector('[data-scroll-container]');
+    let loco = null;
+    try {
+      loco = new LocomotiveScroll({
+        el: scrollerEl,
+        smooth: true,
+        inertia: 0.8,
+        smartphone: { smooth: true },
+        tablet: { smooth: true }
       });
 
-      rvStars.addEventListener('click', function (e) {
-        const s = e.target.closest('.star');
-        if (!s) return;
-        const v = parseInt(s.getAttribute('data-value'), 10) || 0;
-        setStars(v);
+      ScrollTrigger.scrollerProxy(scrollerEl, {
+        scrollTop(value) {
+          return arguments.length ? loco.scrollTo(value, 0, 0) : loco.scroll.instance.scroll.y;
+        },
+        getBoundingClientRect() {
+          return { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+        },
+        pinType: scrollerEl.style.transform ? "transform" : "fixed"
       });
-      rvStars.addEventListener('keydown', function (e) {
-        const s = e.target.closest('.star');
-        if (!s) return;
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          const v = parseInt(s.getAttribute('data-value'), 10) || 0;
-          setStars(v);
+
+      loco.on('scroll', ScrollTrigger.update);
+      ScrollTrigger.addEventListener('refresh', () => loco.update());
+    } catch (e) {
+      console.warn('Locomotive init failed', e);
+      loco = null;
+    }
+
+    // ---------- Animation + helper initializers ----------
+    function initCardAnimations(context) {
+      const cards = context ? context.querySelectorAll('.order-card') : document.querySelectorAll('.order-card');
+      cards.forEach((card) => {
+        if (card._gsap_initialized) return;
+        card._gsap_initialized = true;
+
+        gsap.fromTo(card,
+          { y: 80, opacity: 0, scale: 0.995 },
+          {
+            y: 0, opacity: 1, scale: 1, duration: 1.4, ease: 'power4.out',
+            scrollTrigger: {
+              trigger: card,
+              scroller: scrollerEl,
+              start: 'top 85%',
+              end: 'top 35%',
+              scrub: 0.9,
+            }
+          }
+        );
+
+        const details = card.querySelector('.order-details');
+        if (details) {
+          gsap.fromTo(details,
+            { y: 18, opacity: 0, scaleY: 0.995, transformOrigin: 'top' },
+            {
+              y: 0, opacity: 1, scaleY: 1, duration: 1.0, ease: 'power3.out',
+              scrollTrigger: {
+                trigger: card,
+                scroller: scrollerEl,
+                start: 'top 78%',
+                end: 'top 40%',
+                scrub: 0.8,
+              }
+            }
+          );
         }
       });
-      function setStars(value) {
-        value = Math.max(0, Math.min(5, parseInt(value) || 0));
-        rvRatingInput.value = value;
-        Array.from(rvStars.querySelectorAll('.star')).forEach(function (el) {
-          const v = parseInt(el.getAttribute('data-value'), 10);
-          if (v <= value) {
-            el.classList.add('filled');
-            el.setAttribute('aria-checked', 'true');
-          } else {
-            el.classList.remove('filled');
-            el.setAttribute('aria-checked', 'false');
+
+      const thumbs = context ? context.querySelectorAll('.thumb') : document.querySelectorAll('.thumb');
+      thumbs.forEach((el) => {
+        if (el._gsap_thumb) return;
+        el._gsap_thumb = true;
+        gsap.to(el, {
+          y: -20,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: el,
+            scroller: scrollerEl,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: true
           }
         });
-      }
-      rvForm.addEventListener('submit', function (e) {
-        const rating = parseInt(rvRatingInput.value || '0', 10);
-        if (!rating || rating < 1 || rating > 5) {
-          e.preventDefault();
-          alert('Please provide a rating (1 to 5 stars).');
-          return false;
-        }
-        rvSubmitBtn.disabled = true;
-        return true;
       });
-      reviewModal.addEventListener('hidden.bs.modal', function () {
+
+      const panel = document.querySelector('.summary-card');
+      if (panel && !panel._gsap_panel) {
+        panel._gsap_panel = true;
+        gsap.fromTo(panel,
+          { y: 40, opacity: 0 },
+          { y: 0, opacity: 1, duration: 1.2, ease: 'power4.out',
+            scrollTrigger: {
+              trigger: panel,
+              scroller: scrollerEl,
+              start: 'top 85%',
+              scrub: 0.8
+            }
+          });
+      }
+    }
+
+    function attachAccessibility(context) {
+      const rows = context ? context.querySelectorAll('.item-row') : document.querySelectorAll('.item-row');
+      rows.forEach(function (row) {
+        if (row._accessible) return;
+        row._accessible = true;
+        row.setAttribute('tabindex', '0');
+        row.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            if (isInteractive(document.activeElement)) return;
+            e.preventDefault();
+            const productId = row.getAttribute('data-product-id') || '';
+            const variantId = row.getAttribute('data-variant-id') || '';
+            if (!productId) return;
+            let url = '/prod/' + encodeURIComponent(productId);
+            if (variantId) url += '?variant_id=' + encodeURIComponent(variantId);
+            window.location.href = url;
+          }
+        });
+      });
+
+      const cards = context ? context.querySelectorAll('.order-card') : document.querySelectorAll('.order-card');
+      cards.forEach(function(card){
+        if (card._cardkeys) return;
+        card._cardkeys = true;
+        card.addEventListener('keydown', function(e){
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const firstFocusable = card.querySelector('button, a, input, textarea, select, [tabindex]:not([tabindex="-1"])');
+            if (firstFocusable) firstFocusable.focus();
+          }
+        });
+      });
+    }
+
+    // initial run
+    initCardAnimations();
+    attachAccessibility();
+    try { if (loco && loco.update) loco.update(); ScrollTrigger.refresh(); } catch(e) {}
+
+    // ---------- Cancel confirmation & AJAX cancellation ----------
+    let formToSubmit = null;
+    const cancelModalEl = document.getElementById('confirmCancelModal');
+    const modalOrderIdSpan = document.getElementById('modal-order-id');
+    const confirmBtn = document.getElementById('confirmCancelBtn');
+    let bsCancelModal = null;
+
+    document.body.addEventListener('click', function (e) {
+      const f = e.target.closest('form[id^="cancel-form-"]');
+      if (!f) return;
+      const submitBtn = f.querySelector('button[type="submit"]');
+      if (!submitBtn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      formToSubmit = f;
+      const orderIdInput = f.querySelector('input[name="order_id"]');
+      const orderId = orderIdInput ? orderIdInput.value : '';
+      modalOrderIdSpan.textContent = orderId || '';
+      if (!bsCancelModal) bsCancelModal = new bootstrap.Modal(cancelModalEl);
+      bsCancelModal.show();
+    });
+
+    confirmBtn.addEventListener('click', function () {
+      if (!formToSubmit) return;
+      confirmBtn.disabled = true;
+
+      const action = formToSubmit.action;
+      const formData = new FormData(formToSubmit);
+      const loader = document.getElementById('orders-loader');
+      if (loader) loader.style.display = 'block';
+
+      fetch(action, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+      .then(resp => resp.json().catch(() => ({ success: false, message: 'Invalid server response' })))
+      .then(data => {
+        if (data && data.success) {
+          try {
+            const card = formToSubmit.closest('.order-card');
+            const new_status = (data.new_status || '').toString().toLowerCase();
+            if (new_status === 'cancelled' || new_status === 'refunded') {
+              const btn = formToSubmit.querySelector('button[type="submit"], button');
+              if (btn) btn.remove();
+              if (card) {
+                const badge = card.querySelector('.status-badge');
+                if (badge) {
+                  badge.textContent = new_status.charAt(0).toUpperCase() + new_status.slice(1);
+                  badge.className = 'status-badge status-cancelled';
+                }
+              }
+            } else {
+              const btn = formToSubmit.querySelector('button[type="submit"], button');
+              if (btn) btn.remove();
+              if (card) {
+                const badge = card.querySelector('.status-badge');
+                if (badge) {
+                  badge.textContent = (data.new_status || 'cancellation-request').replace(/-/g, ' ');
+                  badge.className = 'status-badge status-cancellation-request';
+                }
+              }
+            }
+          } catch (err) {
+            console.warn('DOM update error', err);
+          }
+          showInlineMessage(data.message || 'Cancellation requested');
+        } else {
+          showInlineMessage(data && data.message ? data.message : 'Unable to submit cancellation');
+        }
+      })
+      .catch(err => {
+        console.error('Cancellation AJAX error', err);
+        showInlineMessage('Network error — could not submit cancellation');
+      })
+      .finally(() => {
+        confirmBtn.disabled = false;
+        if (bsCancelModal) bsCancelModal.hide();
+        if (loader) loader.style.display = 'none';
+      });
+    });
+
+    cancelModalEl.addEventListener('hidden.bs.modal', function () { confirmBtn.disabled = false; });
+
+    // ---------- inline message helper ----------
+    const inlineMsgEl = document.getElementById('inlineMessage');
+    let inlineMsgTimer = null;
+    function showInlineMessage(text, ms = 3000) {
+      if (!inlineMsgEl) return;
+      inlineMsgEl.textContent = text || '';
+      inlineMsgEl.classList.add('show');
+      clearTimeout(inlineMsgTimer);
+      inlineMsgTimer = setTimeout(() => {
+        inlineMsgEl.classList.remove('show');
+      }, ms);
+    }
+
+    // ---------- Review modal & AJAX submit (robust updates & auto-close) ----------
+    const reviewModalEl = document.getElementById('reviewModal');
+    const bsReviewModal = new bootstrap.Modal(reviewModalEl);
+    const rvProductId = document.getElementById('rv-product-id');
+    const rvVariantId = document.getElementById('rv-variant-id');
+    const rvOrderId = document.getElementById('rv-order-id');
+    const rvProductName = document.getElementById('rv-product-name');
+    const rvRatingInput = document.getElementById('rv-rating');
+    const rvStars = document.getElementById('rv-stars');
+    const rvTitle = document.getElementById('rv-title');
+    const rvBody = document.getElementById('rv-body');
+    const rvSubmitBtn = document.getElementById('rv-submit-btn');
+    const rvReadonlyMsg = document.getElementById('rv-readonly-msg');
+
+    function setModalStars(value) {
+      value = Math.max(0, Math.min(5, parseInt(value||0)));
+      rvRatingInput.value = value;
+      Array.from(rvStars.querySelectorAll('.star')).forEach(function (el) {
+        const v = parseInt(el.getAttribute('data-value'), 10);
+        if (v <= value) {
+          el.classList.add('filled');
+          el.setAttribute('aria-checked','true');
+        } else {
+          el.classList.remove('filled');
+          el.setAttribute('aria-checked','false');
+        }
+      });
+    }
+
+    rvStars.addEventListener('click', function (e) {
+      if (rvStars.classList.contains('readonly')) return;
+      const s = e.target.closest('.star');
+      if (!s) return;
+      const v = parseInt(s.getAttribute('data-value'), 10) || 0;
+      setModalStars(v);
+    });
+    rvStars.addEventListener('keydown', function (e) {
+      if (rvStars.classList.contains('readonly')) return;
+      const s = e.target.closest('.star');
+      if (!s) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const v = parseInt(s.getAttribute('data-value'), 10) || 0;
+        setModalStars(v);
+      }
+    });
+
+    // When clicking inline-star we open modal, prefill modal from star or from the row dataset.
+    document.body.addEventListener('click', function (e) {
+      // disabled-cancel handling (if any)
+      const disabledBtn = e.target.closest('.btn-disabled');
+      if (disabledBtn) {
+        e.preventDefault();
+        const dtype = disabledBtn.dataset.disabledType || '';
+        if (dtype === 'requested') {
+          showInlineMessage('Cancellation already requested for this order');
+        } else {
+          showInlineMessage('Cancellation not allowed for this order');
+        }
+        return;
+      }
+
+      const star = e.target.closest('.inline-star');
+      if (!star) return;
+      e.preventDefault();
+
+      const productId = star.getAttribute('data-product') || '';
+      const variantId = star.getAttribute('data-variant') || '';
+      const orderId = star.getAttribute('data-order') || '';
+      const clickedRating = parseInt(star.getAttribute('data-rating'), 10) || 0;
+      const reviewedFlag = star.getAttribute('data-reviewed') === '1';
+      const itemRow = star.closest('.item-row');
+      const prodName = itemRow ? (itemRow.querySelector('.item-title')?.textContent || '') : '';
+
+      // Prefer review info attached to the star itself, else fallback to the row dataset (populated after AJAX)
+      const reviewTitle = star.getAttribute('data-review-title') || (itemRow && itemRow.dataset.reviewTitle) || '';
+      const reviewBody = star.getAttribute('data-review-body') || (itemRow && itemRow.dataset.reviewBody) || '';
+      const rowRating = (itemRow && itemRow.dataset.rating) ? parseInt(itemRow.dataset.rating,10) : null;
+
+      let existingRating = 0;
+      if (rowRating) existingRating = rowRating;
+      else {
+        const ariaChecked = itemRow && itemRow.querySelectorAll('.inline-star[aria-checked="true"]');
+        if (ariaChecked && ariaChecked.length) existingRating = ariaChecked.length;
+        else {
+          const filled = itemRow && itemRow.querySelectorAll('.inline-star.filled, .star.filled');
+          if (filled && filled.length) existingRating = filled.length;
+        }
+      }
+
+      rvProductId.value = productId || '';
+      rvVariantId.value = variantId || '';
+      rvOrderId.value = orderId || '';
+      rvProductName.textContent = prodName || '';
+      rvTitle.value = '';
+      rvBody.value = '';
+
+      if (reviewTitle) rvTitle.value = reviewTitle;
+      if (reviewBody) rvBody.value = reviewBody;
+
+      const ratingToShow = existingRating || clickedRating || 0;
+      setModalStars(ratingToShow);
+
+      if (reviewedFlag || (itemRow && itemRow.dataset.reviewed === '1')) {
+        rvStars.classList.add('readonly');
+        rvTitle.readOnly = true;
+        rvBody.readOnly = true;
+        rvReadonlyMsg.style.display = 'block';
+        rvSubmitBtn.style.display = 'none';
+        document.getElementById('reviewModalLabel').textContent = 'Your review';
+      } else {
+        rvStars.classList.remove('readonly');
+        rvTitle.readOnly = false;
+        rvBody.readOnly = false;
+        rvReadonlyMsg.style.display = 'none';
+        rvSubmitBtn.style.display = '';
+        document.getElementById('reviewModalLabel').textContent = 'Write a review';
+      }
+
+      bsReviewModal.show();
+    });
+
+    // REVIEW FORM submit (AJAX). On success:
+    // - Close modal
+    // - Update item-row dataset and inline-star elements (filled state, attributes)
+    // - Ensure modal will show saved details if reopened (we store review-title/body on DOM)
+    const rvForm = document.getElementById('reviewForm');
+    rvForm.addEventListener('submit', function (e) {
+      if (rvSubmitBtn.style.display === 'none') {
+        e.preventDefault();
+        return false;
+      }
+      e.preventDefault();
+
+      const rating = parseInt(rvRatingInput.value || '0', 10);
+      if (!rating || rating < 1 || rating > 5) {
+        alert('Please provide a rating (1 to 5 stars).');
+        return false;
+      }
+
+      rvSubmitBtn.disabled = true;
+      const formData = new FormData(rvForm);
+
+      fetch(rvForm.action, {
+        method: 'POST',
+        body: formData,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      })
+      .then(resp => resp.json().catch(() => ({ success: false, message: 'Invalid server response' })))
+      .then(data => {
+        if (data && data.success) {
+          try {
+            // Normalize ids to strings for matching:
+            const pid = String(data.product_id);
+            const vid = (data.variant_id === "" || data.variant_id === null || typeof data.variant_id === 'undefined') ? "" : String(data.variant_id);
+            // Find matching row robustly (prefer exact variant match, else product-only)
+            let matched = null;
+            const rows = Array.from(document.querySelectorAll('.item-row'));
+            for (let i=0;i<rows.length;i++){
+              const row = rows[i];
+              const rid = String(row.getAttribute('data-product-id') || (row.dataset && row.dataset.productId) || '');
+              const rvid = String(row.getAttribute('data-variant-id') || (row.dataset && row.dataset.variantId) || '');
+              if (rid === pid) {
+                // if both have variants, require variant equal; otherwise accept product-only match
+                if ((vid && rvid && rvid === vid) || (!vid && !rvid) || (!vid && rvid === '') || (vid && rvid === '')) {
+                  matched = row;
+                  break;
+                }
+                // also allow match where vid is empty but row variant is empty
+                if (!vid && (rvid === '' || typeof rvid === 'undefined')) { matched = row; break; }
+              }
+            }
+
+            // If not found by product+variant, fallback to product-only match
+            if (!matched) matched = document.querySelector('.item-row[data-product-id="' + pid + '"]');
+
+            if (matched) {
+              // Update persistent dataset on the row
+              try {
+                matched.dataset.reviewed = '1';
+                matched.dataset.rating = String(data.rating);
+                matched.dataset.reviewTitle = data.title || '';
+                matched.dataset.reviewBody = data.body || '';
+              } catch (err) {
+                // fallback to setAttribute if dataset not supported
+                try { matched.setAttribute('data-reviewed','1'); matched.setAttribute('data-rating', String(data.rating)); matched.setAttribute('data-review-title', data.title || ''); matched.setAttribute('data-review-body', data.body || ''); } catch(e){}
+              }
+
+              // Update inline stars within that row
+              const stars = matched.querySelectorAll('.inline-star');
+              stars.forEach(function(s){
+                const sVal = parseInt(s.getAttribute('data-rating') || '0', 10);
+                if (sVal <= data.rating) {
+                  s.classList.add('filled');
+                  s.setAttribute('aria-checked','true');
+                } else {
+                  s.classList.remove('filled');
+                  s.setAttribute('aria-checked','false');
+                }
+                s.setAttribute('data-reviewed', '1');
+                if (data.title !== undefined && data.title !== null) s.setAttribute('data-review-title', data.title);
+                if (data.body !== undefined && data.body !== null) s.setAttribute('data-review-body', data.body);
+              });
+            }
+
+            // Populate modal fields with saved values (so user can immediately see them if they re-open)
+            try {
+              if (data.title !== undefined && data.title !== null) rvTitle.value = data.title;
+              if (data.body !== undefined && data.body !== null) rvBody.value = data.body;
+              setModalStars(data.rating);
+
+              // Make modal read-only appearance (but we will close it now)
+              rvStars.classList.add('readonly');
+              rvTitle.readOnly = true;
+              rvBody.readOnly = true;
+              rvReadonlyMsg.style.display = 'block';
+              rvSubmitBtn.style.display = 'none';
+              document.getElementById('reviewModalLabel').textContent = 'Your review';
+            } catch (err) {
+              console.warn('Failed to populate modal after review', err);
+            }
+
+            // Close the modal and show inline confirmation
+            bsReviewModal.hide();
+          } catch (err) { console.warn('DOM update after review error', err); }
+
+          showInlineMessage(data.message || 'Review submitted');
+        } else {
+          showInlineMessage(data && data.message ? data.message : 'Failed to submit review');
+        }
+      })
+      .catch(err => {
+        console.error('Review AJAX error', err);
+        showInlineMessage('Network error — could not submit review');
+      })
+      .finally(() => {
         rvSubmitBtn.disabled = false;
       });
 
-      // --- Delegated navigation for order items (prevents navigating when clicking interactive elements) ---
-      function isInteractive(el) {
-        return !!el.closest('a, button, input, textarea, select, label');
-      }
-
-      document.addEventListener('click', function(e){
-        // if click is on interactive control, ignore (e.g., the Review button)
-        if (isInteractive(e.target)) return;
-
-        const item = e.target.closest('.order-item');
-        if (!item) return;
-
-        const pid = item.getAttribute('data-product-id');
-        const vid = item.getAttribute('data-variant-id');
-        if (!pid) return;
-
-        let url = '/prod/' + encodeURIComponent(pid);
-        if (vid) url += '?variant_id=' + encodeURIComponent(vid);
-        window.location.href = url;
-      });
-
-      document.addEventListener('keydown', function(e){
-        if (e.key !== 'Enter' && e.key !== ' ') return;
-        const focused = document.activeElement;
-        if (!focused) return;
-        if (isInteractive(focused)) return;
-        const item = focused.closest('.order-item');
-        if (!item) return;
-        e.preventDefault();
-        const pid = item.getAttribute('data-product-id');
-        const vid = item.getAttribute('data-variant-id');
-        if (!pid) return;
-        let url = '/prod/' + encodeURIComponent(pid);
-        if (vid) url += '?variant_id=' + encodeURIComponent(vid);
-        window.location.href = url;
-      });
-
-      // --- Mobile status select logic ---
-      const statusSelect = document.getElementById('status-mobile-select');
-      const statusDescBox = document.getElementById('status-desc');
-      if (statusSelect) {
-        statusSelect.addEventListener('change', function () {
-          const opt = this.options[this.selectedIndex];
-          const href = opt.value;
-          const desc = opt.getAttribute('data-desc') || '';
-          if (statusDescBox) statusDescBox.textContent = desc;
-          // navigate to the selected status (preserves q & sort because URLs were built server-side)
-          if (href) window.location.href = href;
-        });
-      }
-
+      return false;
     });
+
+    // When modal is hidden, reset interactive state (but keep row dataset so reopening will show saved review)
+    reviewModalEl.addEventListener('hidden.bs.modal', function () {
+      rvSubmitBtn.disabled = false;
+      rvStars.classList.remove('readonly');
+      rvTitle.readOnly = false;
+      rvBody.readOnly = false;
+      rvReadonlyMsg.style.display = 'none';
+      rvSubmitBtn.style.display = '';
+      document.getElementById('reviewModalLabel').textContent = 'Write a review';
+    });
+
+    // ---------- navigation click handlers ----------
+    function isInteractive(el) {
+      return !!el.closest('a, button, input, textarea, select, label, .inline-star, form');
+    }
+
+    document.body.addEventListener('click', function (e) {
+      const row = e.target.closest('.item-row');
+      if (!row) return;
+      if (isInteractive(e.target)) return;
+      const productId = row.getAttribute('data-product-id') || '';
+      const variantId = row.getAttribute('data-variant-id') || '';
+      if (!productId) return;
+      let url = '/prod/' + encodeURIComponent(productId);
+      if (variantId) url += '?variant_id=' + encodeURIComponent(variantId);
+      window.location.href = url;
+    });
+
+    // ---------- strip seconds & fractional seconds ----------
+    function stripSecondsFromTextNodes(root) {
+      const timeRegex = /(\b\d{1,2}:\d{2})(?::\d+(?:[.,]\d+)?|\.\d+)?/g;
+      root.querySelectorAll('*').forEach(el => {
+        if (el.children.length === 0 && typeof el.textContent === 'string' && el.textContent.trim().length) {
+          if (timeRegex.test(el.textContent)) el.textContent = el.textContent.replace(timeRegex, '$1');
+        }
+      });
+    }
+    const ordersGrid = document.querySelector('.orders-grid');
+    if (ordersGrid) stripSecondsFromTextNodes(ordersGrid);
+    const summary = document.querySelector('.summary-card');
+    if (summary) stripSecondsFromTextNodes(summary);
+    ScrollTrigger.addEventListener('refresh', () => {
+      if (ordersGrid) stripSecondsFromTextNodes(ordersGrid);
+      if (summary) stripSecondsFromTextNodes(summary);
+    });
+
+    // safety refresh
+    setTimeout(() => { try { if (loco && loco.update) loco.update(); ScrollTrigger.refresh(); } catch(e) {} }, 120);
+
+    // ---------- Infinite scroll (unchanged) ----------
+    let isLoading = false;
+    const ordersListEl = document.getElementById('orders-list');
+    const loaderEl = document.getElementById('orders-loader');
+
+    function buildFetchUrl(page) {
+      const params = new URLSearchParams();
+      params.set('page', page);
+      // Request 10 orders per page
+      params.set('per_page', '10');
+      const q = document.querySelector('input[name="q"]')?.value || '';
+      const sort = document.querySelector('select[name="sort"]')?.value || '';
+      const status = new URLSearchParams(window.location.search).get('status') || '';
+      if (q) params.set('q', q);
+      if (sort) params.set('sort', sort);
+      if (status) params.set('status', status);
+      return window.location.pathname + '?' + params.toString();
+    }
+
+    function onNewContentInserted(container, insertedNodes) {
+      // init animations and accessibility for inserted nodes
+      initCardAnimations(container);
+      attachAccessibility(container);
+
+      // refresh scroll triggers & locomotive BEFORE we patch visibility
+      try { if (loco && loco.update) loco.update(); ScrollTrigger.refresh(); } catch(e) {}
+
+      // IMPORTANT FIX:
+      if (insertedNodes && insertedNodes.length) {
+        insertedNodes.forEach(function(node){
+          try {
+            const card = node.nodeType === 1 && node.matches('.order-card') ? node : node.querySelector && node.querySelector('.order-card');
+            if (!card) return;
+            const details = card.querySelector('.order-details');
+            if (details) {
+              details.style.opacity = '1';
+              details.style.transform = 'none';
+              details.style.transition = 'none';
+            }
+          } catch (err) {
+            console.warn('post-insert visibility fix failed', err);
+          }
+        });
+        setTimeout(() => {
+          insertedNodes.forEach(function(node){
+            try {
+              const card = node.nodeType === 1 && node.matches('.order-card') ? node : node.querySelector && node.querySelector('.order-card');
+              if (!card) return;
+              const details = card.querySelector('.order-details');
+              if (details) {
+                details.style.transition = '';
+              }
+            } catch (e) {}
+          });
+        }, 60);
+      }
+    }
+
+    function appendHtmlIntoOrdersList(html) {
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = html || '';
+      const inserted = [];
+      while (wrapper.firstChild) {
+        const n = wrapper.firstChild;
+        ordersListEl.appendChild(n);
+        inserted.push(n);
+      }
+      return inserted;
+    }
+
+    function loadNextPage() {
+      if (isLoading) return;
+      if (!ordersListEl) return;
+      const currentPage = parseInt(ordersListEl.dataset.page || '1', 10);
+      const hasMore = ordersListEl.dataset.hasMore === '1';
+      if (!hasMore) return;
+
+      const nextPage = currentPage + 1;
+      isLoading = true;
+      if (loaderEl) loaderEl.style.display = 'block';
+
+      const url = buildFetchUrl(nextPage);
+      fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(r => r.json().catch(() => null))
+        .then(data => {
+          if (!data || !data.success) {
+            ordersListEl.dataset.hasMore = '0';
+            return;
+          }
+          const insertedNodes = appendHtmlIntoOrdersList(data.html || '');
+          if (insertedNodes && insertedNodes.length) {
+            onNewContentInserted(ordersListEl, insertedNodes);
+          }
+          ordersListEl.dataset.page = nextPage;
+          ordersListEl.dataset.hasMore = data.has_more ? '1' : '0';
+        })
+        .catch(err => console.error('Error loading more orders', err))
+        .finally(() => {
+          isLoading = false;
+          if (loaderEl) loaderEl.style.display = 'none';
+        });
+    }
+
+    function checkNearBottom() {
+      if (!ordersListEl) return;
+      const hasMore = ordersListEl.dataset.hasMore === '1';
+      if (!hasMore) return;
+
+      const cards = Array.from(ordersListEl.querySelectorAll('.order-card'));
+      if (!cards.length) return;
+
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      let lastVisibleIndex = -1;
+      for (let i = 0; i < cards.length; i++) {
+        const rect = cards[i].getBoundingClientRect();
+        if (rect.top < vh) lastVisibleIndex = i;
+      }
+      const remaining = lastVisibleIndex === -1 ? cards.length : (cards.length - (lastVisibleIndex + 1));
+      if (remaining <= 5) {
+        loadNextPage();
+      }
+    }
+
+    if (loco && loco.on) {
+      loco.on('scroll', function() { checkNearBottom(); });
+    } else {
+      window.addEventListener('scroll', checkNearBottom);
+    }
+    window.addEventListener('keydown', function(e){ if (e.key === 'End') loadNextPage(); });
+
+  });
   </script>
 </body>
 </html>

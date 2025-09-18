@@ -1,0 +1,147 @@
+{# _orders_fragment.html - renders a block of order articles only #}
+{% for order_id, order in orders.items() %}
+<article style="margin-bottom: 20px;" class="order-card" tabindex="0" aria-labelledby="order-{{ order_id }}-title" data-order-index="{{ loop.index0 }}" data-order-id="{{ order_id }}">
+  <div class="order-top">
+    <div class="order-meta">
+      <div class="order-id" id="order-{{ order_id }}-title">Order #{{ order_id }}</div>
+      <div class="order-date">{{ order.order_date }}</div>
+      <div style="display:inline-flex;align-items:center;gap:8px;">
+        <span class="order-total">{{ order.currency }} {{ '%.2f'|format(order.total_amount) }}</span>
+        <span class="small text-muted">•</span>
+        <span class="small text-muted">Payment: {{ order.payment_status }}</span>
+      </div>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;">
+      {% set sclass = 'status-' + (order.order_status|lower|replace(' ', '-')) %}
+      <span class="status-badge {{ sclass }}">{{ order.order_status }}</span>
+
+      <div style="display:flex;gap:8px;align-items:center">
+        <form id="cancel-form-{{ order_id }}" method="POST" action="{{ url_for('main.request_order_cancellation') }}" onsubmit="event.stopPropagation();">
+          <input type="hidden" name="order_id" value="{{ order_id }}">
+          {% set eligible = order.order_status in ['processing','confirmed'] %}
+          {% set cancellation_requested = order.order_status in ['cancellation-request','cancellation requested'] %}
+          {% set cancelled_state = order.order_status in ['cancelled','refunded'] %}
+          {% set delivered_state = order.order_status|lower == 'delivered' %}
+          {% if eligible %}
+            <button type="submit" class="btn btn-danger-modern" title="Request cancellation"><i class="bi bi-x-circle"></i>&nbsp;<span class="d-none d-md-inline">Cancel</span></button>
+          {% else %}
+            {# do not render cancel button for cancellation-request, cancelled/refunded, or delivered #}
+          {% endif %}
+        </form>
+
+        <form method="POST" action="{{ url_for('main.download_invoice') }}" onsubmit="event.stopPropagation();">
+          <input type="hidden" name="order_id" value="{{ order_id }}">
+          <button type="submit" class="btn btn-ghost" title="Download invoice"><i class="bi bi-file-earmark-pdf"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="order-details" aria-hidden="false">
+    <div class="items-list">
+      {% for item in order['items'] %}
+        {% set vid_attr = item.variant_id if item.variant_id is not none else '' %}
+        <div id="item-{{ order_id }}-{{ item.product_id }}{% if vid_attr %}-{{ vid_attr }}{% endif %}"
+             class="item-row"
+             role="group"
+             aria-label="Item {{ item.product_name }}"
+             data-product-id="{{ item.product_id }}"
+             data-variant-id="{{ item.variant_id or '' }}"
+             data-reviewed="{{ '1' if item.reviewed else '0' }}"
+             data-rating="{{ item.rating if item.rating is not none else '' }}"
+             data-review-title="{{ item.review.title if item.review else '' }}"
+             data-review-body="{{ item.review.body if item.review else '' }}">
+          <div class="item-thumb">
+            {% if item.image_path %}
+              <img src="{{ url_for('static', filename=item.image_path.replace('\\','/')) }}" alt="{{ item.product_name }}">
+            {% else %}
+              <div style="padding:10px;color:var(--muted)"><i class="bi bi-image"></i></div>
+            {% endif %}
+          </div>
+
+          <div class="item-main">
+            <div class="item-title">{{ item.product_name }}</div>
+            <div class="item-variant">
+              {% if item.variant.size %}Size: {{ item.variant.size }}{% endif %}
+              {% if item.variant.color %} {% if item.variant.size %}•{% endif %} Color: {{ item.variant.color }}{% endif %}
+            </div>
+            <div class="item-meta" style="display:flex;gap:12px;color:var(--muted);font-size:13px;margin-top:6px;">
+              <div>Qty: {{ item.quantity }}</div>
+              <div>Item total: {{ order.currency }} {{ '%.2f'|format(item.total_price) }}</div>
+            </div>
+          </div>
+
+          <div class="item-actions">
+            {% set status_lc = order.order_status|lower %}
+            {% if status_lc == 'delivered' %}
+              <div class="stars-inline" role="radiogroup" aria-label="Rate {{ item.product_name }}">
+                {% set r = item.rating if item.rating is defined and item.rating is not none else (item.review.rating if item.review is defined and item.review else None) %}
+                {% for s in range(1,6) %}
+                  {% set filled = (r is not none and s <= r) %}
+                  <span tabindex="0"
+                        class="star {% if filled %}filled{% endif %} inline-star"
+                        role="radio"
+                        aria-checked="{{ 'true' if filled else 'false' }}"
+                        data-product="{{ item.product_id }}"
+                        data-variant="{{ item.variant_id or '' }}"
+                        data-order="{{ order_id }}"
+                        data-rating="{{ s }}"
+                        data-reviewed="{{ '1' if item.reviewed else '0' }}"
+                        data-review-title="{{ item.review.title if item.review }}"{% if item.review and item.review.body %} data-review-body="{{ item.review.body|e }}" {% endif %}>
+                  ★
+                  </span>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="small text-muted">Reviews allowed after delivery</div>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div style="display:flex; gap:12px; margin-top:14px; align-items:flex-start;">
+      <div style="flex:1;">
+        <div class="address-compact" tabindex="0" role="button" aria-label="Shipping address for order {{ order_id }}">
+          <div class="address-title">Shipping Address</div>
+          <div class="small text-muted" style="margin-top:6px;">
+            {% if order.shipping_address.name %}<strong>{{ order.shipping_address.name }}</strong><br>{% endif %}
+            {{ order.shipping_address.line1 }}{% if order.shipping_address.line2 %}, {{ order.shipping_address.line2 }}{% endif %}<br>
+            {{ order.shipping_address.city }}, {{ order.shipping_address.state }} - {{ order.shipping_address.postal_code }}<br>
+            {{ order.shipping_address.country }}{% if order.shipping_address.phone %}<br>Phone: {{ order.shipping_address.phone }}{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div style="width:320px;">
+        <div style="background:#fff;border-radius:10px;padding:12px;border:1px solid rgba(243,236,236,0.9); box-shadow:0 8px 24px rgba(2,6,23,0.03);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-weight:700">Order Summary</div>
+            <div class="small text-muted">{{ order.currency }}</div>
+          </div>
+          <table style="width:100%;font-size:14px;">
+            <tbody>
+              {% for item in order['items'] %}
+                <tr>
+                  <td style="padding:6px 4px; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ item.product_name }}</td>
+                  <td style="text-align:center; padding:6px 4px;">x{{ item.quantity }}</td>
+                  <td style="text-align:right; padding:6px 4px;">{{ order.currency }} {{ '%.2f'|format(item.total_price) }}</td>
+                </tr>
+              {% endfor %}
+              <tr>
+                <td colspan="2" style="text-align:right;padding-top:8px;"><strong>Shipping</strong></td>
+                <td style="text-align:right;padding-top:8px;">{{ order.currency }} {{ '%.2f'|format(order.shipping_cost or 0.0) }}</td>
+              </tr>
+              <tr>
+                <td colspan="2" style="text-align:right;padding-top:8px;"><strong>Grand total</strong></td>
+                <td style="text-align:right;padding-top:8px;"><strong>{{ order.currency }} {{ '%.2f'|format(order.total_amount) }}</strong></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</article>
+{% endfor %}

@@ -1,660 +1,396 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <title>Your Cart</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-  <link rel="stylesheet" href="{{ url_for('static', filename='customer/footer.css') }}">
   <style>
     :root{
-      --card-shadow: 0 10px 30px rgba(8, 15, 30, 0.06);
-      --accent: #0d6efd;
-      --accent-2: #00C853;
+      --accent: #ff7f66;
+      --accent-dark: #ff4d6d;
+      --muted: #6b7280;
+      --bg: #fff8f6;
+      --card-bg: #fff;
+      --card-radius: 12px;
+      --soft-shadow: 0 12px 30px rgba(2,6,23,0.06);
+      --strong-shadow: 0 18px 48px rgba(2,6,23,0.08);
+      --max-width: 1260px;
+      font-family: "Inter", "Helvetica Neue", Arial, sans-serif;
     }
 
-    .qty-box {
-      width: 120px;
-      transition: box-shadow .18s ease, transform .12s ease;
-      border-radius: 6px;
-    }
+    body { background: var(--bg); color:#222; margin:0; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
+    .container { max-width: var(--max-width); margin: 28px auto; padding: 0 18px; }
 
-    .qty-box:focus{
-      box-shadow: 0 6px 20px rgba(13,110,253,0.12);
-      transform: translateY(-1px);
-      outline: none;
-      border-color: var(--accent);
-    }
+    h1.page-title { margin: 0 0 6px 0; font-size: 28px; font-weight:900; letter-spacing:-0.3px; }
+    .muted { color:var(--muted); }
 
-    .cart-img {
-      height: 60px;
-      object-fit: contain;
-      border-radius: 6px;
-      transition: transform .25s ease, box-shadow .25s ease;
-      will-change: transform;
-      background: #fff;
-      padding: 6px;
-    }
+    /* Overall layout: two-column on wide, single column on small */
+    .cart-grid { display: grid; grid-template-columns: 1fr 420px; gap: 28px; align-items:start; }
+    @media (max-width: 1100px) { .cart-grid { grid-template-columns: 1fr 360px; } }
+    @media (max-width: 760px) { .cart-grid { grid-template-columns: 1fr; } }
 
-    .cart-img:hover {
-      transform: scale(1.08);
-      box-shadow: 0 10px 24px rgba(2,6,23,.08);
-    }
-
-    .muted-small {
-      color: #6c757d;
-      font-size: .9rem;
-    }
-
-    .card-summary {
-      position: sticky;
-      top: 20px;
-      transition: transform .18s ease, box-shadow .18s ease;
-      border-radius: 10px;
-    }
-
-    .product-link { display: inline-flex; gap: .75rem; align-items: center; text-decoration: none; color: inherit; transition: transform .12s ease; }
-    .product-link .product-name { transition: text-decoration .12s ease, color .12s ease; font-weight:600; }
-    .product-link:hover { transform: translateY(-3px); }
-    .product-link:hover .product-name { color: var(--accent); text-decoration: underline; }
-
-    .table tbody tr {
-      transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease;
-      transform: translateY(0);
-      will-change: transform;
-      background: transparent;
-      border-radius: 10px;
-    }
-    .table tbody tr:hover {
-      transform: translateY(-6px);
-      box-shadow: var(--card-shadow);
-      background: #ffffff;
-    }
-    .table tbody tr td { transition: background-color .18s ease; vertical-align: middle; }
-
-    .btn-primary {
-      transition: transform .12s ease, box-shadow .12s ease;
-      border-radius: 10px;
-    }
-    .btn-primary:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(13,110,253,0.14);
-    }
-
-    .btn-outline-secondary, .btn-outline-primary {
-      transition: transform .08s ease, box-shadow .08s ease;
-    }
-    .btn-outline-secondary:hover, .btn-outline-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 18px rgba(2,6,23,0.06);
-    }
-
-    .btn-danger {
-      transition: transform .12s ease, box-shadow .12s ease;
-      border-radius: 8px;
-    }
-    .btn-danger:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(244,63,94,0.12);
-    }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .table tbody tr { animation: fadeInUp .28s ease both; }
-    .card-summary { animation: fadeInUp .36s ease both; }
-
-    @keyframes softPulse {
-      0% { transform: translateY(0) scale(1); box-shadow: 0 10px 24px rgba(13,110,253,0.10); }
-      50% { transform: translateY(-2px) scale(1.01); box-shadow: 0 18px 40px rgba(13,110,253,0.12); }
-      100% { transform: translateY(0) scale(1); box-shadow: 0 10px 24px rgba(13,110,253,0.10); }
-    }
-    .btn-primary.pulse {
-      animation: none;
-    }
-    .btn-primary.pulse:hover {
-      animation: softPulse .9s ease-in-out;
-    }
-
-    /*****************************************************************
-     * MOBILE-ONLY: apply **only** under 769px.                          *
-     * Desktop and tablet styles (>=769px) remain exactly as provided.  *
-     *****************************************************************/
-    @media (max-width: 768px) {
-      /* reduce hover effects on mobile for performance & visual clarity */
-      .table tbody tr:hover { transform: none; box-shadow: none; background: transparent; }
-      .cart-img:hover { transform: none; box-shadow: none; }
-      .product-link:hover { transform: none; }
-
-      /* slightly smaller images on phones to free space */
-      .cart-img { height: 52px; padding: 4px; }
-
-      /* Strong, robust mobile layout:
-         Convert table rows into stacked cards on mobile only.
-         This prevents overflow of controls while preserving desktop markup.
-      */
-      .table thead { display: none; }          /* hide header only on mobile */
-      .table, .table tbody, .table tr, .table td { display: block; width: 100%; }
-      .table tr { margin-bottom: 12px; background: #fff; border-radius: 10px; padding: 10px; box-shadow: var(--card-shadow); border: 1px solid rgba(0,0,0,0.03); }
-      .table td { display: flex; justify-content: space-between; align-items: center; padding: 8px 6px; border: none; white-space: normal; gap: 8px; }
-      .table td:first-child { padding: 0 6px 8px 6px; }
-
-      /* Each cell shows a label (from data-label attribute) to mimic headers */
-      .table td[data-label]::before {
-        content: attr(data-label);
-        display: inline-block;
-        font-size: .82rem;
-        color: #6c757d;
-        font-weight:700;
-        width: 34%;
-        margin-right: 8px;
-        vertical-align: middle;
-      }
-
-      /* Product area: image + meta stacked nicely */
-      .product-compact { display:flex; gap:12px; align-items:center; }
-      .product-name { font-weight:700; }
-
-      /* Quantity controls: compact and wrap when needed */
-      .qty-controls { display:flex; gap:6px; align-items:center; width:100%; }
-      .qty-controls form { margin:0; display:inline-flex; align-items:center; }
-      .qty-controls .qty-box { width:72px !important; flex: 0 0 72px; padding: .25rem .5rem; font-size: .95rem; }
-
-      /* Make +/- and Set smaller and icon-focused */
-      .qty-controls .btn { padding: .32rem .45rem; min-width:36px; }
-      .qty-controls .btn i, .qty-controls .btn span { vertical-align: middle; }
-
-      /* Actions: compact icons with visually-hidden labels (for screen readers) */
-      .cell-action { display:flex; gap:8px; align-items:center; justify-content:flex-end; }
-      .cell-action .btn { padding: .28rem .45rem; font-size: .92rem; }
-      /* hide visible action text on phones; rely on icons */
-      .action-icon-only { display: inline-block !important; font-size: 1.06rem; }
-
-      /* Available text smaller and placed under controls to avoid overflow */
-      .muted-small.mt-1 { display:block; margin-top:8px; font-size:.82rem; }
-
-      /* Ensure subtotal and price wrap gracefully */
-      td[data-label="Price"], td[data-label="Subtotal"] { text-align: right; min-width: 90px; }
-
-      /* ensure summary card stacks below content (no sticky) */
-      .card-summary { position: static; margin-top: 12px; }
-
-      /* small adjustments to padding to avoid horizontal overflow */
-      .container { padding-left: 10px; padding-right: 10px; }
-      .cell-btn{
-        width: 25vw;
-      }
-    }
-
-    /* ensure action text visible on md+ (desktop/tablet) — desktop unchanged */
-    @media (min-width: 769px) {
-      .cell-action .action-text { display:inline; }
-      .action-icon-only { display: none; }
-      .qty-box { width:120px; } /* keep original desktop width */
-    }
-
-    /* Checkout buffer overlay styles (unchanged) */
-    #checkoutBufferOverlay {
-      position: fixed;
-      inset: 0;
-      display: none;
-      z-index: 999999;
-      align-items: center;
-      justify-content: center;
-      background: rgba(6,10,15,0.32);
-      -webkit-backdrop-filter: blur(6px);
-      backdrop-filter: blur(6px);
-      transition: opacity 260ms ease;
-      opacity: 0;
-      pointer-events: none;
-    }
-    #checkoutBufferOverlay.show {
-      display: flex;
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .checkout-buffer-card {
-      background: linear-gradient(180deg, #ffffff, #fbfdff);
+    /* left container */
+    .items-panel {
+      background: var(--card-bg);
       border-radius: 14px;
-      padding: 18px 20px;
-      display:flex;
-      gap:14px;
-      align-items:center;
-      box-shadow: 0 40px 120px rgba(2,6,23,0.18);
-      border: 1px solid rgba(13,110,253,0.06);
-      width: min(640px, calc(100% - 48px));
-      max-width: 94%;
-      transform: translateY(-8px);
-      transition: transform 360ms cubic-bezier(.2,.9,.2,1), opacity 260ms ease;
-      text-align: left;
+      padding: 18px;
+      box-shadow: var(--soft-shadow);
+      border: 1px solid rgba(243,236,236,0.6);
     }
 
-    .checkout-icon {
-      width:88px;
-      height:88px;
-      min-width:88px;
-      border-radius:14px;
+    /* Items grid: responsive columns (3,2,1) */
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    @media (max-width: 1000px) { .items-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 560px) { .items-grid { grid-template-columns: 1fr; } }
+
+    /* product card */
+    .ci {
       display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:center;
+      padding: 14px;
+      border-radius: 12px;
+      background: #fff;
+      transition: transform .12s ease, box-shadow .12s ease;
+      border: 1px solid rgba(243,236,236,0.6);
+      min-height: 360px;
+    }
+    .ci:hover { transform: translateY(-6px); box-shadow: var(--strong-shadow); }
+
+    /* decreased image size but still prominent */
+    .ci-image { width: 220px; height: 300px; border-radius:12px; overflow:hidden; background:#faf7f6; display:flex; align-items:center; justify-content:center; }
+    .ci-image img { width:100%; height:100%; object-fit:cover; display:block; transition: transform .18s ease; }
+    .ci-image:hover img { transform: scale(1.03); }
+
+    .ci-name { font-size:1rem; font-weight:800; color:#222; text-align:center; margin:0; text-decoration:none; display:block; max-width:92%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    /* controls row under name */
+    .ci-controls {
+      display:flex;
+      gap: 10px;
       align-items:center;
       justify-content:center;
-      background: linear-gradient(180deg,#eff6ff,#ffffff);
-      box-shadow: 0 18px 48px rgba(13,110,253,0.06);
-      position:relative;
-      overflow:visible;
-    }
-    .checkout-pulse {
-      position:absolute;
-      width:132px;
-      height:132px;
-      border-radius:22px;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
-      background: radial-gradient(circle at 40% 30%, rgba(13,110,253,0.12), rgba(13,110,253,0.02) 40%);
-      filter: blur(8px);
-      opacity: 0;
-      animation: checkoutPulse 1400ms ease-in-out infinite;
-      pointer-events: none;
-    }
-    @keyframes checkoutPulse {
-      0% { opacity: 0; transform: translate(-50%,-50%) scale(.94); }
-      50% { opacity: 1; transform: translate(-50%,-50%) scale(1.06); }
-      100% { opacity: 0; transform: translate(-50%,-50%) scale(.94); }
+      width:100%;
+      flex-wrap:wrap;
     }
 
-    .checkout-svg { width:48px; height:48px; transform-origin:center; }
-    .checkout-spin { animation: checkoutSpin 1100ms linear infinite; }
-    @keyframes checkoutSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
-    .checkout-text h4 { margin:0 0 6px 0; font-size:1.05rem; font-weight:700; color:#0b365a; }
-    .checkout-text p { margin:0; color:#57606f; font-size:.95rem; line-height:1.32; }
-
-    .checkout-progress {
-      margin-top: 12px;
-      height:8px;
-      background: linear-gradient(90deg,#eef6ff,#f8fbff);
-      border-radius:999px;
-      overflow:hidden;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    .qty-bar {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border-radius:10px;
+      padding:6px;
+      background: linear-gradient(180deg,#fff,#fff);
+      box-shadow: 0 6px 18px rgba(2,6,23,0.04);
+      border: 1px solid rgba(237,240,246,0.8);
     }
-    .checkout-progress > .bar {
-      height:100%;
-      width:0%;
-      background: linear-gradient(90deg,#0d6efd,#6610f2);
-      border-radius:999px;
-      transition: width 420ms cubic-bezier(.2,.9,.2,1);
-      box-shadow: 0 6px 18px rgba(13,110,253,0.12) inset;
+    .qty-btn {
+      border-radius:8px;
+      background: transparent;
+      border: 1px solid rgba(0,0,0,0.06);
+      padding:8px 12px;
+      font-weight:600;
+      cursor: pointer;
+      min-width: 36px;
+      text-align:center;
+    }
+    .qty-display {
+      min-width:44px;
+      text-align:center;
+      font-weight:700;
+      font-size:1rem;
+      padding:6px 10px;
+      border-radius:8px;
+      background: #fff;
+      border: 1px solid rgba(237,240,246,0.9);
     }
 
-    .checkout-success { border-color: rgba(40,167,69,0.18); box-shadow: 0 30px 80px rgba(40,167,69,0.06); }
-    .checkout-error { border-color: rgba(220,53,69,0.12); box-shadow: 0 30px 80px rgba(220,53,69,0.06); }
+    .btn-delete {
+      background:#ff5a6a;
+      color:#fff;
+      border: none;
+      padding:8px 14px;
+      border-radius:10px;
+      font-weight:800;
+      box-shadow: 0 10px 26px rgba(220,53,69,0.10);
+      cursor:pointer;
+    }
+    .btn-delete:hover { transform: translateY(-2px); }
 
-    @media (max-width:640px) {
-      .checkout-buffer-card { padding: 14px; gap:12px; }
-      .checkout-icon { width:72px; height:72px; min-width:72px; }
-      .checkout-svg { width:40px; height:40px; }
-      .checkout-text h4 { font-size:1rem; }
+    /* price under name */
+    .ci-price { font-weight:700; font-size:1.02rem; color:#111; margin-top:6px; }
+
+    /* summary card */
+    .summary {
+      background: linear-gradient(180deg,#fff,#fbfbfb);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: var(--soft-shadow);
+      border: 1px solid rgba(243,236,236,0.6);
+      position: sticky;
+      top: 24px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .summary h4 { margin:0; font-size:20px; font-weight:900; color:#111; }
+
+    /* list of items in summary */
+    .line-item {
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+      padding:10px 0;
+      border-bottom: 1px dashed rgba(0,0,0,0.04);
+    }
+    .line-item .left { display:flex; flex-direction:column; gap:4px; max-width:70%; }
+    .line-item .prod-name { font-weight:800; font-size:0.98rem; color:#222; margin:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .line-item .meta { font-size:0.92rem; color:var(--muted); }
+
+    .line-item .right { text-align:right; min-width:92px; }
+    .line-item .unit { font-weight:700; font-size:0.96rem; }
+    .line-item .qty { font-size:0.92rem; color:var(--muted); margin-top:2px; }
+
+    .summary .totals { margin-top:8px; display:flex; flex-direction:column; gap:8px; }
+    .totals-row { display:flex; justify-content:space-between; font-size:0.98rem; color:var(--muted); padding:6px 0; }
+    .totals-row.total { font-weight:900; color:#111; font-size:1.04rem; }
+
+    .checkout-btn {
+      margin-top:10px;
+      background: linear-gradient(180deg,var(--accent),var(--accent-dark));
+      color:#fff;
+      border:none;
+      padding:12px 14px;
+      border-radius:10px;
+      font-weight:900;
+      box-shadow: 0 12px 30px rgba(255,127,102,0.12);
+      cursor:pointer;
+    }
+    .checkout-btn:hover { transform: translateY(-3px); }
+
+    .empty {
+      padding: 36px;
+      text-align:center;
+      background:var(--card-bg);
+      border-radius:12px;
+      box-shadow:var(--soft-shadow);
+      border:1px solid rgba(243,236,236,0.6);
+    }
+
+    @media (max-width:760px) {
+      .ci { min-height: auto; align-items:stretch; }
+      .ci-image { width:100%; height:260px; border-radius:10px; }
+      .ci-name { text-align:left; white-space:normal; }
+      .ci-controls { justify-content:flex-start; padding-top:6px; }
+      .summary { position: static; margin-top: 18px; }
+      .container { padding: 18px; }
     }
   </style>
 </head>
-
 <body>
   {% include 'customer/layout.html' %}
-  <div class="container main-content mt-5">
+
+  <div class="container">
     {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-    {% for category, message in messages %}
-    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-      {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    {% endfor %}
-    {% endif %}
+      {% if messages %}
+        <div class="mb-3">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
     {% endwith %}
 
-    <div class="row">
-      <!-- Left: Cart Items -->
-      <div class="col-md-7">
-        <h2>Your Cart</h2>
+    <header class="d-flex align-items-center justify-content-between mb-3 " style="background-color: #fff5ee;">
+      <div>
+        <h1 class="page-title">Your Cart</h1>
+        <div class="muted">Review items you intend to purchase.</div>
+      </div>
+      <div>
+        <a class="btn btn-outline-secondary" href="{{ url_for('main.place_order') }}" style="border-radius:10px;">Continue shopping</a>
+      </div>
+    </header>
+
+    <div class="cart-grid">
+      <!-- LEFT: product cards grid -->
+      <section class="items-panel" style ="background-color: #fff5ee;" aria-labelledby="cart-heading">
+        <h2 id="cart-heading" class="visually-hidden">Cart items</h2>
+
         {% if cart %}
-        <table class="table table-borderless mt-3 align-middle">
-          <thead>
-            <tr class="text-muted small">
-              <th style="width:90px;"></th>
-              <th>Product</th>
-              <th style="width:120px;">Price (₹)</th>
-              <th style="width:200px;">Quantity</th>
-              <th style="width:120px;">Subtotal (₹)</th>
-              <th style="width:110px;">Action</th>
-            </tr>
-          </thead>
-          <tbody>
+          <div class="items-grid">
             {% for item in cart %}
-            {% set prod_url = url_for('main.view_prod_detail', product_id=item.product_id) %}
-            {% if item.variant_id %}
-              {% set prod_url = prod_url + '?variant_id=' + item.variant_id|string %}
-            {% endif %}
-            <tr>
-              <td data-label="">
-                <a class="product-link" href="{{ prod_url }}">
+              {% set prod_url = url_for('main.view_prod_detail', product_id=item.product_id) %}
+              {% if item.variant_id %}
+                {% set prod_url = prod_url + '?variant_id=' + item.variant_id|string %}
+              {% endif %}
+              <article class="ci" data-cart-item-id="{{ item.cart_item_id }}">
+                <a class="ci-image" href="{{ prod_url }}" aria-label="View product">
                   {% if item.image_path %}
-                    <img src="{{ url_for('static', filename=item.image_path.replace('\\', '/')) }}" alt="{{ item.name }}" class="cart-img">
+                    <img src="{{ url_for('static', filename=item.image_path.replace('\\','/')) }}" alt="{{ item.name }}">
                   {% else %}
-                    <img src="{{ url_for('static', filename='uploads/placeholder.png') }}" alt="no image" class="cart-img">
+                    <img src="{{ url_for('static', filename='uploads/placeholder.png') }}" alt="No image">
                   {% endif %}
                 </a>
-              </td>
 
-              <td data-label="Product">
-                <div class="product-compact">
-                  <div>
-                    <a class="product-link" href="{{ prod_url }}">
-                      <div class="product-name">{{ item.name }}</div>
-                    </a>
-                    <div class="muted-small">SKU: {{ item.sku or '-' }} • Variant: {{ item.variant_id }}</div>
-                  </div>
-                </div>
-              </td>
+                <a class="ci-name" href="{{ prod_url }}">{{ item.name }}</a>
 
-              <td data-label="Price">₹{{ '%.2f'|format(item.price) }}</td>
+                <div class="ci-price">₹{{ '%.2f'|format(item.price) }}</div>
 
-              <td data-label="Quantity">
-                <div class="d-flex align-items-center gap-2 qty-controls">
+                <div class="ci-controls" role="group" aria-label="Quantity and actions">
                   <!-- decrease -->
                   <form method="POST" action="{{ url_for('main.update_cart_quantity') }}" style="display:inline;">
                     <input type="hidden" name="cart_item_id" value="{{ item.cart_item_id }}">
-                    <button type="submit" name="action" value="decrease"
-                      class="btn btn-sm btn-outline-secondary" aria-label="Decrease quantity">
-                      <span class="action-icon-only">−</span><span class="action-text"> −</span>
-                    </button>
+                    <button type="submit" name="action" value="decrease" class="qty-btn" aria-label="Decrease quantity">−</button>
                   </form>
 
-                  <!-- set qty -->
-                  <form method="POST" action="{{ url_for('main.update_cart_quantity') }}" class="d-flex"
-                    style="gap:6px; flex:1;">
+                  <!-- qty display (kept accessible) -->
+                  <form method="POST" action="{{ url_for('main.update_cart_quantity') }}" style="display:inline-flex;align-items:center;gap:8px;">
                     <input type="hidden" name="cart_item_id" value="{{ item.cart_item_id }}">
                     <input type="hidden" name="action" value="set">
-                    <input type="number" name="qty" value="{{ item.qty }}" min="1" max="{{ item.max_qty }}"
-                      class="form-control form-control-sm qty-box" aria-label="Quantity input">
-                    <button type="submit" class="btn btn-sm btn-outline-primary" aria-label="Set quantity">
-                      <span class="action-icon-only"><i class="bi bi-check-lg" aria-hidden="true"></i></span>
-                      <span class="action-text"> Set</span>
-                    </button>
+                    <div class="qty-display" aria-hidden="true">{{ item.qty }}</div>
+                    <input type="number" name="qty" value="{{ item.qty }}" min="1" max="{{ item.max_qty }}" style="width:48px;display:none;" aria-hidden="true">
+                    <button type="submit" class="qty-btn" style="display:none;" aria-hidden="true">Set</button>
                   </form>
 
                   <!-- increase -->
                   <form method="POST" action="{{ url_for('main.update_cart_quantity') }}" style="display:inline;">
                     <input type="hidden" name="cart_item_id" value="{{ item.cart_item_id }}">
-                    <button type="submit" name="action" value="increase"
-                      class="btn btn-sm btn-outline-secondary" aria-label="Increase quantity">
-                      <span class="action-icon-only">+</span><span class="action-text"> +</span>
-                    </button>
+                    <button type="submit" name="action" value="increase" class="qty-btn" aria-label="Increase quantity">+</button>
                   </form>
-                </div>
-                <div class="muted-small mt-1">Available: {{ item.max_qty }}</div>
-              </td>
 
-              <td data-label="Subtotal">₹{{ '%.2f'|format(item.price * item.qty) }}</td>
-
-              <td data-label="Action">
-                <div class="cell-action">
-                  
-
-                  <form method="POST" action="{{ url_for('main.remove_cart_item') }}">
+                  <!-- delete -->
+                  <form method="POST" action="{{ url_for('main.remove_cart_item') }}" style="display:inline;">
                     <input type="hidden" name="cart_item_id" value="{{ item.cart_item_id }}">
-                    <button type="submit" class="cell-btn btn btn-sm btn-danger" aria-label="Remove item">
-                      <span class="action-icon-only"><i class="bi bi-trash" aria-hidden="true"></i></span>
-                      <span class="action-text"> Delete</span>
-                    </button>
+                    <button type="submit" class="btn-delete" aria-label="Remove item">Delete</button>
                   </form>
                 </div>
-              </td>
-            </tr>
+              </article>
             {% endfor %}
-          </tbody>
-        </table>
+          </div>
         {% else %}
-        <div class="p-4 bg-white rounded shadow-sm text-center">
-          <h5>Your cart is empty</h5>
-          <p class="muted-small">Browse products and add items to your cart.</p>
-          <a class="btn btn-outline-primary" href="{{ url_for('main.place_order') }}">Continue Shopping</a>
-        </div>
+          <div class="empty">
+            <h3>Your cart is empty</h3>
+            <p class="muted">Browse products and add items to your cart.</p>
+            <a class="btn btn-outline-primary" href="{{ url_for('main.place_order') }}">Continue Shopping</a>
+          </div>
         {% endif %}
-      </div>
+      </section>
 
-      <!-- Right: Summary -->
-      <div class="col-md-5">
-        <div class="card shadow p-4 card-summary">
-          <h4 class="mb-3">Order Summary</h4>
-          {% if cart %}
-          <div class="mb-3">
-            <table class="table table-sm mb-0">
-              <tbody>
-                <tr>
-                  <td>Subtotal</td>
-                  <td class="text-end">₹{{ '%.2f'|format(subtotal) }}</td>
-                </tr>
-                <tr>
-                  <td>Shipping</td>
-                  <td class="text-end">₹{{ '%.2f'|format(shipping_cost) }}</td>
-                </tr>
-                <tr>
-                  <th class="text-end">Grand Total</th>
-                  <th class="text-end">₹{{ '%.2f'|format(total) }}</th>
-                </tr>
-              </tbody>
-            </table>
+      <!-- RIGHT: order summary -->
+      <aside class="summary" aria-label="Order summary">
+        <h4>Order Summary</h4>
+
+        {% if cart %}
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            {% for item in cart %}
+              <div class="line-item" data-cart-item-id="{{ item.cart_item_id }}">
+                <div class="left">
+                  <p class="prod-name">{{ item.name }}</p>
+                  <div class="meta">Qty: <strong>{{ item.qty }}</strong></div>
+                </div>
+                <div class="right">
+                  <div class="unit">₹{{ '%.2f'|format(item.price) }}</div>
+                  <div class="qty">₹{{ '%.2f'|format(item.price * item.qty) }}</div>
+                </div>
+              </div>
+            {% endfor %}
           </div>
 
-          <!-- Proceed to checkout: buffered animation (class .checkout-trigger) -->
-          <a href="{{ url_for('main.checkout') }}" class="btn btn-primary w-100 checkout-trigger pulse" id="checkoutBtn">
-            Proceed to Checkout
-          </a>
-          {% else %}
-          <p>No items in cart.</p>
-          {% endif %}
-        </div>
+          <div class="totals">
+            <div class="totals-row">
+              <div class="text-muted">Subtotal</div>
+              <div class="text-muted">₹{{ '%.2f'|format(subtotal) }}</div>
+            </div>
+            <div class="totals-row">
+              <div class="text-muted">Shipping</div>
+              <div class="text-muted">₹{{ '%.2f'|format(shipping_cost) }}</div>
+            </div>
+            <div class="totals-row total">
+              <div>Grand Total</div>
+              <div>₹{{ '%.2f'|format(total) }}</div>
+            </div>
 
-      </div>
+            <button class="checkout-btn" onclick="location.href='{{ url_for('main.checkout') }}'">Proceed to Checkout</button>
+          </div>
+        {% else %}
+          <div class="text-muted">No items in cart.</div>
+        {% endif %}
+      </aside>
     </div>
   </div>
 
   {% include 'customer/footer.html' %}
 
-  <!-- Checkout buffer overlay (inserted once) -->
-  <div id="checkoutBufferOverlay" aria-hidden="true" role="status" aria-live="polite">
-    <div class="checkout-buffer-card" role="region" aria-label="Proceeding to checkout">
-      <div class="checkout-icon" aria-hidden="true">
-        <div class="checkout-pulse" aria-hidden="true"></div>
-        <!-- Creative SVG: wallet with spinning ring -->
-        <svg class="checkout-svg checkout-spin" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <!-- lightweight checkout overlay preserved -->
+  <div id="checkoutBufferOverlay" style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; background:rgba(6,10,15,0.32); backdrop-filter: blur(4px);" aria-hidden="true" role="status">
+    <div style="background:linear-gradient(180deg,#fff,#fbfdff); padding:18px 20px; border-radius:14px; box-shadow:0 40px 120px rgba(2,6,23,0.18); width:min(680px,94%); display:flex; gap:14px; align-items:center;">
+      <div style="width:88px;height:88px;min-width:88px;border-radius:14px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#eff6ff,#ffffff);box-shadow:0 18px 48px rgba(13,110,253,0.06);">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <circle cx="24" cy="24" r="18" stroke="rgba(13,110,253,0.14)" stroke-width="3" />
           <path d="M12 22h24v8a4 4 0 0 1-4 4H16a4 4 0 0 1-4-4v-8z" fill="#0d6efd" opacity="0.95"/>
           <rect x="30" y="18" width="6" height="6" rx="1" fill="#fff"/>
         </svg>
       </div>
-
-      <div class="checkout-text" style="flex:1;">
-        <h4 id="checkoutBufferTitle">Preparing your checkout…</h4>
-        <p id="checkoutBufferMessage">Reserving items and securing your payment — this will only take a moment.</p>
-
-        <div class="checkout-progress" aria-hidden="true">
-          <div class="bar" id="checkoutBufferBar" style="width:0%"></div>
+      <div style="flex:1;">
+        <h4 id="checkoutBufferTitle" style="margin:0 0 6px 0;">Preparing your checkout…</h4>
+        <p id="checkoutBufferMessage" style="margin:0;color:var(--muted);">Reserving items and securing your payment — this will only take a moment.</p>
+        <div style="margin-top:12px;height:8px;background:linear-gradient(90deg,#eef6ff,#f8fbff);border-radius:999px;overflow:hidden;">
+          <div id="checkoutBufferBar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#6610f2);transition:width 420ms ease;"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
   <script>
-    (function () {
+    // Lightweight overlay preserved — same behavior as before
+    (function(){
       const overlay = document.getElementById('checkoutBufferOverlay');
-      const card = overlay.querySelector('.checkout-buffer-card');
-      const titleEl = document.getElementById('checkoutBufferTitle');
-      const msgEl = document.getElementById('checkoutBufferMessage');
       const bar = document.getElementById('checkoutBufferBar');
-      const trigger = document.getElementById('checkoutBtn');
+      const checkoutBtns = document.querySelectorAll('.checkout-btn');
+      let timer = null, progress = 0;
 
-      // suppression guard so overlay does NOT auto-show when page is restored via bfcache/popstate
-      window.__suppressCheckoutOverlay = false;
-      function clearSuppressOnNextInteraction() {
-        function onFirstPointer() {
-          window.__suppressCheckoutOverlay = false;
-          document.removeEventListener('pointerdown', onFirstPointer, true);
-        }
-        document.addEventListener('pointerdown', onFirstPointer, true);
-      }
-      window.addEventListener('pageshow', function (ev) {
-        if (ev && ev.persisted) {
-          window.__suppressCheckoutOverlay = true;
-          hideCheckoutOverlay(true);
-          clearSuppressOnNextInteraction();
-          setTimeout(() => { window.__suppressCheckoutOverlay = false; }, 600);
-        }
-      }, true);
-      window.addEventListener('popstate', function () {
-        // user used back/forward, suppress briefly and ensure overlay hidden
-        window.__suppressCheckoutOverlay = true;
-        hideCheckoutOverlay(true);
-        clearSuppressOnNextInteraction();
-        setTimeout(() => { window.__suppressCheckoutOverlay = false; }, 600);
-      });
-
-      // progress controller
-      let progressTimer = null;
-      let progressValue = 0;
-      function startProgress() {
-        clearInterval(progressTimer);
-        progressValue = Math.max(progressValue, 4);
-        bar.style.width = progressValue + '%';
-        progressTimer = setInterval(() => {
-          const increment = Math.max(0.4, Math.random() * 4);
-          progressValue = Math.min(92, progressValue + increment);
-          bar.style.width = progressValue.toFixed(2) + '%';
+      function start() {
+        overlay.style.display = 'flex';
+        overlay.setAttribute('aria-hidden','false');
+        progress = 6;
+        bar.style.width = progress + '%';
+        clearInterval(timer);
+        timer = setInterval(()=> {
+          const inc = Math.max(0.5, Math.random()*3.5);
+          progress = Math.min(92, progress + inc);
+          bar.style.width = progress + '%';
         }, 300);
       }
-      function finishProgress(finalState) {
-        clearInterval(progressTimer);
+      function finish() {
+        clearInterval(timer);
         bar.style.width = '100%';
-        if (finalState === 'success') {
-          card.classList.remove('checkout-error');
-          card.classList.add('checkout-success');
-        } else if (finalState === 'error') {
-          card.classList.remove('checkout-success');
-          card.classList.add('checkout-error');
-        } else {
-          card.classList.remove('checkout-success','checkout-error');
-        }
-        setTimeout(hideCheckoutOverlay, 420);
+        setTimeout(hide, 480);
       }
-
-      function showCheckoutOverlay(opts = {}) {
-        if (window.__suppressCheckoutOverlay) return;
-        // optional overrides
-        titleEl.textContent = opts.title || 'Preparing your checkout…';
-        msgEl.textContent = opts.message || 'Reserving items and securing your payment — this will only take a moment.';
-        card.classList.remove('checkout-success','checkout-error');
-        overlay.classList.add('show');
-        overlay.setAttribute('aria-hidden','false');
-        startProgress();
-      }
-
-      function hideCheckoutOverlay(force = false) {
-        clearInterval(progressTimer);
-        overlay.classList.remove('show');
+      function hide() {
+        clearInterval(timer);
+        overlay.style.display = 'none';
         overlay.setAttribute('aria-hidden','true');
         bar.style.width = '0%';
-        progressValue = 0;
-        card.classList.remove('checkout-success','checkout-error');
-        // when forced we keep no further behavior
       }
 
-      // --- NEW: navigation-detection + improved timing so overlay paints before navigation starts
-      // fallback duration — if navigation doesn't start, finalize after this (ms)
-      const NAV_FAIL_HIDE_AFTER = 12000; // 12s
-      let fallbackTimer = null;
-      let navigationStarted = false;
-
-      function cancelFallback() {
-        if (fallbackTimer) {
-          clearTimeout(fallbackTimer);
-          fallbackTimer = null;
-        }
-      }
-
-      function onNavigationStart() {
-        navigationStarted = true;
-        cancelFallback();
-        // optionally push bar to full so unload looks final
-        bar.style.width = '100%';
-      }
-
-      document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'hidden') onNavigationStart();
-      }, true);
-      window.addEventListener('pagehide', onNavigationStart, true);
-      window.addEventListener('beforeunload', onNavigationStart, true);
-
-      // click handler for checkout CTA
-      if (trigger) {
-        trigger.addEventListener('click', function (ev) {
-          // don't show overlay if suppressed
-          if (window.__suppressCheckoutOverlay) return;
-          // allow ctrl/meta to open in new tab normally
-          if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.altKey) return;
-          const href = this.getAttribute('href') || '';
-          if (!href) return;
-          ev.preventDefault();
-
-          // show overlay with a friendly creative message
-          showCheckoutOverlay({
-            title: 'Fasten your seatbelt ✨',
-            message: 'We’re reserving your items, preparing the best checkout experience, almost ready…'
-          });
-
-          // Setup fallback: if navigation never starts, finish progress after NAV_FAIL_HIDE_AFTER
-          cancelFallback();
-          navigationStarted = false;
-          fallbackTimer = setTimeout(() => {
-            if (!navigationStarted) {
-              finishProgress('success');
-              fallbackTimer = null;
-            }
-          }, NAV_FAIL_HIDE_AFTER);
-
-          // Allow browser frames to paint the overlay, then start navigation immediately.
-          // Double requestAnimationFrame increases likelihood overlay is painted before navigation begins.
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              try {
-                // Start navigation — browser should begin unload / load next page now.
-                // Do NOT call finishProgress here (overlay should remain visible during unload)
-                window.location.href = href;
-              } catch (err) {
-                cancelFallback();
-                finishProgress('error');
-                hideCheckoutOverlay();
-              }
-            });
-          });
-        }, { passive: false });
-      }
-
-      // ensure overlay removed on popstate/pageshow as well (double safety)
-      window.addEventListener('pageshow', () => { hideCheckoutOverlay(true); });
-      window.addEventListener('popstate', () => { hideCheckoutOverlay(true); });
-
-      // exposed API if needed
-      window.CheckoutBuffer = {
-        show: (opts) => showCheckoutOverlay(opts),
-        hide: () => hideCheckoutOverlay(true),
-        finish: (state = 'success') => finishProgress(state)
-      };
+      checkoutBtns.forEach(btn => {
+        btn.addEventListener('click', function(ev){
+          start();
+          setTimeout(()=> { finish(); }, 12000); // fallback
+        });
+      });
     })();
   </script>
 </body>
-
 </html>

@@ -1,23 +1,477 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Champalal & Sons | Home</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="{{ url_for('static', filename='customer/index.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='customer/footer.css') }}">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Champalal & Sons — Light & Crafted</title>
+  <meta name="description" content="Champalal & Sons — curated fabrics since 1930. Handloom sarees, suiting, kurta cloths, shawals & bedsheets (yardage only)." />
+
+  <style>
+    :root{
+      --bg: #ffffff;
+      --muted:#6b7280;
+      --accent:#f59e0b; /* amber */
+      --accent-contrast:#111827;
+      --surface:#f8fafc;
+      --card:#ffffff;
+      --radius:14px;
+      --glass: rgba(255,255,255,0.6);
+      --shadow: 0 6px 18px rgba(17,24,39,0.06);
+      --max:1200px;
+      --focus: 3px solid rgba(245,158,11,0.18);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--accent-contrast);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+    .container{max-width:var(--max);margin:0 auto;padding:20px}
+
+    /* Header */
+    header{position:sticky;top:0;background:linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.85));backdrop-filter:blur(6px);border-bottom:1px solid #f1f5f9;z-index:40}
+    .nav{display:flex;align-items:center;justify-content:space-between;height:72px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{background:linear-gradient(135deg,#FEF3E0,#FFF7ED);padding:8px;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,0.04);font-weight:700;color:var(--accent);}
+    .site-title{line-height:1}
+    .site-title h1{margin:0;font-size:16px}
+    .site-title p{margin:0;font-size:12px;color:var(--muted)}
+
+    nav.links{display:flex;gap:18px;align-items:center}
+    nav.links a{font-size:14px;color:var(--muted);text-decoration:none}
+    .icon-btn{border-radius:10px;padding:8px;border:none;background:transparent;cursor:pointer}
+
+    /* Hero */
+    .hero{display:grid;grid-template-columns:1fr;gap:20px;margin-top:22px}
+    @media(min-width:992px){.hero{grid-template-columns:1.2fr .8fr;align-items:center}}
+
+    /* make hero-card full-bleed + full viewport height for that premium landing feel */
+    .hero-card{
+      border-radius:var(--radius);
+      overflow:hidden;
+      box-shadow:var(--shadow);
+      position:relative;
+      top: 0px;
+
+      /* full-bleed + full viewport */
+      width:79vw;
+      max-width:1260px;
+      border: radius 40px;
+      height:80vh;
+      display:block;
+    }
+
+    .hero-media{
+      height:100vh;
+      background-size:cover;
+      background-position:center;
+    }
+
+    /* vertically center overlay on large screens */
+    .hero-overlay{
+      position:absolute;
+      left:28px;
+      top:50%;
+      transform:translateY(-50%);
+      color:var(--accent-contrast);
+      max-width:560px;
+      z-index:10;
+      /* subtle text shadow for readability */
+      text-shadow: 0 4px 18px rgba(255,255,255,0.0);
+    }
+
+    .hero h2{font-size:28px;margin:0 0 8px}
+    .hero p.lead{margin:0;color:var(--muted);max-width:540px}
+    .cta{display:inline-flex;gap:10px;margin-top:14px}
+    .btn{padding:10px 16px;border-radius:999px;border:none;cursor:pointer;font-weight:600}
+    .btn.primary{background:var(--accent);color:white}
+    .btn.ghost{background:white;border:1px solid #e6e7ea}
+
+    .side-panel{background:var(--card);border-radius:12px;padding:18px;box-shadow:var(--shadow)}
+    .side-panel h3{margin:0;font-size:16px}
+    .side-panel p{margin:8px 0;color:var(--muted);font-size:13px}
+    .input,select,textarea{width:100%;padding:10px;border:1px solid #e6e7ea;border-radius:8px;font-size:14px}
+    .row{display:flex;gap:8px}
+
+    /* Refine */
+    .toolbar{display:flex;justify-content:space-between;align-items:center;margin-top:28px}
+    .refine{display:flex;gap:12px;align-items:center}
+    .dropdown{position:relative}
+    .dropdown-menu{position:absolute;left:0;top:46px;background:white;border:1px solid #e6e7ea;border-radius:10px;padding:8px;box-shadow:var(--shadow);display:none}
+    .dropdown-menu.show{display:block}
+
+    .grid{display:grid;grid-template-columns:1fr;gap:18px;margin-top:18px}
+    @media(min-width:640px){.grid{grid-template-columns:repeat(2,1fr)}}
+    @media(min-width:1024px){.grid{grid-template-columns:repeat(3,1fr)}}
+
+    .card{background:var(--card);border-radius:12px;overflow:hidden;box-shadow:0 6px 18px rgba(15,23,42,0.04);transition:transform .25s,box-shadow .25s}
+    .card:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(15,23,42,0.08)}
+    .card .media{height:180px;background-size:cover;background-position:center;position:relative}
+    .swatch{position:absolute;left:12px;top:12px;width:36px;height:36px;border-radius:50%;box-shadow:0 4px 12px rgba(0,0,0,0.06);border:3px solid white}
+    .card .body{padding:14px}
+    .card h4{margin:0 0 6px}
+    .card p{margin:0;color:var(--muted);font-size:13px}
+    .card .actions{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+
+    /* Featured fabrics */
+    .featured{margin-top:28px}
+    .f-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+    @media(min-width:640px){.f-grid{grid-template-columns:repeat(3,1fr)}}
+    @media(min-width:1024px){.f-grid{grid-template-columns:repeat(4,1fr)}}
+    .fabric{background:var(--card);padding:10px;border-radius:10px;box-shadow:var(--shadow)}
+    .fabric img{width:100%;height:160px;object-fit:cover;border-radius:8px}
+
+    /* Testimonials */
+    .testi{margin-top:28px;background:linear-gradient(180deg,#fff7ed,#fffbf7);Padding:18px;border-radius:12px}
+    .testi blockquote{margin:0;font-style:italic}
+    .testi footer{margin-top:8px;color:var(--muted)}
+
+    /* FAQ / Newsletter */
+    .faq-grid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:1024px){.faq-grid{grid-template-columns:1fr 1fr}}
+    .faq{border-radius:10px;border:1px solid #eef2f7;overflow:hidden}
+    .faq button{width:100%;text-align:left;padding:14px;background:white;border:0;display:flex;justify-content:space-between;align-items:center}
+    .faq .panel{padding:14px;background:transparent;color:var(--muted)}
+
+    /* Footer */
+    footer{margin-top:32px;padding:18px 0;border-top:1px solid #f1f5f9;color:var(--muted);font-size:13px}
+
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:none;align-items:center;justify-content:center}
+    .modal{background:white;border-radius:12px;padding:18px;max-width:680px;width:94%;box-shadow:0 24px 60px rgba(0,0,0,0.24)}
+    .modal-backdrop.show{display:flex}
+
+    /* mobile call */
+    .call-cta{position:fixed;right:18px;bottom:18px;background:var(--accent);color:white;padding:10px 14px;border-radius:999px;display:none;align-items:center;gap:8px;box-shadow:0 8px 30px rgba(245,158,11,0.18)}
+    @media(max-width:767px){.call-cta{display:flex}}
+
+    /* small helpers */
+    .muted{color:var(--muted)}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#fff7ed;color:var(--accent);font-weight:600}
+    button:focus, input:focus, select:focus, textarea:focus{outline:none;box-shadow:var(--focus)}
+  </style>
 </head>
-<body>
-  {% include 'customer/layout.html' %}
-  <div style="background-color: #fff;" class="container main-content">
-    <div class="text-center mt-5">
-      <h1 class="display-4 fw-bold mb-3" style="color:#00C853;">Welcome to <span style="color:#FFD600;">Champalal & Sons</span></h1>
-      <p class="lead mb-4">Your one-stop solution for efficient order processing and management.</p>
-      <a href="/place-order" class="btn btn-success btn-lg me-2">Place an Order</a>
-      <a href="/orders" class="btn btn-outline-success btn-lg">View Orders</a>
+<body style="  background: #fff5ee;">
+    {% include 'customer/layout.html' %}
+
+  <main class="container">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-card">
+        <div id="heroMedia" class="hero-media" style="background-image:url('https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1400&q=80')"></div>
+        <div class="hero-overlay">
+          <div class="pill">Legacy • Since 1930</div>
+          <h2 id="heroTitle">Cloth that tells a story</h2>
+          <p class="lead">Curated yardage for tailors, families and homes — since 1930. We sell fabric yardage only, not ready-made garments.</p>
+          <div class="cta">
+            <button class="btn primary" id="exploreBtn">Explore Collections</button>
+            <button class="btn ghost" id="openEnquire">Enquire</button>
+          </div>
+        </div>
+        <div style="position:absolute;right:18px;top:18px;display:flex;gap:8px">
+          <div id="heroDots"></div>
+        </div>
+      </div>
+
+      
+    </section>
+
+    <!-- REFINE & CATEGORIES -->
+    <section class="toolbar">
+      <div style="display:flex;gap:12px;align-items:center">
+        <div class="dropdown">
+          <button id="dropdownBtn" class="btn" style="border:1px solid #e6e7ea">Refine by Section ▾</button>
+          <div id="dropdownMenu" class="dropdown-menu" role="menu" aria-hidden="true">
+            <button data-val="all">All</button>
+            <button data-val="saree">Sarees</button>
+            <button data-val="suiting">Suiting</button>
+            <button data-val="kurta">Kurta Cloths</button>
+            <button data-val="shawals">Shawals</button>
+            <button data-val="bedsheet">Bedsheets</button>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px">
+          <input id="searchInput" placeholder="Search fabrics, e.g. silk" style="padding:8px;border-radius:8px;border:1px solid #e6e7ea;width:220px" />
+          <button id="searchBtn" class="btn primary">Search</button>
+        </div>
+      </div>
+
+      <div class="muted">Showing <strong id="sectionsCount">5</strong> sections</div>
+    </section>
+
+    <section class="grid" id="categories">
+      <!-- cards inserted by JS -->
+    </section>
+
+    <!-- Featured fabrics -->
+    <section class="featured">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0">Featured Fabrics</h3>
+        <a href="#" style="color:var(--accent);font-weight:600">Browse all</a>
+      </div>
+
+      <div class="f-grid" id="featuredGrid">
+        <!-- items by JS -->
+      </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testi">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0">What customers say</h3>
+        <div class="muted">Trusted over generations</div>
+      </div>
+      <div style="margin-top:12px;position:relative">
+        <blockquote id="testiText">“They helped me choose the perfect silk for my wedding saree — the texture was unmatched.”</blockquote>
+        <footer class="muted" id="testiBy">— Asha</footer>
+        <div style="position:absolute;right:8px;top:30%;display:flex;gap:8px">
+          <button id="prevTesti" class="btn">‹</button>
+          <button id="nextTesti" class="btn">›</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ & Newsletter -->
+    <section class="faq-grid">
+      <div>
+        <h3>Frequently asked</h3>
+        <div id="faqList" style="margin-top:10px">
+          <!-- FAQs by JS -->
+        </div>
+      </div>
+
+      <div style="background:white;border-radius:10px;padding:16px;box-shadow:var(--shadow)">
+        <h3 style="margin:0">Newsletter</h3>
+        <p class="muted" style="margin-top:6px">Join to receive fabric drops, tips and store events (no spam).</p>
+        <form id="newsForm" style="display:flex;gap:8px;margin-top:12px">
+          <input type="email" placeholder="Your email" required style="flex:1;padding:10px;border-radius:8px;border:1px solid #e6e7ea" />
+          <button class="btn primary">Subscribe</button>
+        </form>
+        <div class="muted" style="margin-top:8px;font-size:12px">We respect your privacy. Unsubscribe anytime.</div>
+      </div>
+    </section>
+
+    <footer>
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:space-between">
+        <div>© <span id="year"></span> Champalal & Sons — Cloth merchants since 1930</div>
+        <div style="display:flex;gap:12px"><a href="#">Privacy</a><a href="#">Terms</a></div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Mobile call CTA -->
+  <a class="call-cta" href="tel:+919876543210">Call • +91 98765 43210</a>
+
+  <!-- Modal -->
+  <div id="modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal">
+      <div style="display:flex;justify-content:space-between;align-items:start">
+        <div>
+          <h3>Enquire — Champalal & Sons</h3>
+          <p class="muted">Provide details and our team will respond. (Demo)</p>
+        </div>
+        <button id="closeModal" class="icon-btn">✕</button>
+      </div>
+
+      <form id="modalForm" style="margin-top:12px;display:grid;gap:8px">
+        <input required placeholder="Name" />
+        <input required placeholder="Email or phone" />
+        <textarea rows="4" placeholder="Details: fabric type, meter, preferred delivery"></textarea>
+        <div style="display:flex;gap:8px">
+          <button class="btn primary">Send Enquiry</button>
+          <button type="button" id="cancelModal" class="btn">Cancel</button>
+        </div>
+      </form>
     </div>
   </div>
-  {% include 'customer/footer.html' %}
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Data (mirrors React version)
+    const categories = [
+      { id:'saree', name:'Sarees', subtitle:'Handloom silks & blends', image:'https://images.unsplash.com/photo-1520975916406-6b5a3d6b8d3a?auto=format&fit=crop&w=1200&q=60', swatch:'#c86b4c' },
+      { id:'suiting', name:'Suiting Cloth', subtitle:'Fine worsted & blends', image:'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=1200&q=60', swatch:'#2b6a8a' },
+      { id:'kurta', name:'Kurta Cloths', subtitle:'Cool breathable weaves', image:'https://images.unsplash.com/photo-1622495893460-9a9f3d36f0b6?auto=format&fit=crop&w=1200&q=60', swatch:'#e0b175' },
+      { id:'shawals', name:'Shawals & Stoles', subtitle:'Soft woolens & handwoven', image:'https://images.unsplash.com/photo-1542576826-6f6f6f7b8e4b?auto=format&fit=crop&w=1200&q=60', swatch:'#6f4a3a' },
+      { id:'bedsheet', name:'Bedsheets', subtitle:'Premium linens & cottons', image:'https://images.unsplash.com/photo-1505691723518-36a45b6f4e77?auto=format&fit=crop&w=1200&q=60', swatch:'#a1c18a' }
+    ];
+
+    const heroSlides = [
+      { id:'h1', title:'Cloth that tells a story', subtitle:'Curated yardage for tailors, families and homes — since 1930', image:'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1400&q=80' },
+      { id:'h2', title:'Handloom & Premium Weaves', subtitle:'Selected textures, honest fibres, lasting value', image:'https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=1400&q=80' },
+      { id:'h3', title:'Tailor-ready yardage', subtitle:'No ready-made garments — just exceptional fabrics', image:'https://images.unsplash.com/photo-1495121605193-b116b5b09b07?auto=format&fit=crop&w=1400&q=80' }
+    ];
+
+    const testimonials = [
+      { id:1, name:'Asha', text:'They helped me choose the perfect silk for my wedding saree — the texture was unmatched.' },
+      { id:2, name:'Ramesh', text:'Excellent suiting cloth; my tailor loved the drape. Staff are patient and honest.' },
+      { id:3, name:'Meera', text:'I always come here for bedsheets — quality lasts for years.' }
+    ];
+
+    const faqs = [
+      { q:'Do you sell ready-made garments?', a:"No — we only sell fabric yardage and textiles. We don't offer ready-made clothes like jeans or shirts." },
+      { q:'Can I request custom sourcing?', a:'Yes — use the Enquire button or the contact form with details (meterage, fabric type).' },
+      { q:'Do you ship?', a:'We can arrange local delivery and limited shipping. Please enquire with your location.' }
+    ];
+
+    // Init
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Helper: navigate to place-order with the required pattern
+    function gotoPlaceOrder(q){
+      const qClean = q ? encodeURIComponent(q) : '';
+      location.href = `/place-order?q=${qClean}&sort=newest`;
+    }
+
+    // Hero carousel
+    let slide = 0;
+    const heroMedia = document.getElementById('heroMedia');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroDots = document.getElementById('heroDots');
+
+    function renderHero(){
+      const h = heroSlides[slide];
+      heroMedia.style.backgroundImage = `url('${h.image}')`;
+      heroTitle.textContent = h.title;
+      // dots
+      heroDots.innerHTML = '';
+      heroSlides.forEach((_,i)=>{
+        const d = document.createElement('button');
+        d.style.width='10px';d.style.height='10px';d.style.borderRadius='999px';d.style.border='none';d.style.margin='4px';d.style.background = i===slide? 'var(--accent)':'#e6e7ea';
+        d.addEventListener('click',()=>{slide=i;renderHero();});
+        heroDots.appendChild(d);
+      });
+    }
+    renderHero();
+    setInterval(()=>{slide=(slide+1)%heroSlides.length;renderHero();},6000);
+
+    // Categories render
+    const categoriesEl = document.getElementById('categories');
+    function renderCategories(list){
+      categoriesEl.innerHTML='';
+      list.forEach(c=>{
+        const art = document.createElement('article'); art.className='card';
+        art.innerHTML = `
+          <div class="media" style="background-image:url('${c.image}')"></div>
+          <div class="body">
+            <h4>${c.name}</h4>
+            <p>${c.subtitle}</p>
+            <div class="actions">
+              <button class="btn view-btn">View</button>
+              <div style="display:flex;gap:8px">
+                <button class="btn primary enquire-btn">Enquire</button>
+                <button class="btn" title="Favourite">♡</button>
+              </div>
+            </div>
+          </div>
+        `;
+        const media = art.querySelector('.media');
+        media.style.backgroundSize='cover';
+        media.style.height='180px';
+        const sw = document.createElement('div'); sw.className='swatch'; sw.style.background = c.swatch;
+        media.appendChild(sw);
+
+        // attach dataset to view button so we know which q to use
+        const viewBtn = art.querySelector('.view-btn');
+        viewBtn.dataset.q = c.id;
+
+        categoriesEl.appendChild(art);
+      });
+      document.getElementById('sectionsCount').textContent = list.length;
+
+      // attach enquire handlers
+      document.querySelectorAll('.enquire-btn').forEach(b=>b.addEventListener('click',()=>openModal()));
+
+      // attach view handlers (navigate to /place-order?q=<type>&sort=newest)
+      document.querySelectorAll('.view-btn').forEach(b=>{
+        b.addEventListener('click',()=>{
+          const q = b.dataset.q || '';
+          gotoPlaceOrder(q);
+        });
+      });
+    }
+    renderCategories(categories);
+
+    // Featured fabrics
+    const featuredGrid = document.getElementById('featuredGrid');
+    for(let i=0;i<8;i++){
+      const d = document.createElement('div'); d.className='fabric';
+      d.innerHTML = `<img src='https://picsum.photos/seed/fabric${i}/400/300' alt='fabric-${i}'/><div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px"><div><div style='font-weight:600'>Fabric ${i+1}</div><div class='muted' style='font-size:12px'>Silk / 1.1m approx</div></div><button class='btn view-featured' style='background:#FFFBEB;border-radius:8px;padding:6px 8px;color:var(--accent)'>View</button></div>`;
+      // set q to 'featured' for featured grid items (same URL pattern)
+      featuredGrid.appendChild(d);
+      // dataset assignment and handler (set after append so element exists)
+      const viewBtn = d.querySelector('.view-featured');
+      if(viewBtn){
+        viewBtn.dataset.q = 'featured';
+        viewBtn.addEventListener('click', ()=> gotoPlaceOrder(viewBtn.dataset.q) );
+      }
+    }
+
+    // Testimonials
+    let testiIndex = 0;
+    const testiText = document.getElementById('testiText');
+    const testiBy = document.getElementById('testiBy');
+    function renderTesti(){
+      testiText.textContent = '“'+testimonials[testiIndex].text+'”';
+      testiBy.textContent = '— '+testimonials[testiIndex].name;
+    }
+    document.getElementById('prevTesti').addEventListener('click',()=>{testiIndex=(testiIndex-1+testimonials.length)%testimonials.length;renderTesti();});
+    document.getElementById('nextTesti').addEventListener('click',()=>{testiIndex=(testiIndex+1)%testimonials.length;renderTesti();});
+    setInterval(()=>{testiIndex=(testiIndex+1)%testimonials.length;renderTesti();},5500);
+    renderTesti();
+
+    // FAQ
+    const faqList = document.getElementById('faqList');
+    faqs.forEach((f,idx)=>{
+      const wrap = document.createElement('div'); wrap.className='faq';
+      const btn = document.createElement('button'); btn.textContent = f.q; btn.addEventListener('click',()=>{panel.style.display = panel.style.display === 'block' ? 'none' : 'block';});
+      const panel = document.createElement('div'); panel.className='panel'; panel.style.display='none'; panel.textContent = f.a;
+      wrap.appendChild(btn); wrap.appendChild(panel); faqList.appendChild(wrap);
+    });
+
+    // Dropdown
+    const dropdownBtn = document.getElementById('dropdownBtn');
+    const dropdownMenu = document.getElementById('dropdownMenu');
+    dropdownBtn.addEventListener('click',()=>{dropdownMenu.classList.toggle('show');dropdownMenu.setAttribute('aria-hidden', dropdownMenu.classList.contains('show')? 'false':'true')});
+    dropdownMenu.querySelectorAll('button').forEach(b=>b.addEventListener('click',(e)=>{
+      const val = e.currentTarget.getAttribute('data-val');
+      if(val==='all'){renderCategories(categories);}
+      else{renderCategories(categories.filter(c=>c.id===val));}
+      dropdownMenu.classList.remove('show');
+    }));
+
+    // Search
+    document.getElementById('searchBtn').addEventListener('click',()=>{
+      const q = document.getElementById('searchInput').value.trim().toLowerCase();
+      if(!q){renderCategories(categories);return}
+      renderCategories(categories.filter(c=>c.name.toLowerCase().includes(q) || c.subtitle.toLowerCase().includes(q)));
+    });
+
+    // Modal
+    const modal = document.getElementById('modal');
+    const openEnquire = document.getElementById('openEnquire');
+    const openEnquire2 = document.getElementById('openEnquire2');
+    const closeModal = document.getElementById('closeModal');
+    const cancelModal = document.getElementById('cancelModal');
+
+    function openModal(){modal.classList.add('show');modal.setAttribute('aria-hidden','false')}
+    function closeModalFn(){modal.classList.remove('show');modal.setAttribute('aria-hidden','true')}
+    openEnquire.addEventListener('click',openModal);
+    openEnquire2.addEventListener('click',openModal);
+    closeModal.addEventListener('click',closeModalFn);
+    cancelModal.addEventListener('click',closeModalFn);
+    document.getElementById('modal').addEventListener('click',(e)=>{if(e.target===modal) closeModalFn();});
+
+    // quick enquire submit (demo)
+    document.getElementById('quickForm').addEventListener('submit',(e)=>{e.preventDefault();alert('Demo: enquiry received.');});
+    document.getElementById('modalForm').addEventListener('submit',(e)=>{e.preventDefault();alert('Demo: enquiry sent.');closeModalFn();});
+
+    // Enquire buttons on cards
+    // handled after renderCategories attachments above
+
+    // small accessibility nicety: close dropdown when clicking outside
+    document.addEventListener('click',(e)=>{if(!dropdownBtn.contains(e.target) && !dropdownMenu.contains(e.target)){dropdownMenu.classList.remove('show');dropdownMenu.setAttribute('aria-hidden','true')}});
+
+  </script>
 </body>
 </html>

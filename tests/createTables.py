@@ -370,6 +370,29 @@ BEGIN
 END
 $$;
 
+-- 2025-09-15_create_wishlist_table.sql
+CREATE TABLE public.wishlist (
+  wishlist_id   serial PRIMARY KEY,
+  customer_id   integer NOT NULL,
+  product_id    integer NOT NULL,
+  variant_id    integer NOT NULL,
+  created_at    timestamp NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Kolkata'),
+  CONSTRAINT fk_wishlist_customer FOREIGN KEY (customer_id) REFERENCES public.customers (customer_id) ON DELETE CASCADE,
+  CONSTRAINT fk_wishlist_product FOREIGN KEY (product_id) REFERENCES public.products (product_id) ON DELETE CASCADE,
+  CONSTRAINT fk_wishlist_variant FOREIGN KEY (variant_id) REFERENCES public.product_variants (variant_id) ON DELETE CASCADE,
+  CONSTRAINT uq_wishlist_customer_variant UNIQUE (customer_id, variant_id)
+);
+
+-- Index to look up a customer's wishlist quickly
+CREATE INDEX idx_wishlist_customer_created ON public.wishlist (customer_id, created_at DESC);
+
+-- Index to support queries by variant
+CREATE INDEX idx_wishlist_variant ON public.wishlist (variant_id);
+
+-- Optional: a small partial index for quickly finding recent wishlist entries (helps if you paginate)
+CREATE INDEX idx_wishlist_customer_recent ON public.wishlist (customer_id, created_at DESC) WHERE created_at > (now() - interval '365 days');
+
+
 """
 # ---------- end of DDL ----------
 

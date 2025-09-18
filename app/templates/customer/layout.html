@@ -1,433 +1,360 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>{% block title %}Champalal & Sons{% endblock %}</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Bootstrap 5 CSS CDN -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='customer/footer.css') }}">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}Champalal & Sons — Light & Crafted{% endblock %}</title>
+
+  {# Intentionally avoiding a global Bootstrap include to prevent CSS conflicts with the homepage styling. #}
   {% block head %}{% endblock %}
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
 
   <style>
-    /* basic page layout */
+    /* --- Core variables & typography copied from homepage to guarantee identical navbar visuals --- */
+    :root {
+      --bg: #fff5ee;
+      --muted: #6b7280;
+      --accent: #f59e0b;
+      /* amber */
+      --accent-contrast: #111827;
+      --surface: #f8fafc;
+      --card: #ffffff;
+      --radius: 14px;
+      --glass: rgba(255, 255, 255, 0.6);
+      --shadow: 0 6px 18px rgba(17, 24, 39, 0.06);
+      --max: 1200px;
+      --focus: 3px solid rgba(245, 158, 11, 0.18);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
     body {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      height: 100%;
+      font-family: 'Poppins';
+    }
+
+    body {
       margin: 0;
-      padding: 0;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-    }
-    .main-content {
-      flex: 1;
-      margin: 70px auto 20px;
-      background: rgba(255, 255, 255, 0.8);
-      border-radius: 10px;
-      position: relative;
-      z-index: 1;
-      padding: 18px;
-      width: min(1100px, 92%);
+      background: var(--bg);
+      color: var(--accent-contrast);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale
     }
 
-    /* navbar visuals */
-    .navbar-nav.central-nav { justify-content:center; gap:28px; width:74%; flex-direction:row; align-items:center; }
-    .navbar-nav.central-nav .nav-link, .navbar-nav.ms-auto .nav-link { transition: color .18s ease, transform .18s ease; font-size:1.05rem; }
-    .navbar-nav.central-nav .nav-link:hover, .navbar-nav.central-nav .nav-link:focus, .navbar-nav.ms-auto .nav-link:hover, .navbar-nav.ms-auto .nav-link:focus { color:#FFD600 !important; transform:translateY(-2px); }
-    .navbar-nav .nav-item:not(:last-child){ margin-right:12px; }
-    .navbar-nav.central-nav .nav-item{ margin-right:0; }
-    .navbar-nav .btn-outline-light.nav-link:hover, .navbar-nav .btn-outline-light.nav-link:focus { background:#FFD600 !important; color:#fff !important; border-color:#FFD600 !important; }
-    .container { margin:0; width:90vw; max-width:90vw; margin:auto; }
+    /* Homepage-style container used everywhere to match visuals exactly */
 
-    /* =====================
-       Navbar-area overlay container (does not block whole page)
-       - uses the original buffer-card look from your first code
-       - overlay itself is limited to the top/navbar area so main content and buttons are not covered
-       ===================== */
-    #globalBufferOverlay {
-      position: fixed;
+    /* HEADER (exact copy of homepage styles) */
+    header {
+      position: sticky;
       top: 0;
-      left: 0;
-      right: 0;
-      height: 0; /* set by JS to navbar height */
-      display: block; /* JS controls card visibility not container display */
-      z-index: 99999;
+      background: white;
+      backdrop-filter: blur(6px);
+      z-index: 40;
+    }
+    .container { max-width: 1260px; }
+
+    .nav {
+      margin: auto;
+      width: 100em;
+      display: flex;
+      align-items: center;
+      flex-direction: row;
+      padding-top: 0.5em;
+      padding-bottom: 0.5em;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 14%;
+      margin: 0% 1.5%;
+    }
+
+    .logo {
+      /* background: linear-gradient(135deg, #FEF3E0, #FFF7ED); */
+      padding: 8px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .site-title {
+      line-height: 1
+    }
+
+    .site-title h1 {
+      margin: 0;
+      font-size: 16px
+    }
+
+    .site-title p {
+      margin: 0;
+      font-size: 12px;
+      color: var(--muted)
+    }
+
+    nav.links {
+      display: flex;
+      gap: 18px;
+      align-items: center
+    }
+
+    nav.links a {
+      font-size: 14px;
+      color: black;
+      font-weight: 470;
+      font-size: medium;
+      text-decoration: none;
+      font-family: poppins;
+    }
+
+    /* icon button box: unified sizing so all icons + interactive areas match */
+    .icon-btn {
+      border-radius: 10px;
+      padding: 6px;              /* inner spacing between svg and edge */
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: transparent; /* we keep background on the card, not the whole viewport */
-      pointer-events: none; /* allow clicks through outside the card */
-      overflow: visible;
+      width: 50px;               /* consistent box size */
+      height: 50px;
+      box-sizing: border-box;
     }
 
-    /* =====================
-       Buffer card styles (kept from your first code)
-       ===================== */
-    .buffer-card {
-      pointer-events: auto;
-      position: absolute; /* positioned by JS below the navbar */
-      background: linear-gradient(180deg, #ffffff, #fbfdff);
-      border-radius: 14px;
-      padding: 18px 18px;
-      display:flex;
-      gap:14px;
-      align-items:center;
-      box-shadow: 0 30px 80px rgba(2,6,23,0.18);
-      border: 1px solid rgba(13,110,253,0.06);
-      width: min(720px, calc(100% - 48px));
-      max-width: 92%;
-      transform: translateY(-8px) scale(.98);
-      transition: transform 380ms cubic-bezier(.2,.9,.2,1), opacity 260ms ease;
-      opacity: 0;
-      transform-origin: top center;
-    }
-    .buffer-card.show { transform: translateY(0) scale(1); opacity: 1; }
-
-    /* icon area */
-    .buffer-icon {
-      width:78px;
-      height:78px;
-      min-width:78px;
-      border-radius:12px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background: linear-gradient(180deg,#eff6ff,#ffffff);
-      box-shadow: 0 12px 36px rgba(13,110,253,0.06);
-      position:relative;
-      overflow:visible;
+    /* keep profile and auth area visually separate */
+    .auth-list {
+      display: flex;
+      gap: 0px;                /* uniform spacing between items */
+      align-items: center;
+      margin: 0;
+      padding: 0;
+      list-style: none
     }
 
-    /* Animated cart spinner (SVG) */
-    .buffer-svg { width:44px; height:44px; transform-origin:center; }
-    .buffer-spin { animation: bufferSpin 1200ms linear infinite; }
-    @keyframes bufferSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .auth-list li { margin: 0; } /* ensure no extra margins from list items */
 
-    /* subtle 'pulse' behind icon */
-    .buffer-pulse {
-      position:absolute;
-      width:108px;
-      height:108px;
-      border-radius:22px;
-      left:50%;
-      top:50%;
-      transform:translate(-50%,-50%);
-      background: radial-gradient(circle at 40% 30%, rgba(13,110,253,0.12), rgba(13,110,253,0.02) 40%);
-      filter: blur(6px);
-      opacity: 0;
-      animation: pulseShow 1200ms ease-in-out infinite;
-      pointer-events: none;
-    }
-    @keyframes pulseShow {
-      0% { opacity: 0; transform: translate(-50%,-50%) scale(.92); }
-      50% { opacity: 1; transform: translate(-50%,-50%) scale(1.05); }
-      100% { opacity: 0; transform: translate(-50%,-50%) scale(.92); }
+    .auth-list .nav-item {
+      display: flex;
+      align-items: center
     }
 
-    /* text area */
-    .buffer-text h4 { margin:0 0 6px 0; font-size:1.05rem; font-weight:700; color:#0b365a; }
-    .buffer-text p { margin:0; color:#57606f; font-size:.95rem; line-height:1.32; }
-
-    /* progress bar */
-    .buffer-progress {
-      margin-top: 12px;
-      height:8px;
-      background: linear-gradient(90deg,#eef6ff,#f8fbff);
-      border-radius:999px;
-      overflow:hidden;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
-    }
-    .buffer-progress > .bar {
-      height:100%;
-      width:0%;
-      background: linear-gradient(90deg,#0d6efd,#6610f2);
-      border-radius:999px;
-      transition: width 420ms cubic-bezier(.2,.9,.2,1);
-      box-shadow: 0 6px 18px rgba(13,110,253,0.12) inset;
+    /* helper classes (same as homepage) */
+    .muted {
+      color: var(--muted)
     }
 
-    /* small tip row */
-    .buffer-tip { margin-top:10px; font-size:.85rem; color:#6c757d; display:flex; gap:8px; align-items:center; }
-    .buffer-dot { width:8px; height:8px; border-radius:50%; background:#0d6efd; opacity:.9; box-shadow:0 2px 6px rgba(13,110,253,0.18); transform:translateY(0); animation: dotBounce 1200ms ease-in-out infinite; }
-    @keyframes dotBounce { 0% { transform: translateY(0); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0); } }
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #fff7ed;
+      color: var(--accent);
+      font-weight: 600
+    }
 
-    /* success / error micro-state */
-    .buffer-card.success { border-color: rgba(40,167,69,0.18); box-shadow: 0 30px 80px rgba(40,167,69,0.06); }
-    .buffer-card.error { border-color: rgba(220,53,69,0.12); box-shadow: 0 30px 80px rgba(220,53,69,0.06); }
-    .buffer-card.success .buffer-text h4 { color:#1b7a3a; }
-    .buffer-card.error .buffer-text h4 { color:#b02a37; }
+    /* Page content wrapper */
+    main {
+      max-width: var(--max);
+      margin: 22px auto;
+      padding: 0 20px
+    }
+
+    /* Mobile call CTA (same behavior) */
+    .call-cta {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: var(--accent);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 999px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 30px rgba(245, 158, 11, 0.18)
+    }
 
     /* small responsive tweaks */
-    @media (max-width: 640px) {
-      .buffer-card { padding: 14px; gap:10px; }
-      .buffer-icon { width:64px; height:64px; min-width:64px; }
-      .buffer-svg { width:36px; height:36px; }
-      .buffer-text h4 { font-size:.98rem; }
+    @media(max-width:767px) {
+      .nav {
+        height: 64px
+      }
+
+      .site-title h1 {
+        font-size: 14px
+      }
+
+      .site-title p {
+        font-size: 11px
+      }
+
+      .call-cta {
+        display: flex
+      }
+    }
+
+    /* Remove any inherited Bootstrap-like defaults that could interfere */
+    /* These are scoped and minimal — leaving the rest of the page to individual templates */
+    a {
+      color: inherit;
+    }
+
+    .nav a {
+      text-decoration: none;
+    }
+
+    /* small helper to size the image inside the existing .logo block without changing layout */
+    .logo img {
+      display: block;
+      height: 40px;
+      width: auto;
     }
   </style>
 </head>
+
 <body>
-  <!-- Navbar -->
-  <nav id="siteNavbar" class="navbar navbar-expand-lg navbar-dark bg-success shadow">
-    <div class="container" style="width: 100vw;">
-      <!-- brand excluded from nav-buffer behavior -->
-      <a class="navbar-brand fw-bold" href="/" id="brandLink">
-        <span style="color:#FFD600;">Champalal & Sons</span>
-      </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-        <span class="navbar-toggler-icon"></span>
-      </button>
+  <!-- Header exactly as homepage (keeps logo/title/links/profile on same row) -->
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <div class="logo">
+          <a href="/" aria-label="Home">
+            <img src="{{ url_for('static', filename='images/C&S logo.png') }}" style="transform: scale(2.4); transform-origin: center;" alt="C&S logo">
+          </a>
+        </div>
+      </div>
 
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav central-nav">
-          <!-- Home excluded -->
-          <li class="nav-item"><a class="nav-link text-white" href="/">Home</a></li>
+      <nav class="links" aria-label="Main navigation" style="display:flex;align-items:center;justify-content:space-between;width:80%">
+        <div style="display:flex;gap:40px;align-items:center; margin: auto;padding-left: 9%;">
+          <a href="/">HOME</a>
+          <a href="/place-order">PRODUCTS</a>
+          <a href="/orders">VIEW ORDERS</a>
+        </div>
 
-          <!-- Links that will trigger the navbar buffering overlay -->
-          <li class="nav-item"><a class="nav-link text-white nav-buffer" href="/place-order" data-buffer-title="Loading products…" data-buffer-msg="Loading catalog — fetching latest items and offers.">Place Order</a></li>
-          <li class="nav-item"><a class="nav-link text-white nav-buffer" href="/cart" data-buffer-title="Opening your cart…" data-buffer-msg="We’re fetching your items & ensuring availability.">View Cart</a></li>
-          <li class="nav-item"><a class="nav-link text-white nav-buffer" href="/orders" data-buffer-title="Loading orders…" data-buffer-msg="Retrieving your order history and statuses.">View Orders</a></li>
-        </ul>
+        <ul class="auth-list" style="position: relative; left: 8%;" aria-hidden="false">
+          <li>
+            <a class="icon-btn" href="/wishlist" aria-label="Wishlist" title="Wishlist">
+              <!-- Big, well-designed heart icon (SVG) -->
+              <svg width="32" height="32" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                   aria-hidden="true" focusable="false"
+                   style="display:block; transition: transform 160ms cubic-bezier(.2,.9,.3,1); transform-origin: center;"
+                   onmouseenter="this.style.transform='scale(1.08)';"
+                   onmouseleave="this.style.transform='scale(1)';">
+                <defs>
+                  <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ff7f66"/>
+                    <stop offset="100%" stop-color="#ff3d6b"/>
+                  </linearGradient>
+                  <filter id="heartShadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#ff7f66" flood-opacity="0.18"/>
+                  </filter>
+                </defs>
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+                      fill="url(#heartGrad)" filter="url(#heartShadow)"></path>
+                <path d="M12.1 19.02c-4.35-3.94-7-6.33-7-10.52 0-2.3 1.9-4.2 4.2-4.2 1.6 0 3.07.88 3.9 2.22.83-1.34 2.3-2.22 3.9-2.22 2.3 0 4.2 1.9 4.2 4.2 0 4.19-2.65 6.58-7 10.52l-1.2 1.09-1.2-1.09z"
+                      fill-opacity="0.06" fill="#000"></path>
+              </svg>
+            </a>
+          </li>
 
-        <ul class="navbar-nav ms-auto">
+          <li>
+            <!-- Improved cart icon (SVG) -->
+            <a class="icon-btn" style="position: relative;top: 3px;" href="/cart" aria-label="Cart" title="Cart">
+              <svg width="35" height="35" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                   aria-hidden="true" focusable="false"
+                   style="display:block; transition: transform 160ms cubic-bezier(.2,.9,.3,1); transform-origin: center;"
+                   onmouseenter="this.style.transform='scale(1.06)';"
+                   onmouseleave="this.style.transform='scale(1)';">
+                <defs>
+                  <linearGradient id="cartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#444b54"/>
+                    <stop offset="100%" stop-color="#111827"/>
+                  </linearGradient>
+                  <filter id="cartShadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.08"/>
+                  </filter>
+                </defs>
+                <!-- cart body -->
+                <path d="M3 3h2.4l1.8 9.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 6H6"
+                      fill="none" stroke="url(#cartGrad)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" filter="url(#cartShadow)"/>
+                <!-- handle / top bar -->
+                <path d="M16 16a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-8 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"
+                      fill="url(#cartGrad)" opacity="0.98"/>
+                <!-- subtle fill for cart base -->
+                <path d="M5 6l1.5 7.5c.12.6.62 1 1.23 1h8.54c.6 0 1.1-.4 1.23-1L20 6"
+                      fill="rgba(17,24,39,0.03)"/>
+              </svg>
+            </a>
+          </li>
+
+
           {% if session.get('customer_id') and session.get('name') %}
-            <li class="nav-item d-flex align-items-center">
-              <!-- profile still uses buffer -->
-              <a class="nav-link fw-bold text-warning nav-buffer" href="{{ url_for('main.profile') }}" style="font-size:1.1rem;" data-buffer-title="Opening profile…" data-buffer-msg="Loading your account details">
-                <i class="fa fa-user-circle me-1" aria-hidden="true"></i> {{ session['name'] }}
-              </a>
-            </li>
-            <li class="nav-item" style="margin-top:5px;">
-              <!-- logout explicitly excluded from buffering -->
-              <a class="nav-link btn btn-outline-light ms-2 px-3 py-1 text-white" href="/logout" data-no-buffer="true" style="font-weight:600; border-radius:20px; background:#fff; color:#00C853 !important;">Log out</a>
-            </li>
+          <li class="nav-item d-flex align-items-center">
+            <a class="nav-link fw-bold" href="{{ url_for('main.profile') }}" style="font-size:1.05rem;color:var(--accent);">
+              <!-- NEW: refined profile avatar icon (slightly reduced to 28) -->
+              <svg width="30" height="30" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
+                   aria-hidden="true" focusable="false"
+                   style="display:block; transition: transform 160ms cubic-bezier(.2,.9,.3,1); transform-origin: center;"
+                   onmouseenter="this.style.transform='scale(1.06)';"
+                   onmouseleave="this.style.transform='scale(1)';" title="Profile">
+                <defs>
+                  <linearGradient id="avatarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#f59e0b"/>
+                    <stop offset="100%" stop-color="#ff7f66"/>
+                  </linearGradient>
+                  <filter id="avatarShadow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
+                  </filter>
+                </defs>
+
+                <!-- circular backdrop -->
+                <circle cx="12" cy="12" r="10" fill="url(#avatarGrad)" opacity="0.12"></circle>
+
+                <!-- user silhouette (modern rounded) -->
+                <g filter="url(#avatarShadow)">
+                  <path d="M12 13.2c1.77 0 3.2-1.43 3.2-3.2S13.77 6.8 12 6.8 8.8 8.23 8.8 10s1.43 3.2 3.2 3.2z" fill="#ff7f66"/>
+                  <path d="M5.5 18.2c.8-2.1 3.0-3.6 6.5-3.6s5.7 1.5 6.5 3.6a0.6.6 0 0 1-.55.86H6.05a0.6.6 0 0 1-.55-.86z" fill="#ff7f66" opacity="0.95"/>
+                </g>
+
+                <!-- subtle outline -->
+                <circle cx="12" cy="12" r="11" fill="none" stroke="rgba(17,24,39,0.06)" stroke-width="1"/>
+              </svg>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/logout" style="color: black; font-weight: 470; font-size: medium; text-decoration: none; font-family: poppins; padding: 6px 12px; border-radius: 10px;">Log out</a>
+          </li>
           {% else %}
-            <!-- login explicitly excluded from buffering -->
-            <li class="nav-item"><a class="nav-link text-white" href="/login" data-no-buffer="true">Login</a></li>
-            <!-- register kept buffered -->
-            <li class="nav-item"><a class="nav-link text-white " href="/register" data-no-buffer="true">Register</a></li>
+          <li class="nav-item"><a class="nav-link" href="/login">Login</a></li>
+          <li class="nav-item"><a class="nav-link" href="/register">Register</a></li>
           {% endif %}
         </ul>
-      </div>
+      </nav>
     </div>
-  </nav>
+  </header>
 
-
-  <!-- Navbar-area overlay container (cards appended here) -->
-  <div id="globalBufferOverlay" aria-hidden="true" role="status" aria-live="polite"></div>
-
-  <!-- Bootstrap JS CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-  <!-- Buffering script (creates original-styled buffer-cards positioned near clicked nav links)
-       includes suppression on bfcache / popstate so overlays don't pop on back/forward -->
   <script>
-    (function () {
-      const overlay = document.getElementById('globalBufferOverlay');
-      const NAVBAR = document.getElementById('siteNavbar');
+    // small behaviour used across pages
+    try { document.getElementById('year').textContent = new Date().getFullYear(); } catch (e) { }
 
-      /* ----------------------------
-         suppression guard for history navigation (bfcache/back/forward)
-         ---------------------------- */
-      // global flag accessible for debugging if needed
-      window.__suppressNavBuffer = false;
-
-      function clearSuppressOnNextInteraction() {
-        function onFirstPointer() {
-          window.__suppressNavBuffer = false;
-          document.removeEventListener('pointerdown', onFirstPointer, true);
-        }
-        document.addEventListener('pointerdown', onFirstPointer, true);
-      }
-
-      // local helper to hide all cards (used before NavBarBuffer is exported)
-      function hideAllCards() {
-        try {
-          Array.from(overlay.children).forEach(c => {
-            try { c.classList.remove('show'); } catch(e) {}
-            try { overlay.removeChild(c); } catch(e) {}
-          });
-        } catch (e) {}
-        overlay.style.height = '0px';
-      }
-
-      window.addEventListener('pageshow', function (ev) {
-        // if restored from bfcache, suppress overlay popups briefly and remove stale cards
-        if (ev && ev.persisted) {
-          window.__suppressNavBuffer = true;
-          hideAllCards();
-          clearSuppressOnNextInteraction();
-          setTimeout(() => { window.__suppressNavBuffer = false; }, 600);
-        }
-      }, true);
-
-      window.addEventListener('popstate', function () {
-        // user navigated history (back/forward) — suppress overlays briefly
-        window.__suppressNavBuffer = true;
-        hideAllCards();
-        clearSuppressOnNextInteraction();
-        setTimeout(() => { window.__suppressNavBuffer = false; }, 600);
-      });
-
-      /* ----------------------------
-         buffer card creation/positioning/animation
-         ---------------------------- */
-      function createBufferCard(title, message) {
-        const card = document.createElement('div');
-        card.className = 'buffer-card';
-        card.setAttribute('role','status');
-        card.setAttribute('aria-live','polite');
-        card.innerHTML = `
-          <div class="buffer-icon" aria-hidden="true">
-            <div class="buffer-pulse" aria-hidden="true"></div>
-            <svg class="buffer-svg buffer-spin" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-              <circle cx="24" cy="24" r="18" stroke="rgba(13,110,253,0.18)" stroke-width="4" />
-              <path d="M16 18h20l-3 10H19l-3-10z" fill="#0d6efd" opacity="0.98"/>
-              <circle cx="19" cy="32" r="2" fill="#111"/>
-              <circle cx="31" cy="32" r="2" fill="#111"/>
-            </svg>
-          </div>
-          <div class="buffer-text" style="flex:1;">
-            <h4 class="buffer-title"></h4>
-            <p class="buffer-msg"></p>
-            <div class="buffer-progress" aria-hidden="true"><div class="bar"></div></div>
-            <div class="buffer-tip" aria-hidden="true"><div class="buffer-dot" style="animation-delay:0ms"></div><div class="buffer-tip-text" style="display:none"></div></div>
-          </div>
-        `;
-        card.querySelector('.buffer-title').textContent = title || 'Loading…';
-        card.querySelector('.buffer-msg').textContent = message || '';
-        return card;
-      }
-
-      function animateBar(barEl) {
-        barEl.style.width = '6%';
-        let val = 6;
-        const timer = setInterval(() => {
-          const inc = Math.max(0.3, Math.random() * 3);
-          val = Math.min(92, val + inc);
-          barEl.style.width = val.toFixed(2) + '%';
-        }, 360);
-        return () => { clearInterval(timer); barEl.style.width = '100%'; };
-      }
-
-      function positionCardBelowNavbar(card, anchor) {
-        // ensure overlay height covers navbar area so absolute positioning inside overlay works
-        const navRect = NAVBAR.getBoundingClientRect();
-        const overlayHeight = Math.max(navRect.height + 100, 64);
-        overlay.style.height = overlayHeight + 'px';
-        overlay.style.top = '0px';
-        overlay.style.left = '0px';
-        overlay.style.right = '0px';
-        overlay.style.pointerEvents = 'none';
-
-        // append if not already
-        if (card.parentElement !== overlay) overlay.appendChild(card);
-
-        // measure after appended
-        const measured = card.getBoundingClientRect();
-        const anchorRect = anchor.getBoundingClientRect();
-        const anchorCenter = anchorRect.left + (anchorRect.width / 2);
-        const viewportWidth = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
-        const maxLeft = viewportWidth - Math.min(measured.width, viewportWidth - 16) - 8;
-        let left = anchorCenter - (measured.width / 2);
-        left = Math.max(8, Math.min(left, maxLeft));
-
-        // top relative to overlay (overlay fixed at top:0), place below navbar
-        const top = Math.round(navRect.height + 10); // px below top
-        card.style.left = left + 'px';
-        card.style.top = top + 'px';
-      }
-
-      function showBufferForAnchor(anchorEl, opts = {}) {
-        if (!anchorEl) return () => {};
-        const title = opts.title || anchorEl.dataset.bufferTitle || 'Loading…';
-        const msg = opts.msg || anchorEl.dataset.bufferMsg || '';
-        const card = createBufferCard(title, msg);
-        // Insert and position next frame
-        requestAnimationFrame(() => positionCardBelowNavbar(card, anchorEl));
-        requestAnimationFrame(() => card.classList.add('show'));
-
-        const bar = card.querySelector('.bar');
-        const finish = animateBar(bar);
-
-        let hidden = false;
-        function hide(state) {
-          if (hidden) return;
-          hidden = true;
-          try { finish(); } catch(e) {}
-          if (state === 'success') { card.classList.remove('error'); card.classList.add('success'); }
-          else if (state === 'error') { card.classList.remove('success'); card.classList.add('error'); }
-          else { card.classList.remove('success','error'); }
-          card.classList.remove('show');
-          setTimeout(() => {
-            try { if (card.parentElement === overlay) overlay.removeChild(card); } catch(e) {}
-            if (!overlay.hasChildNodes()) overlay.style.height = '0px';
-          }, 380);
-        }
-        return { hide, card, bar };
-      }
-
-      /* ----------------------------
-         click handler for links with class 'nav-buffer'
-         respects suppression guard, respects data-no-buffer attribute
-         ---------------------------- */
-      document.addEventListener('click', function (ev) {
-        // guard against showing overlays while suppression active (bfcache / popstate)
-        if (window.__suppressNavBuffer) return;
-
-        const anchor = ev.target.closest && ev.target.closest('a.nav-buffer');
-        if (!anchor) return;
-        // allow modifier keys to open in new tab
-        if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
-        const href = anchor.getAttribute('href') || '';
-        if (!href) return;
-        // explicit opt-out
-        if (anchor.dataset.noBuffer === 'true' || anchor.getAttribute('data-no-buffer') === 'true') return;
-
-        // prevent immediate navigation to show buffer
-        ev.preventDefault();
-
-        const control = showBufferForAnchor(anchor, { title: anchor.dataset.bufferTitle, msg: anchor.dataset.bufferMsg });
-        // optional small delay before navigating so user sees animation
-        const delay = parseInt(anchor.dataset.bufferDelay || '0', 10);
-        setTimeout(() => {
-          try {
-            // navigate; typical page unload will remove overlay automatically
-            window.location.href = href;
-          } catch (err) {
-            // hide if navigation failed
-            control.hide('error');
-          }
-        }, Math.max(0, delay));
-      }, { passive: false });
-
-      /* ----------------------------
-         Programmatic API (expose hideAll and showNear)
-         ---------------------------- */
-      window.NavBarBuffer = {
-        showNear(selectorOrElement, opts) {
-          const el = (typeof selectorOrElement === 'string') ? document.querySelector(selectorOrElement) : selectorOrElement;
-          if (!el) return null;
-          const ctl = showBufferForAnchor(el, opts || {});
-          return ctl;
-        },
-        hideAll() {
-          hideAllCards();
-        }
-      };
-
-      // ensure cleanup on pageshow/popstate (also in suppression handlers above)
-      window.addEventListener('pageshow', () => { try { window.NavBarBuffer.hideAll(); } catch(e) {} });
-      window.addEventListener('popstate', () => { try { window.NavBarBuffer.hideAll(); } catch(e) {} });
-
-      // on resize remove cards to avoid misplacement
-      window.addEventListener('resize', () => {
-        hideAllCards();
-      });
-
-    })();
+    function handleCTA() { if (window.innerWidth <= 767) { document.querySelector('.call-cta').style.display = 'flex'; } else { document.querySelector('.call-cta').style.display = 'none'; } }
+    handleCTA(); window.addEventListener('resize', handleCTA);
   </script>
+
+  {% block scripts %}{% endblock %}
 </body>
+
 </html>
