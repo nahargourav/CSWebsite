@@ -26,12 +26,6 @@ def get_db():
     try:
         # simple connect using the full URL
         conn = psycopg2.connect(database_url, connect_timeout=10)
-
-
-
-
-
-
         return conn
     except Exception as e:
-        print(f"Error connecting to PostgreSQL using DATABASE_URL: {e}"
+        print(f"Error connecting to PostgreSQL using DATABASE_URL: {e}")
