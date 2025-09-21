@@ -1,0 +1,83 @@
+{# customer/_orders_fragment_mobile.html - order cards containing compact item rows #}
+{# 'orders' is OrderedDict keyed by order_id, each order dict has 'items' list #}
+
+{% for oid, order in orders.items() %}
+  <article class="order-card" data-order-id="{{ oid }}">
+    {# header: clicking navigates to order detail #}
+    <div class="order-head" role="link" aria-label="Open order {{ oid }}" data-order-url="{{ url_for('main.view_order', order_id=oid) }}">
+      <div class="order-meta-left">
+        <div class="order-date">
+          {% if order['order_date'] is string %}
+            Ordered on {{ order['order_date'] }}
+          {% else %}
+            Ordered on {{ order['order_date'].strftime('%b %d') }}
+          {% endif %}
+        </div>
+        <div class="order-total">{{ order['currency'] }} {{ '%.2f'|format(order['total_amount']) }}</div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="order-status" aria-hidden="true">{{ order['order_status'] | replace('-', ' ') | title }}</div>
+        <div class="chev-btn" aria-hidden="true" title="Open order">›</div>
+      </div>
+    </div>
+
+    <div class="items-list" role="list">
+      {% set status_lc = (order['order_status'] or '').lower() %}
+      {% for item in order['items'] %}
+        {# product detail url (variant if present) #}
+        {% if item.variant and item.variant.sku is defined and item.variant.sku %}
+          {# prefer providing variant param if available #}
+          {% set prod_url = url_for('main.view_prod_detail', product_id=item.product_id, variant_id=item.variant_id) %}
+        {% else %}
+          {% set prod_url = url_for('main.view_prod_detail', product_id=item.product_id) %}
+        {% endif %}
+
+        <div class="item-row"
+             role="listitem"
+             tabindex="0"
+             data-product-id="{{ item.product_id }}"
+             data-variant-id="{{ item.variant_id or '' }}"
+             data-product-name="{{ item.product_name|e }}"
+             data-product-url="{{ prod_url }}">
+          <div class="item-thumb" aria-hidden="true">
+            {% if item.image_path %}
+              <img src="{{ url_for('static', filename=item.image_path.replace('\\','/')) }}" alt="{{ item.product_name }}">
+            {% else %}
+              <img src="{{ url_for('static', filename='images/placeholder-sm.png') }}" alt="placeholder">
+            {% endif %}
+          </div>
+
+          <div class="item-main">
+            <div class="item-name">{{ item.product_name }}</div>
+
+            <div class="item-bottom">
+              <div class="stars" role="group" aria-label="Rating for {{ item.product_name }}">
+                {% if status_lc == 'delivered' %}
+                  {% for s in range(1,6) %}
+                    {% set filled = (item.rating is not none and s <= item.rating) %}
+                    <span class="star {% if filled %}filled{% endif %}"
+                          role="radio"
+                          tabindex="0"
+                          data-rating="{{ s }}"
+                          data-product="{{ item.product_id }}"
+                          data-variant="{{ item.variant_id or '' }}"
+                          data-order="{{ oid }}"
+                          data-reviewed="{{ '1' if item.reviewed else '0' }}"
+                          data-review-title="{{ item.review.title if item.review else '' }}"
+                          data-review-body="{{ item.review.body if item.review else '' }}"
+                          aria-checked="{{ 'true' if filled else 'false' }}">★</span>
+                  {% endfor %}
+                {% else %}
+                  {# not delivered -> no star UI at all (per your requirement) #}
+                {% endif %}
+              </div>
+
+              <div style="font-size:13px;color:var(--muted);white-space:nowrap;">Qty: {{ item.quantity }}</div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </article>
+{% endfor %}

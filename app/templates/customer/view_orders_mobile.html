@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Your Orders (Mobile)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+  <style>
+    :root{
+      --accent: #ff7f66;
+      --accent-2: #ff6b6b;
+      --muted: #6b7280;
+      --card-radius: 12px;
+      --card-shadow: 0 10px 28px rgba(2,6,23,0.06);
+      --accent-green: #10b981;
+      --page-bg: #fff7f5;
+      font-family: 'Poppins', system-ui, -apple-system, "Helvetica Neue", Arial;
+    }
+
+    html,body{height:100%;margin:0;background:var(--page-bg);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;color:#0f1724;}
+    a { color: inherit; text-decoration: none; }
+
+    .mobile-root{
+      max-width:720px;
+      margin:0 auto;
+      padding:12px 14px 90px;
+    }
+    .mobile-title{
+      text-align:center;
+      font-size:20px;
+      margin:10px 0 14px;
+      color:#0f1724;
+      font-weight:700;
+    }
+
+    /* ORDER CARD (contains header + items list) */
+    .order-card {
+      width:100%;
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: var(--card-shadow);
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      border: 1px solid rgba(15,23,36,0.04);
+      position: relative;
+      overflow: hidden;
+    }
+    .order-card + .order-card { margin-top:12px; }
+
+    .order-head {
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      cursor: pointer;
+    }
+    .order-meta-left { display:flex; flex-direction:column; gap:6px; min-width:0; }
+    .order-date { font-size:13px; color:var(--muted); white-space:nowrap; }
+    .order-total { font-weight:800; color:#0b365a; font-size:15px; }
+    .order-status {
+      font-size:12px; color:var(--muted); text-transform:capitalize;
+      background: rgba(15,23,36,0.02); padding:6px 8px; border-radius:999px;
+      white-space:nowrap;
+    }
+
+    .order-head .chev-btn {
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:36px;height:36px;border-radius:10px;
+      background: linear-gradient(180deg, rgba(15,23,36,0.02), rgba(15,23,36,0.01));
+      border:1px solid rgba(15,23,36,0.03);
+      color: rgba(15,23,36,0.55);
+      font-weight:700;
+      font-size:18px;
+    }
+
+    /* items list inside order card */
+    .items-list { display:flex; flex-direction:column; gap:8px; margin-top:6px; }
+    .item-row {
+      display:flex; gap:10px; align-items:center; padding:8px; border-radius:10px;
+      background: linear-gradient(180deg,#fff,#fbfbfd);
+      border: 1px solid rgba(15,23,36,0.03);
+      position:relative;
+      overflow:hidden;
+      user-select: none;
+    }
+
+    .item-thumb {
+      width:64px; height:64px; min-width:64px; border-radius:8px; overflow:hidden; background:#faf7f6;
+      display:flex; align-items:center; justify-content:center; border:1px solid rgba(15,23,36,0.03);
+      flex-shrink:0;
+    }
+    .item-thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+    .item-main { flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; z-index:2; }
+    .item-name {
+      font-weight:700; color:#0f1724; font-size:14px;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    }
+
+    .item-bottom { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+
+    /* stars and review (no explicit buttons) */
+    .stars {
+      display:flex; gap:6px; align-items:center;
+    }
+    .stars .star {
+      font-size:18px; color:#e9e9e9; cursor:pointer; user-select:none; line-height:1;
+      transition: transform .08s ease, filter .08s ease, opacity .08s ease;
+      display:inline-block;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    /* ----- INLINE (item-list) FILLED STAR GRADIENT ----- */
+    .stars .star.filled {
+      color: transparent;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 6px 18px rgba(255,127,102,0.08);
+      transform: translateY(-2px);
+    }
+    .stars .star.filled[data-rating="1"]{ background-position: 0% 50%; background-size: 500% 100%; }
+    .stars .star.filled[data-rating="2"]{ background-position: 20% 50%; background-size: 500% 100%; }
+    .stars .star.filled[data-rating="3"]{ background-position: 40% 50%; background-size: 500% 100%; }
+    .stars .star.filled[data-rating="4"]{ background-position: 60% 50%; background-size: 500% 100%; }
+    .stars .star.filled[data-rating="5"]{ background-position: 80% 50%; background-size: 500% 100%; }
+
+    /* keep hover affordance for inline stars */
+    .stars .star:hover { transform: translateY(-3px) scale(1.04); filter: drop-shadow(0 10px 24px rgba(255,127,102,0.05)); }
+
+    /* ensure interactive elements above header click */
+    .item-main, .item-thumb, .stars { position:relative; z-index:3; }
+
+    /* small devices */
+    @media (max-width:420px){
+      .item-thumb{ width:56px; height:56px; min-width:56px; }
+      .stars .star { font-size:16px; }
+    }
+
+    /* =========================
+       Modal & modal-star theme tweaks
+       ========================= */
+
+    /* Make modal feel premium and match theme */
+    .modal-content {
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff, #fffdfa);
+      box-shadow: 0 30px 60px rgba(2,6,23,0.12);
+      border: none;
+      overflow: hidden;
+      padding: 0;
+    }
+    .modal-header {
+      border-bottom: none;
+      padding: 14px 16px;
+      background: linear-gradient(90deg, rgba(255,127,102,0.03), rgba(245,158,11,0.02));
+      align-items:center;
+    }
+    .modal-title {
+      font-weight:700;
+      font-size:1.06rem;
+      color:#0f1724;
+    }
+    .btn-close {
+      opacity:0.75;
+      filter: none;
+    }
+    .modal-body {
+      padding: 14px 16px;
+      background: transparent;
+    }
+    .modal-footer {
+      padding: 10px 14px;
+      border-top: none;
+      background: transparent;
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+    }
+
+    /* Buttons in modal */
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(15,23,36,0.06);
+      padding: 8px 12px;
+      border-radius: 10px;
+      color: #0f1724;
+    }
+    .btn-ghost:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(2,6,23,0.04); }
+
+    .btn-modern {
+      border-radius: 10px;
+      padding: 8px 14px;
+      font-weight:700;
+      box-shadow: 0 12px 36px rgba(255,127,102,0.10);
+      border: none;
+    }
+
+    /* Modal stars (distinct from inline-list stars).
+       Unfilled: soft gray. Filled: warm gradient text fill so color isn't plain black.
+    */
+    #mobileReviewModal #m-rv-stars .star {
+      font-size: 26px;
+      color: #e9e9e9;
+      transition: transform .12s ease, filter .12s ease, opacity .12s ease;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+      display:inline-block;
+      line-height:1;
+      margin: 0 2px;
+      cursor: pointer;
+      user-select: none;
+    }
+    #mobileReviewModal #m-rv-stars .star.filled:hover {
+      transform: translateY(-6px) scale(1.06);
+      filter: drop-shadow(0 10px 28px rgba(255,127,102,0.08));
+    }
+
+    /* Modal filled gradient (same gradient style as inline). Use data-value to shift gradient per-star */
+    #mobileReviewModal #m-rv-stars .star.filled{
+      color: transparent;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 6px 18px rgba(255,127,102,0.12);
+    }
+    #mobileReviewModal #m-rv-stars .star.filled[data-value="1"]{ background-position:0% 50%; background-size:500% 100%; }
+    #mobileReviewModal #m-rv-stars .star.filled[data-value="2"]{ background-position:20% 50%; background-size:500% 100%; }
+    #mobileReviewModal #m-rv-stars .star.filled[data-value="3"]{ background-position:40% 50%; background-size:500% 100%; }
+    #mobileReviewModal #m-rv-stars .star.filled[data-value="4"]{ background-position:60% 50%; background-size:500% 100%; }
+    #mobileReviewModal #m-rv-stars .star.filled[data-value="5"]{ background-position:80% 50%; background-size:500% 100%; }
+
+    /* Readonly look: slightly muted and non-interactive (modal) */
+    #mobileReviewModal #m-rv-stars.readonly .star {
+      cursor: default;
+      opacity: 0.95;
+    }
+    #mobileReviewModal #m-rv-stars.readonly .star:hover {
+      transform: none;
+      filter: none;
+    }
+
+    /* Input fields subtle styles to match theme */
+    #mobileReviewModal .form-control {
+      border-radius: 10px;
+      border: 1px solid rgba(15,23,36,0.06);
+      box-shadow: 0 6px 18px rgba(2,6,23,0.04) inset;
+      padding: 10px 12px;
+    }
+    #mobileReviewModal textarea.form-control { min-height: 110px; }
+
+    /* small helper for readonly note */
+    #m-rv-readonly-note { margin-top:8px; color:var(--muted); font-size:13px; }
+
+  </style>
+</head>
+<body>
+  {% include 'customer/layout.html' %}
+
+  <main class="mobile-root" role="main" aria-labelledby="ordersHeading">
+    <h1 id="ordersHeading" class="mobile-title">Your Orders</h1>
+
+    <div id="orders-list" data-page="{{ page|default(1) }}" data-has-more="{{ '1' if has_more else '0' }}">
+      {% include 'customer/_orders_fragment_mobile.html' %}
+    </div>
+
+    <div id="orders-loader" style="text-align:center; padding:14px; display:none;">
+      <div class="small text-muted">Loading more…</div>
+    </div>
+  </main>
+
+  <!-- Review modal (used for both view and create) -->
+  <div class="modal fade" id="mobileReviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <form id="mobileReviewForm" class="modal-content" method="post" action="{{ url_for('main.submit_review') }}">
+        <div class="modal-header">
+          <h5 class="modal-title" id="mobileReviewModalTitle">Write a review</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <input type="hidden" name="product_id" id="m-rv-product-id" value="">
+          <input type="hidden" name="variant_id" id="m-rv-variant-id" value="">
+          <input type="hidden" name="order_id" id="m-rv-order-id" value="">
+          <input type="hidden" name="rating" id="m-rv-rating" value="">
+
+          <div class="mb-2">
+            <div class="small text-muted">Product</div>
+            <div id="m-rv-product-name" class="fw-bold"></div>
+          </div>
+
+          <label class="form-label small">Your rating</label>
+          <div class="rv-stars" id="m-rv-stars" role="radiogroup" aria-label="Rating" style="display:flex;gap:8px;justify-content:center;font-size:24px;">
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span>
+            <span class="star" data-value="3">★</span>
+            <span class="star" data-value="4">★</span>
+            <span class="star" data-value="5">★</span>
+          </div>
+
+          <div class="mb-3 mt-3">
+            <label class="form-label">Title (optional)</label>
+            <input type="text" name="title" id="m-rv-title" class="form-control" maxlength="255" placeholder="Short summary (optional)">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Review</label>
+            <textarea name="body" id="m-rv-body" class="form-control" rows="4" placeholder="Write what you liked / disliked"></textarea>
+          </div>
+
+          <div id="m-rv-readonly-note" class="small text-muted" style="display:none;">This review is read-only.</div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ghost" data-bs-dismiss="modal">Close</button>
+          <button type="submit" id="m-rv-submit" class="btn btn-modern" style="background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;">Submit review</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', function(){
+
+    // helper: safe get URL for product detail when fragment gives data attribute
+    function openProductUrl(url) {
+      if (!url) return;
+      window.location.href = url;
+    }
+
+    // open review modal with options
+    function openReviewModal(opts){
+      // opts: {product_id, variant_id, order_id, rating, title, body, readonly, product_name}
+      document.getElementById('mobileReviewModalTitle').textContent = opts.readonly ? 'Your review' : 'Write a review';
+      document.getElementById('m-rv-product-id').value = opts.product_id || '';
+      document.getElementById('m-rv-variant-id').value = opts.variant_id || '';
+      document.getElementById('m-rv-order-id').value = opts.order_id || '';
+      document.getElementById('m-rv-rating').value = opts.rating || 0;
+      document.getElementById('m-rv-product-name').textContent = opts.product_name || '';
+      document.getElementById('m-rv-title').value = opts.title || '';
+      document.getElementById('m-rv-body').value = opts.body || '';
+
+      // modal stars - fill left->right according to opts.rating
+      Array.from(document.querySelectorAll('#m-rv-stars .star')).forEach(function(s){
+        const v = parseInt(s.getAttribute('data-value'),10);
+        if (v <= (opts.rating || 0)) s.classList.add('filled'); else s.classList.remove('filled');
+      });
+
+      // readonly toggle - make it robust: add class, set aria-disabled so other handlers can check
+      const mStars = document.getElementById('m-rv-stars');
+      if (opts.readonly) {
+        document.getElementById('m-rv-title').readOnly = true;
+        document.getElementById('m-rv-body').readOnly = true;
+        document.getElementById('m-rv-readonly-note').style.display = '';
+        document.getElementById('m-rv-submit').style.display = 'none';
+        mStars.classList.add('readonly');
+        mStars.setAttribute('aria-disabled','true');
+      } else {
+        document.getElementById('m-rv-title').readOnly = false;
+        document.getElementById('m-rv-body').readOnly = false;
+        document.getElementById('m-rv-readonly-note').style.display = 'none';
+        document.getElementById('m-rv-submit').style.display = '';
+        mStars.classList.remove('readonly');
+        mStars.removeAttribute('aria-disabled');
+      }
+
+      bootstrap.Modal.getOrCreateInstance(document.getElementById('mobileReviewModal')).show();
+    }
+
+    // Card-level delegation
+    document.body.addEventListener('click', function(e){
+      // if star clicked (either inline star in item-row OR modal star inside modal)
+      const star = e.target.closest('.star');
+      if (star && star.closest('.item-row')) {
+        // inline star on item in fragment
+        e.preventDefault();
+        e.stopPropagation();
+
+        const productId = star.getAttribute('data-product') || '';
+        const variantId = star.getAttribute('data-variant') || '';
+        const orderId = star.getAttribute('data-order') || '';
+        const clickedRating = parseInt(star.getAttribute('data-rating') || '0', 10) || 0;
+        const reviewed = star.getAttribute('data-reviewed') === '1';
+        const reviewTitle = star.getAttribute('data-review-title') || '';
+        const reviewBody = star.getAttribute('data-review-body') || '';
+        const productName = star.closest('.item-row')?.getAttribute('data-product-name') || '';
+
+        if (reviewed) {
+          // BUGFIX: when item already reviewed, don't use the clicked star's rating
+          // instead derive stored rating from the item-row's filled stars
+          const itemRow = star.closest('.item-row');
+          let storedRating = clickedRating;
+          if (itemRow) {
+            const filledStars = itemRow.querySelectorAll('.stars .star.filled');
+            storedRating = filledStars ? filledStars.length : clickedRating;
+          }
+          // open readonly modal with existing rating/title/body, using storedRating
+          openReviewModal({
+            product_id: productId,
+            variant_id: variantId,
+            order_id: orderId,
+            rating: storedRating,
+            title: reviewTitle,
+            body: reviewBody,
+            readonly: true,
+            product_name: productName
+          });
+          return;
+        }
+
+        // check order status to be safe
+        const orderCard = star.closest('.order-card');
+        const status = orderCard && orderCard.querySelector('.order-status')?.textContent?.trim()?.toLowerCase() || '';
+        if (status !== 'delivered') {
+          alert('You can only rate products from delivered orders.');
+          return;
+        }
+
+        // not reviewed → open modal with rating preselected (use clicked star)
+        openReviewModal({
+          product_id: productId,
+          variant_id: variantId,
+          order_id: orderId,
+          rating: clickedRating,
+          title: '',
+          body: '',
+          readonly: false,
+          product_name: productName
+        });
+        return;
+      }
+
+      // modal star clicks are handled separately (below) — don't interfere here
+
+      // if clicked on order header area -> open order detail
+      const header = e.target.closest('.order-head');
+      if (header) {
+        const url = header.getAttribute('data-order-url');
+        if (url) {
+          window.location.href = url;
+          return;
+        }
+      }
+
+      // if clicked on item-row (but not a star) -> open product/variant page
+      const itemRow = e.target.closest('.item-row');
+      if (itemRow && !e.target.closest('.star')) {
+        const url = itemRow.getAttribute('data-product-url');
+        if (url) {
+          window.location.href = url;
+          return;
+        }
+      }
+    });
+
+    // modal internal star click (choose rating)
+    document.getElementById('m-rv-stars').addEventListener('click', function(e){
+      // prevent interaction when readonly in multiple ways
+      if (this.classList.contains('readonly') || this.getAttribute('aria-disabled') === 'true') return;
+      const s = e.target.closest('.star');
+      if (!s) return;
+      const v = parseInt(s.getAttribute('data-value'),10) || 0;
+      document.getElementById('m-rv-rating').value = v;
+      Array.from(document.querySelectorAll('#m-rv-stars .star')).forEach(function(x){
+        const xv = parseInt(x.getAttribute('data-value'),10);
+        if (xv <= v) x.classList.add('filled'); else x.classList.remove('filled');
+      });
+    });
+
+    // submit review via AJAX (maps to /submit_review)
+    document.getElementById('mobileReviewForm').addEventListener('submit', function(e){
+      e.preventDefault();
+      const submitBtn = document.getElementById('m-rv-submit');
+      submitBtn.disabled = true;
+
+      const fd = new FormData(this);
+      const rating = parseInt(fd.get('rating') || '0', 10);
+      if (!rating || rating < 1 || rating > 5) {
+        alert('Please select a rating (1-5).');
+        submitBtn.disabled = false;
+        return;
+      }
+
+      fetch(this.action, {
+        method: 'POST',
+        body: fd,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      }).then(r => r.json().catch(()=>({success:false,message:'Server error'})))
+        .then(function(data){
+          if (data && data.success) {
+            // find the item-row and update stars to reviewed state
+            const pid = String(data.product_id);
+            const vid = String(data.variant_id || '');
+            const oid = String(data.order_id);
+
+            const orderCards = document.querySelectorAll('.order-card[data-order-id="'+oid+'"]');
+            orderCards.forEach(function(card){
+              const items = card.querySelectorAll('.item-row');
+              items.forEach(function(it){
+                const ip = String(it.getAttribute('data-product-id')||'');
+                const iv = String(it.getAttribute('data-variant-id')||'');
+                if (ip === pid && ( !vid || iv === vid || !iv )) {
+                  // update star attributes
+                  const stars = it.querySelectorAll('.stars .star');
+                  stars.forEach(function(s){
+                    const rVal = parseInt(s.getAttribute('data-rating')||'0',10);
+                    if (rVal <= data.rating) {
+                      s.classList.add('filled'); s.setAttribute('aria-checked','true');
+                    } else {
+                      s.classList.remove('filled'); s.setAttribute('aria-checked','false');
+                    }
+                    s.setAttribute('data-reviewed','1');
+                    if (data.title !== undefined && data.title !== null) s.setAttribute('data-review-title', data.title);
+                    if (data.body !== undefined && data.body !== null) s.setAttribute('data-review-body', data.body);
+                  });
+                }
+              });
+            });
+
+            // close modal & toast
+            bootstrap.Modal.getInstance(document.getElementById('mobileReviewModal'))?.hide();
+            showToast(data.message || 'Review submitted');
+          } else {
+            showToast(data && data.message ? data.message : 'Failed to submit review');
+          }
+        })
+        .catch(function(err){ console.error(err); showToast('Network error'); })
+        .finally(function(){ submitBtn.disabled = false; });
+    });
+
+    // tiny toast helper
+    function showToast(msg, ms=2400){
+      const el = document.createElement('div');
+      el.textContent = msg;
+      el.style.position='fixed';
+      el.style.left='50%';
+      el.style.transform='translateX(-50%)';
+      el.style.bottom='80px';
+      el.style.background='rgba(17,24,39,0.95)';
+      el.style.color='white';
+      el.style.padding='10px 14px';
+      el.style.borderRadius='10px';
+      el.style.zIndex='99999';
+      el.style.boxShadow='0 8px 36px rgba(2,6,23,0.25)';
+      document.body.appendChild(el);
+      setTimeout(()=>{ el.style.opacity='0'; el.remove(); }, ms);
+    }
+
+    // Infinite scroll: fetch next page fragment
+    let isLoading = false;
+    const ordersList = document.getElementById('orders-list');
+    const loader = document.getElementById('orders-loader');
+
+    function buildFetchUrl(page){
+      const params = new URLSearchParams(window.location.search);
+      params.set('page', page);
+      params.set('per_page', '10');
+      return window.location.pathname + '?' + params.toString();
+    }
+
+    async function loadNextPage(){
+      if (isLoading) return;
+      if (!ordersList) return;
+      if (ordersList.dataset.hasMore !== '1') return;
+      isLoading = true;
+      loader && (loader.style.display = 'block');
+      const next = parseInt(ordersList.dataset.page || '1', 10) + 1;
+      try {
+        const res = await fetch(buildFetchUrl(next), { headers: { 'X-Requested-With': 'XMLHttpRequest' }});
+        const data = await res.json().catch(()=>null);
+        if (data && data.success && data.html) {
+          const wrapper = document.createElement('div');
+          wrapper.innerHTML = data.html;
+          while (wrapper.firstChild) ordersList.appendChild(wrapper.firstChild);
+          ordersList.dataset.page = next;
+          ordersList.dataset.hasMore = data.has_more ? '1' : '0';
+        } else {
+          ordersList.dataset.hasMore = '0';
+        }
+      } catch (e) { console.error('loadNextPage', e); }
+      finally { isLoading = false; loader && (loader.style.display = 'none'); }
+    }
+
+    window.addEventListener('scroll', function(){
+      if (!ordersList) return;
+      const rect = ordersList.getBoundingClientRect();
+      if (rect.bottom - window.innerHeight < 420) loadNextPage();
+    });
+
+  });
+  </script>
+
+  {% include 'customer/footer.html' %}
+</body>
+</html>

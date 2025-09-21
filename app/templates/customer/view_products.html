@@ -242,6 +242,21 @@
   .rating-block { text-align: center; }
   .rating-meta { margin-top: 6px; color: #6c757d; font-size: .9rem; font-weight: 600; }
 
+  /* Mobile-specific rating pill (to match image) */
+  .rating-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 28px;
+    background: #2fa84f; /* green pill */
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 12px rgba(47,168,79,0.14);
+  }
+  .rating-pill svg { width: 16px; height: 16px; fill: white; }
+
   /* ---------- Misc UI ---------- */
   .existing-image { display: inline-flex; flex-direction: column; gap: 6px; align-items: center; margin: 6px; }
   .existing-image img { width: 84px; height: 84px; object-fit: cover; border-radius: 8px; border: 1px solid #e9ecef; }
@@ -337,7 +352,7 @@
     100% { transform: translateY(0); }
   }
 
-  /* ---------- Mobile: Refine-by dropdown/panel ---------- */
+  /* ---------- Mobile: Refine-by dropdown/panel & Mobile UI ---------- */
   /* mobile trigger button (visible only on small screens) */
   .mobile-refine-btn {
     display: none; /* enabled under mobile media query */
@@ -356,41 +371,217 @@
   }
   .mobile-refine-btn.open .chev { transform: rotate(180deg); }
 
+  /* small filter/sort button group shown under search on mobile */
+  .mobile-filters-row {
+    display: none; /* enabled under mobile query */
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .mobile-filters-row .btn {
+    flex: 1;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 700;
+    box-shadow: 0 8px 24px rgba(2,6,23,0.06);
+    border: 1px solid rgba(0,0,0,0.04);
+    background: #fff;
+  }
+  .mobile-filters-row .btn .icon {
+    margin-right: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   /* mobile panel (cloned sidebar content goes here) */
   .mobile-filters-panel { display: none; }
   .mobile-filters-panel.active { display: block; }
+  .mobile-search-sort { gap: 12px; }
 
+  /* mobile panel main styling */
   @media (max-width: 767.98px) {
     /* hide desktop left column (consistent across both files) */
-    .col-lg-3 { display: none !important; }
+    .col-lg-3 > .sidebar { display: none !important; }
+    .disappear-sidebar { display: none !important; }
+    .controls-disappear { display: none !important; }
+    .refine-disappear { display: none !important; }
+    .mobile-search-sort { display:flex;
+      flex-direction: column;
+      gap: 0px;
+    }
+    .col-lg-9{margin-top: 0;}
+    .product-col{width: 50%;}
+    .mob-search-sort-width {
+    width: 50% !important;
+}
 
-    /* adjust image heights on mobile */
-    .product-frame img { height: 300px; }
-
+.sidebar{
+  margin-left: 0 !important;
+  width: 100%;
+}
     /* show refine button on small screens */
     .mobile-refine-btn { display: flex; }
 
-    /* the mobile panel will be a fixed, slide-down panel */
+    /* show the small filter/sort row under the search input */
+    .mobile-filters-row { display: flex; }
+
+    /* the mobile panel will be a fixed, slide-up full-width panel */
     .mobile-filters-panel {
       position: fixed;
-      top: 64px; /* adjust depending on your header height */
-      left: 8px;
-      right: 8px;
-      z-index: 4000;
-      border-radius: 10px;
-      box-shadow: 0 30px 80px rgba(2,6,23,0.12);
-      background: transparent;
-      transform: translateY(-120%);
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 5000;
+      border-radius: 14px 14px 0 0;
+      box-shadow: 0 -18px 60px rgba(6,10,15,0.18);
+      background: #fff;
+      transform: translateY(110%);
       transition: transform 320ms cubic-bezier(.2,.9,.2,1), opacity 220ms ease;
       opacity: 0;
+      max-height: calc(100vh - 80px);
+      overflow: auto;
     }
     .mobile-filters-panel.active { transform: translateY(0); opacity: 1; }
 
-    /* the cloned sidebar inside the mobile panel keeps .sidebar styles */
-    .mobile-filters-panel .sidebar { padding: 14px; border-radius: 10px; }
+    /* panel internal container to hold cloned sidebar */
+    .mobile-filters-panel .panel-inner {
+      padding: 16px;
+      background: linear-gradient(180deg,#fff,#fff9f4);
+      min-height: 220px;
+      border-radius: 14px 14px 0 0;
+    }
 
-    /* keep apply/reset buttons full width */
-    .mobile-filters-panel .d-grid { gap: 8px; }
+    /* mobile header */
+    .mobile-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 6px;
+      gap: 8px;
+    }
+    .mobile-panel-header h5 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #0d0d0d;
+    }
+    .mobile-panel-header .sub {
+      font-size: 0.9rem;
+      color: #6c757d;
+      font-weight: 500;
+      margin-left: 6px;
+    }
+    .mobile-panel-header .close-btn {
+      background: transparent;
+      border: none;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #111;
+    }
+
+    /* each filter-section inside mobile clone to be full-width, tappable */
+    .mobile-filters-panel .filter-section {
+      margin-bottom: 10px;
+      border-radius: 10px;
+      padding: 12px;
+      background: #fff;
+      box-shadow: 0 8px 30px rgba(2,6,23,0.04);
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+    .mobile-filters-panel .filter-toggle { font-size: 1.05rem; display:flex; align-items:center; gap:6px; }
+
+    /* make the big Apply Filters button */
+    .mobile-filters-panel .apply-big {
+      width: 100%;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      border: 0;
+      background: #f59f11; /* amber/orange */
+      color: white;
+      box-shadow: 0 12px 36px rgba(245,159,17,0.16);
+      margin: 12px 0;
+    }
+
+    .mobile-filters-panel .reset-link {
+      display: block;
+      text-align: center;
+      text-decoration: underline;
+      color: #111;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    /* bottom sticky action row */
+    .mobile-filters-panel .panel-actions {
+      display: flex;
+      gap: 10px;
+      padding: 12px;
+      border-top: 1px solid rgba(0,0,0,0.04);
+      background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.98));
+      position: sticky;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+    .mobile-filters-panel .panel-actions .btn {
+      flex: 1;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 700;
+    }
+    .mobile-filters-panel .panel-actions .btn-outline {
+      border: 1px solid rgba(0,0,0,0.08);
+      background: transparent;
+    }
+
+    /* adjust image heights on mobile */
+    .product-frame img { height: 350px; }
+    .product-frame  { padding: 0px; }
+
+    /* make product grid 2-up with minimal horizontal gap */
+    .product-col { padding-left: 0px; padding-right: 0px; }
+    .row.g-3 { gap: 0px; }
+
+    /* product title & meta on mobile bigger */
+    .product-title { font-size: 0.98rem; text-align: center; }
+    .product-meta { text-align: center; font-size: 0.86rem; }
+
+    .card-body{display:flex; flex-direction: column;justify-content: center;align-items: center;}
+
+    /* price group layout for mobile */
+    .card-body .price-strong { font-size: 1.02rem; text-align: center; display:block; }
+    .card-body .price-sub { text-align: center; color: #6c757d; font-weight: 600; }
+    .card-body .discount-red { color: #e63946; font-weight: 700; font-size: 0.95rem; margin-top: 6px; text-align: center; display:block; }
+
+    /* rating: hide desktop rating-block and show mobile rating pill */
+    .rating-block { display: none; }
+    .mobile-rating { display: flex; justify-content: flex-start; gap: 10px; margin-top: 8px; }
+
+    /* Ensure wishlist button is smaller on mobile and placed over image */
+    .wish-btn { width: 40px; height: 40px; right: 10px; top: 10px; }
+
+    /* search input larger radius on mobile */
+    .search-input { padding: 14px 48px 14px 18px; font-size: 1rem; border-radius: 28px; }
+
+    /* small sort sheet (overlay) */
+    .mobile-sort-sheet {
+      position: fixed;
+      right: 12px;
+      left: 12px;
+      top: 20%;
+      z-index: 6000;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 18px 60px rgba(6,10,15,0.18);
+      padding: 12px;
+      display: none;
+    }
+    .mobile-sort-sheet.active { display: block; }
+
+    /* Keep everything inside mobile clone accessible */
+    .mobile-filters-panel .filter-body { padding-left: 6px; }
   }
 
   /* small utility */
@@ -401,20 +592,7 @@
 <body >
   {% include 'customer/layout.html' %}
 
-  <!-- MOBILE: Refine-by trigger (only visible on small screens) -->
-  <div class="container-fluid mt-3 d-md-none">
-    <div class="row">
-      <div class="col-12 px-3">
-        <button id="mobileRefineBtn" class="btn btn-outline-secondary mobile-refine-btn" aria-controls="mobileFiltersPanel" aria-expanded="false" type="button">
-          <span>Refine By</span>
-          <!-- chevron icon -->
-          <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </div>
+  
 
   <div id="pageLoader"><div class="spinner"><div class="spinner-border" role="status"></div><div class="small text-muted">Loading…</div></div></div>
 
@@ -434,9 +612,9 @@
   <div class="container-fluid">
     <div class="row g-4 mt-2">
       <!-- LEFT SIDEBAR (kept for desktop; hidden on small screens via CSS) -->
-      <div class="col-lg-3">
+      <div class="col-lg-3 disappear-sidebar">
         <div class="sidebar">
-          <h5 class="mb-3">Refine By</h5>
+          <h5 class="mb-3 refine-disappear">Refine By</h5>
 
           <form method="GET" id="filtersForm">
             <input type="hidden" name="q" value="{{ selected.q }}">
@@ -553,7 +731,7 @@
               </div>
             </div>
 
-            <div class="mt-3 d-grid">
+            <div class="mt-3 d-grid controls-disappear">
               <button type="submit" class="btn btn-primary" id="applyFiltersBtn" style="background: #ffb347;border: 0px;">Apply Filters</button>
               <a href="{{ url_for('main.place_order') }}" class="btn btn-link mt-2" style="color: #110b0b;" >Reset</a>
             </div>
@@ -563,7 +741,7 @@
 
       <div class="col-lg-9">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <form method="GET" class="d-flex w-100 me-3" id="searchForm" style="gap:12px; align-items:center;">
+          <form method="GET" class="d-flex w-100 me-3 mobile-search-sort" id="searchForm" style=" align-items:center;">
             <!-- server-side preserved hidden inputs for accessibility/non-JS fallback -->
             {% for k, vals in selected.items() %}
               {% if vals and k not in ['q','sort','min_price','max_price','rating'] %}
@@ -573,8 +751,8 @@
               {% endif %}
             {% endfor %}
 
-            <div class="search-bar">
-              <div class="search-wrap">
+            <div class="search-bar" style="width:100%;">
+              <div class="search-wrap" style="flex:1;">
                 <input name="q" type="text" class="search-input" placeholder="Search products (name, brand, description)" value="{{ selected.q or '' }}">
                 <button type="submit" class="search-icon" aria-label="Search">
                   <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-4.35-4.35" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="11" r="6" stroke="#fff" stroke-width="2"/></svg>
@@ -582,7 +760,7 @@
               </div>
             </div>
 
-            <div class="select-wrap">
+            <div class="select-wrap d-none d-md-inline-block">
               <select name="sort" class="form-select w-auto" onchange="this.form.submit()">
                 <option value="newest" {% if selected.sort=='newest' %}selected{% endif %}>Newest</option>
                 <option value="low" {% if selected.sort=='low' %}selected{% endif %}>Price: Low to High</option>
@@ -590,6 +768,19 @@
                 <option value="rating" {% if selected.sort=='rating' %}selected{% endif %}>Rating</option>
               </select>
             </div>
+
+            <!-- MOBILE: filter & sort buttons under search (visible only on small screens) -->
+            <div class="w-100 d-md-none mt-2 mob-search-sort-width">
+              <div class="mobile-filters-row">
+                <button id="mobileFilterBtnInline" type="button" class="btn" aria-haspopup="dialog" aria-controls="mobileFiltersPanel">
+                  <span class="icon" aria-hidden="true">☰</span> Filter
+                </button>
+                <button id="mobileSortBtnInline" type="button" class="btn" aria-haspopup="dialog" aria-controls="mobileSortSheet">
+                  <span class="icon" aria-hidden="true">⇅</span> Sort
+                </button>
+              </div>
+            </div>
+
           </form>
         </div>
 
@@ -612,8 +803,17 @@
                   <div class="product-title">{{ product.name }}</div>
                   <div class="product-meta">{{ product.brand or '—' }} • {{ product.category or '—' }}</div>
 
-                  <!-- rating widget (robust pixel-precise fill) -->
-                  <div class="mb-2 rating-block">
+                  <!-- MOBILE RATING PILL (visible on mobile only) -->
+                  <div class="mobile-rating d-flex d-md-none">
+                    <div class="rating-pill" aria-hidden="true" style="background-color: #ff5f6a;">
+                      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 .587l3.668 7.431L24 9.748l-6 5.847 1.416 8.265L12 19.771 4.584 23.86 6 15.595 0 9.748l8.332-1.73z"/></svg>
+                      <span>{{ (product.rating_avg|float(0)|round(1)) }}</span>
+                      <span style="opacity:.95; font-weight:600; margin-left:4px;">({{ (product.reviews_count or 0) }})</span>
+                    </div>
+                  </div>
+
+                  <!-- rating widget (desktop remains same & hidden on mobile) -->
+                  <div class="mb-2 rating-block d-none d-md-block">
                     <div class="rating" title="{{ ('%.2f' % product.rating_avg) if product.rating_avg is not none else '0.0' }}">
                       <div class="stars-outer" aria-hidden="true">
                         <div class="stars-inner" style="width: {{ ((product.rating_avg|float(0) / 5.0) * 140.0)|round(2) }}px;"></div>
@@ -622,11 +822,20 @@
                     <div class="rating-meta">{{ (product.reviews_count or 0) }} reviews • {{ (product.rating_avg|float(0)|round(2)) }}</div>
                   </div>
 
-                  <div class="d-flex justify-content-center align-items-center gap-3">
-                    <div>
+                  <div class="d-flex justify-content-between align-items-center gap-3" style="margin-top:6px;">
+                    <div style="flex:1;">
                       <div class="price-strong">₹{{ '%.2f' % product.price_range.min }}</div>
                       {% if product.price_range.has_range %}
                         <div class="price-sub">up to ₹{{ '%.2f' % product.price_range.max }}</div>
+                      {% endif %}
+                      {% if product.mrp %}
+                        <div style="display:flex; gap:8px; align-items:center; margin-top:4px;">
+                          <div class="price-sub" style="text-decoration:line-through;">₹{{ '%.2f' % product.mrp }}</div>
+                          {% set discount = ((product.mrp - product.price_range.min) / product.mrp * 100) | round(0) if product.mrp and product.mrp|float > 0 else None %}
+                          {% if discount %}
+                          <div class="discount-red">{{ discount }}% off</div>
+                          {% endif %}
+                        </div>
                       {% endif %}
                     </div>
 
@@ -658,6 +867,28 @@
   <!-- MOBILE PANEL: cloned copy of sidebar will be inserted here (JS) -->
   <div id="mobileFiltersPanel" class="mobile-filters-panel d-md-none" aria-hidden="true"></div>
 
+  <!-- MOBILE SORT SHEET -->
+  <div id="mobileSortSheet" class="mobile-sort-sheet d-md-none" role="dialog" aria-modal="true" aria-hidden="true">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <div style="font-weight:800;">Sort</div>
+      <button id="mobileSortClose" style="border:0; background:transparent; font-weight:700;">Close</button>
+    </div>
+    <form id="mobileSortForm" method="GET">
+      <!-- preserve q and other server-side hidden inputs -->
+      <input type="hidden" name="q" value="{{ selected.q or '' }}">
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <label><input type="radio" name="sort" value="newest" {% if selected.sort=='newest' %}checked{% endif %}> Newest</label>
+        <label><input type="radio" name="sort" value="low" {% if selected.sort=='low' %}checked{% endif %}> Price: Low to High</label>
+        <label><input type="radio" name="sort" value="high" {% if selected.sort=='high' %}checked{% endif %}> Price: High to Low</label>
+        <label><input type="radio" name="sort" value="rating" {% if selected.sort=='rating' %}checked{% endif %}> Rating</label>
+      </div>
+      <div style="margin-top:12px; display:flex; gap:8px;">
+        <button type="submit" class="btn" style="flex:1; background:#f59f11; color:#fff; border-radius:8px; font-weight:700;">Apply</button>
+        <a href="{{ url_for('main.place_order') }}" id="mobileSortReset" class="btn btn-outline-secondary" style="flex:1; border-radius:8px;">Reset</a>
+      </div>
+    </form>
+  </div>
+
   {% include 'customer/footer.html' %}
   <!-- intentionally no bootstrap JS -->
 
@@ -670,6 +901,11 @@
       const filtersForm = document.getElementById('filtersForm');
       const mobileRefineBtn = document.getElementById('mobileRefineBtn');
       const mobilePanel = document.getElementById('mobileFiltersPanel');
+      const mobileFilterBtnInline = document.getElementById('mobileFilterBtnInline');
+      const mobileSortBtnInline = document.getElementById('mobileSortBtnInline');
+      const mobileSortSheet = document.getElementById('mobileSortSheet');
+      const mobileSortClose = document.getElementById('mobileSortClose');
+      const mobileSortReset = document.getElementById('mobileSortReset');
 
       // NOTE: loader/openOverlay display functions intentionally made NO-OP
       function showLoader() {
@@ -803,6 +1039,7 @@
         const rootEl = root || document;
         rootEl.querySelectorAll('.filter-section').forEach(function (section) {
           const btn = section.querySelector('.filter-toggle');
+          if (!btn) return;
           const targetSelector = btn && btn.getAttribute('data-target');
           const body = targetSelector ? (section.querySelector(targetSelector) || document.querySelector(targetSelector)) : null;
           // always set collapsed in component scope (we rely on matching IDs inside the root)
@@ -882,11 +1119,31 @@
         const clonedApplyBtn = cloneContainer.querySelector('#applyFiltersBtn');
         if (clonedApplyBtn) {
           clonedApplyBtn.setAttribute('id', 'applyFiltersBtnMobile');
+          clonedApplyBtn.classList.add('apply-big');
         }
 
-        // insert into mobile panel
+        // insert into mobile panel with custom wrapper & header
         mobilePanel.innerHTML = '';
-        mobilePanel.appendChild(cloneContainer);
+        const panelInner = document.createElement('div');
+        panelInner.className = 'panel-inner';
+
+        // header
+        const header = document.createElement('div');
+        header.className = 'mobile-panel-header';
+        header.innerHTML = '<div style="display:flex; align-items:center;"><h5>Refine</h5><div class="sub" style="margin-left:8px;">Tap to apply</div></div><div><button class="close-btn" aria-label="Close filters">Close</button></div>';
+        panelInner.appendChild(header);
+
+        // place cloned content after header
+        panelInner.appendChild(cloneContainer);
+       
+
+        // bottom action row
+        const actions = document.createElement('div');
+        actions.className = 'panel-actions';
+        actions.innerHTML = '<button id="applyFiltersBtnMobileBottom" class="btn" type="button" style="background:#f59f11; color:#fff; border-radius:12px; font-weight:800;">Apply</button><button id="resetFiltersBtnMobileBottom" class="btn btn-outline-secondary btn-outline" type="button" style="font-weight:700;">Reset</button>';
+        panelInner.appendChild(actions);
+
+        mobilePanel.appendChild(panelInner);
 
         // initialize toggles, rating deselectors inside mobile clone
         initFilterToggles(cloneContainer);
@@ -898,7 +1155,49 @@
           mobileApply.addEventListener('click', function () { showLoader(); });
         }
 
-        // when a filter inside mobile clone changes and user hits Enter in search, we want copyFiltersToSearchForm to pick it up (gathering reads filtersFormMobile)
+        // wire header close button
+        const closeBtn = panelInner.querySelector('.close-btn');
+        if (closeBtn) {
+          closeBtn.addEventListener('click', function () { closeMobilePanel(); });
+        }
+
+        // wire bottom apply & reset to submit / reset the mobile form
+        const mobileBottomApply = document.getElementById('applyFiltersBtnMobileBottom');
+        const mobileBottomReset = document.getElementById('resetFiltersBtnMobileBottom');
+        const mobileFormEl = document.getElementById('filtersFormMobile');
+
+        if (mobileBottomApply && mobileFormEl) {
+          mobileBottomApply.addEventListener('click', function () {
+            // trigger submission of cloned mobile form — it shares same names as desktop
+            // copying behavior expects mobile form to be used when panel active
+            // to preserve backend semantics, we submit the mobile form (GET)
+            // But to show loader (no-op) and remain consistent, call showLoader then submit.
+            showLoader();
+            // submit the mobile cloned form:
+            try { mobileFormEl.submit(); } catch (e) { /* fallback */ showLoader(); }
+          });
+        }
+
+        if (mobileBottomReset && mobileFormEl) {
+          mobileBottomReset.addEventListener('click', function () {
+            // reset inputs inside mobile cloned form
+            mobileFormEl.reset();
+            // also remove generated fields in search form if any
+            searchForm.querySelectorAll('input[data-generated="true"]').forEach(function (el) { el.remove(); });
+            // optionally close panel and let user see changes
+            // redirect to reset URL to fully clear server-side selected state
+            window.location.href = "{{ url_for('main.place_order') }}";
+          });
+        }
+
+        // clicking the cloned 'Apply Filters' (if present) should behave the same as bottom apply
+        const clonedApplyBig = document.getElementById('applyFiltersBtnMobile');
+        if (clonedApplyBig && mobileFormEl) {
+          clonedApplyBig.addEventListener('click', function () {
+            showLoader();
+            try { mobileFormEl.submit(); } catch (e) {}
+          });
+        }
       }
 
       // build clone now (safe even if not visible; it will be used only on small screens)
@@ -910,7 +1209,7 @@
         mobilePanel.classList.add('active');
         mobilePanel.setAttribute('aria-hidden', 'false');
         if (mobileRefineBtn) { mobileRefineBtn.classList.add('open'); mobileRefineBtn.setAttribute('aria-expanded', 'true'); }
-        // push focus into first input for accessibility
+        // Also set focus to first input inside panel for accessibility
         setTimeout(function () {
           const firstInput = mobilePanel.querySelector('input, select, button, textarea');
           if (firstInput) firstInput.focus();
@@ -931,20 +1230,74 @@
         });
       }
 
+      if (mobileFilterBtnInline) {
+        mobileFilterBtnInline.addEventListener('click', function (e) {
+          openMobilePanel();
+        });
+      }
+
+      // Mobile sort button: open small sheet
+      if (mobileSortBtnInline) {
+        mobileSortBtnInline.addEventListener('click', function () {
+          if (mobileSortSheet) {
+            mobileSortSheet.classList.add('active');
+            mobileSortSheet.setAttribute('aria-hidden', 'false');
+            // focus first radio for accessibility
+            setTimeout(function () {
+              const first = mobileSortSheet.querySelector('input[type="radio"]');
+              if (first) first.focus();
+            }, 120);
+          }
+        });
+      }
+      if (mobileSortClose) {
+        mobileSortClose.addEventListener('click', function () {
+          if (mobileSortSheet) {
+            mobileSortSheet.classList.remove('active');
+            mobileSortSheet.setAttribute('aria-hidden', 'true');
+          }
+        });
+      }
+      if (mobileSortReset) {
+        mobileSortReset.addEventListener('click', function () {
+          // clear sort selection
+          const radios = mobileSortSheet.querySelectorAll('input[type="radio"]');
+          radios.forEach(r => r.checked = false);
+        });
+      }
+
+      // when mobile sort form submitted, copy any selected filters (to keep consistent behavior)
+      const mobileSortForm = document.getElementById('mobileSortForm');
+      if (mobileSortForm) {
+        mobileSortForm.addEventListener('submit', function () {
+          // copy currently chosen filters (desktop/mobile) into this outgoing GET as hidden inputs
+          // We'll reuse copyFiltersToSearchForm logic by temporarily adding generated inputs into this form
+          // but for simplicity, just ensure query param 'sort' is set and let server handle existing filter selections
+          // (server will pick selected filters from session or provided query params)
+          showLoader();
+        });
+      }
+
       // click outside to close mobile panel (but not when clicking the panel or button)
       document.addEventListener('click', function (ev) {
         const target = ev.target;
         if (!mobilePanel || !mobileRefineBtn) return;
         if (!mobilePanel.classList.contains('active')) return;
-        if (mobilePanel.contains(target) || mobileRefineBtn.contains(target)) return;
+        if (mobilePanel.contains(target) || mobileRefineBtn.contains(target) || (mobileFilterBtnInline && mobileFilterBtnInline.contains(target))) return;
         closeMobilePanel();
       }, { passive: true });
 
       // close panel on escape
       document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && mobilePanel && mobilePanel.classList.contains('active')) {
-          closeMobilePanel();
-          if (mobileRefineBtn) mobileRefineBtn.focus();
+        if (e.key === 'Escape') {
+          if (mobilePanel && mobilePanel.classList.contains('active')) {
+            closeMobilePanel();
+            if (mobileRefineBtn) mobileRefineBtn.focus();
+          }
+          if (mobileSortSheet && mobileSortSheet.classList.contains('active')) {
+            mobileSortSheet.classList.remove('active');
+            mobileSortSheet.setAttribute('aria-hidden', 'true');
+          }
         }
       });
 

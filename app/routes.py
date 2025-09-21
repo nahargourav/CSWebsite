@@ -18,6 +18,7 @@ from flask import (
     Blueprint, render_template, request, redirect, url_for, flash,
     current_app, session, make_response, jsonify, send_file
 )
+from user_agents import parse as ua_parse
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from markupsafe import escape, Markup
@@ -927,6 +928,7 @@ def place_order():
 # ------------------viewing product details----------------------
 
 @main.route('/prod/<int:product_id>')
+@nocache
 def view_prod_detail(product_id):
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
@@ -1215,6 +1217,7 @@ def cart_add():
 
     product_id = request.form.get('product_id')
     variant_id = request.form.get('variant_id')
+    print(product_id, variant_id)
     qty_raw = request.form.get('qty') or '1'
 
     # basic validation
@@ -1315,7 +1318,7 @@ def cart_add():
                 return redirect(request.referrer or url_for('main.view_prod_detail', product_id=product_id, variant_id=variant_id))
 
             # compute new quantity
-            new_qty = existing_qty + qty
+            new_qty =  qty
             if new_qty > max_avail:
                 # increase to max available and notify (clamped)
                 new_qty = max_avail
@@ -1443,7 +1446,7 @@ def cart_update_qty():
 
     max_avail = int(variant.get('stock_count') or 0)
     if new_qty > max_avail:
-        return jsonify({'ok': False, 'message': f'Requested quantity exceeds available stock ({max_avail}).', 'max_qty': max_avail}), 409
+        return jsonify({'ok': False, 'message': f'Requested quantity exceeds available stock .', 'max_qty': max_avail}), 409
 
     cart = session.get('cart', [])
 
@@ -1601,6 +1604,7 @@ def wishlist_toggle():
 
 
 @main.route('/wishlist/status', methods=['GET'])
+@nocache
 def wishlist_status():
     customer_id = session.get('customer_id')
     variant_id = request.args.get('variant_id')
@@ -1626,10 +1630,11 @@ def wishlist_status():
 
 # ---- Check wishlist status for variant (used by product detail JS) ----
 @main.route('/wishlist', methods=['GET'])
+@nocache
 def wishlist_page():
     customer_id = session.get('customer_id')
     if not customer_id:
-        return redirect(url_for('auth.login', next=request.path))
+        return redirect(url_for('main.login', next=request.path))
 
     conn = get_db()
     # DictCursor when available
@@ -1748,7 +1753,7 @@ def update_cart_quantity():
                 new_qty = current + 1
                 if max_qty and new_qty > max_qty:
                     new_qty = max_qty
-                    flash(f"Quantity limited to available stock ({max_qty}).", "info")
+                    flash(f"Quantity limited to available stock .", "info")
                 item['qty'] = new_qty
 
             elif action == 'decrease':
@@ -1995,7 +2000,6 @@ def place_cart_order():
                            currency='INR')
 
 # ---- Invoice PDF generation utility ----
-
 
 def format_address(addr, include_email=None):
     if not addr:
@@ -2333,9 +2337,6 @@ def generate_invoice_pdf(order_id, payment_db_id, invoice_dir=None):
         except Exception:
             pass
         return None
-
-
-
 # ---------- Modified payment_success (replace your existing function) ----------
 @main.route('/payment_success', methods=['POST'])
 def payment_success():
@@ -2614,15 +2615,33 @@ def download_invoice():
 
 # -----------------view orders--------------
 
-from collections import OrderedDict
+
 
 @main.route('/orders')
 @nocache
 def view_orders():
+    # -------------- auth (unchanged) --------------
     if 'customer_id' not in session:
         flash("Please log in to view orders.", "warning")
         return redirect('/login')
 
+    # ---------- device detection (server-side) ----------
+    ua_string = request.headers.get('User-Agent', '') or ''
+    is_mobile = False
+    try:
+        # user-agents is recommended: pip install user-agents
+        ua = ua_parse(ua_string)
+        # treat tablets as mobile for your mobile template — tweak if needed
+        is_mobile = bool(ua.is_mobile or ua.is_tablet)
+    except Exception:
+        # If user_agents isn't available or parse fails, default to desktop behavior
+        is_mobile = False
+
+    # Choose templates depending on device
+    fragment_template = 'customer/_orders_fragment_mobile.html' if is_mobile else 'customer/_orders_fragment.html'
+    full_template = 'customer/view_orders_mobile.html' if is_mobile else 'customer/view_orders.html'
+
+    # -------------- request params / pagination (unchanged) --------------
     customer_id = int(session['customer_id'])
     status = request.args.get('status')  # e.g. processing,confirmed,out for delivery,delivered,cancelled,refunded
     q = (request.args.get('q') or '').strip()
@@ -2633,7 +2652,7 @@ def view_orders():
         page = max(1, int(request.args.get('page', 1)))
     except Exception:
         page = 1
-    per_page = 5
+    per_page = 10
     offset = (page - 1) * per_page
 
     order_by_map = {
@@ -2925,29 +2944,287 @@ def view_orders():
         except Exception as e:
             current_app.logger.exception("Could not fetch/attach reviews for orders view: %s", str(e))
 
-    # If AJAX request: return rendered HTML fragment + has_more
+    # If AJAX request: return rendered HTML fragment + has_more (choose mobile/desktop fragment based on detection)
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         try:
-            rendered = render_template('customer/_orders_fragment.html', orders=orders)
-            return jsonify(success=True, html=rendered, has_more=has_more), 200
+            rendered = render_template(fragment_template, orders=orders)
+            resp = jsonify(success=True, html=rendered, has_more=has_more)
+            resp.status_code = 200
+            # IMPORTANT: responses differ by user agent
+            resp.headers['Vary'] = 'User-Agent'
+            return resp
         except Exception as e:
             current_app.logger.exception("Error rendering orders fragment: %s", str(e))
-            return jsonify(success=False, message="Rendering error"), 500
+            resp = jsonify(success=False, message="Rendering error")
+            resp.status_code = 500
+            resp.headers['Vary'] = 'User-Agent'
+            return resp
 
-    # Non-AJAX full render
-    return render_template(
-        "customer/view_orders.html",
-        orders=orders,
-        current_status=(status or 'all'),
-        q=q,
-        sort=sort,
-        page=page,
-        per_page=per_page,
-        has_more=has_more
-    )
+    # Non-AJAX full render: render desktop or mobile full template
+    try:
+        resp = make_response(render_template(
+            full_template,
+            orders=orders,
+            current_status=(status or 'all'),
+            q=q,
+            sort=sort,
+            page=page,
+            per_page=per_page,
+            has_more=has_more
+        ))
+        # mark response as varying by UA so caches behave correctly
+        resp.headers['Vary'] = 'User-Agent'
+        return resp
+    except Exception as e:
+        current_app.logger.exception("Error rendering full orders page: %s", str(e))
+        # fallback: render desktop template if mobile template rendering fails
+        resp = make_response(render_template(
+            "customer/view_orders.html",
+            orders=orders,
+            current_status=(status or 'all'),
+            q=q,
+            sort=sort,
+            page=page,
+            per_page=per_page,
+            has_more=has_more
+        ))
+        resp.headers['Vary'] = 'User-Agent'
+        return resp
 
+# -----------------view order detail--------------
 
+@main.route('/orders/<int:order_id>')
+@nocache
+def view_order(order_id):
+    # auth
+    if 'customer_id' not in session:
+        flash("Please log in to view the order.", "warning")
+        return redirect('/login')
 
+    customer_id = int(session['customer_id'])
+
+    # fetch order + items + product info + shipping address
+    try:
+        conn = get_db()
+        cur = conn.cursor(dictionary=True)
+
+        # fetch order meta and shipping address
+        q_order = """
+            SELECT o.order_id, o.order_date, o.total_amount, o.currency, o.status as order_status,
+                   o.shipping_cost, o.payment_status, o.payment_gateway, o.updated_at,
+                   ai.address_id AS shipping_address_id, ai.name AS shipping_name, ai.phone AS shipping_phone,
+                   ai.line1 AS shipping_line1, ai.line2 AS shipping_line2, ai.city AS shipping_city,
+                   ai.state AS shipping_state, ai.postal_code AS shipping_postal_code, ai.country AS shipping_country
+            FROM orders o
+            LEFT JOIN addresses ai ON o.shipping_address_id = ai.address_id
+            WHERE o.order_id = %s
+            LIMIT 1
+        """
+        cur.execute(q_order, (order_id,))
+        order_row = cur.fetchone()
+        if not order_row:
+            cur.close()
+            conn.close()
+            flash("Order not found.", "warning")
+            return redirect(url_for('main.view_orders'))
+
+        # ensure owner
+        # If cursor returned dictionary without customer_id, fetch again to check owner
+        cur_check = conn.cursor()
+        cur_check.execute("SELECT customer_id FROM orders WHERE order_id = %s LIMIT 1", (order_id,))
+        row_check = cur_check.fetchone()
+        cur_check.close()
+        if not row_check or int(row_check[0]) != customer_id:
+            cur.close()
+            conn.close()
+            flash("You are not authorized to view this order.", "warning")
+            return redirect(url_for('main.view_orders'))
+
+        # fetch order items
+        q_items = """
+            SELECT oi.order_item_id, oi.product_id, oi.variant_id, oi.quantity, oi.unit_price, oi.total_price,
+                   p.name AS product_name, p.image_path, pv.sku AS variant_sku, pv.size AS variant_size, pv.color AS variant_color
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.product_id
+            LEFT JOIN product_variants pv ON oi.variant_id = pv.variant_id
+            WHERE oi.order_id = %s
+            ORDER BY oi.order_item_id ASC
+        """
+        cur.execute(q_items, (order_id,))
+        item_rows = cur.fetchall()
+
+        # collect ids for images & reviews
+        product_ids = set()
+        variant_ids = set()
+        for r in item_rows:
+            try:
+                product_ids.add(int(r.get('product_id')))
+            except Exception:
+                pass
+            vid = r.get('variant_id')
+            if vid not in (None, 0):
+                try:
+                    variant_ids.add(int(vid))
+                except Exception:
+                    pass
+
+        # fetch images (prefer variant images)
+        variant_image_map = {}
+        product_image_map = {}
+        if variant_ids or product_ids:
+            try:
+                cur_imgs = conn.cursor(dictionary=True)
+                clauses = []
+                params_imgs = []
+                if variant_ids:
+                    placeholders_v = ','.join(['%s'] * len(variant_ids))
+                    clauses.append(f"variant_id IN ({placeholders_v})")
+                    params_imgs.extend(list(variant_ids))
+                if product_ids:
+                    placeholders_p = ','.join(['%s'] * len(product_ids))
+                    # fallback images where variant_id IS NULL for product images
+                    clauses.append(f"(variant_id IS NULL AND product_id IN ({placeholders_p}))")
+                    params_imgs.extend(list(product_ids))
+                where_img = " OR ".join(clauses)
+                qimg = f"""
+                    SELECT product_id, variant_id, path, is_primary, position, image_id
+                    FROM product_images
+                    WHERE {where_img}
+                    ORDER BY is_primary DESC, position ASC, image_id ASC
+                """
+                cur_imgs.execute(qimg, tuple(params_imgs))
+                img_rows = cur_imgs.fetchall()
+                cur_imgs.close()
+                for ir in img_rows:
+                    vid = ir.get('variant_id')
+                    pid = ir.get('product_id')
+                    path = ir.get('path')
+                    if vid not in (None, 0):
+                        if vid not in variant_image_map:
+                            variant_image_map[vid] = path
+                    else:
+                        if pid not in product_image_map:
+                            product_image_map[pid] = path
+            except Exception as e:
+                current_app.logger.exception("Could not fetch images for order detail: %s", str(e))
+
+        # build items list
+        items = []
+        for r in item_rows:
+            vid = r.get('variant_id')
+            pid = r.get('product_id')
+            if vid not in (None, 0) and vid in variant_image_map:
+                chosen_image = variant_image_map.get(vid)
+            elif pid in product_image_map:
+                chosen_image = product_image_map.get(pid)
+            else:
+                chosen_image = r.get('image_path')
+
+            items.append({
+                "order_item_id": r['order_item_id'],
+                "product_id": r['product_id'],
+                "variant_id": r.get('variant_id'),
+                "product_name": r['product_name'],
+                "image_path": chosen_image,
+                "quantity": r['quantity'],
+                "unit_price": float(r['unit_price']) if r['unit_price'] is not None else None,
+                "total_price": float(r['total_price']) if r['total_price'] is not None else None,
+                "variant": {
+                    "sku": r.get('variant_sku'),
+                    "size": r.get('variant_size'),
+                    "color": r.get('variant_color')
+                },
+                # will fill review info next
+                "reviewed": False,
+                "rating": None,
+                "review": None
+            })
+
+        # fetch reviews for this specific order for this customer
+        try:
+            cur_rev = conn.cursor(dictionary=True)
+            qrev = """
+                SELECT product_id, rating, title, body, created_at
+                FROM product_reviews
+                WHERE customer_id = %s AND order_id = %s
+                ORDER BY created_at DESC
+            """
+            cur_rev.execute(qrev, (customer_id, order_id))
+            rev_rows = cur_rev.fetchall()
+            cur_rev.close()
+
+            if rev_rows:
+                # map product_id -> most recent review for this order
+                rev_map = {}
+                for rr in rev_rows:
+                    try:
+                        pidk = int(rr.get('product_id'))
+                    except Exception:
+                        continue
+                    if pidk not in rev_map:
+                        rev_map[pidk] = {
+                            "rating": int(rr.get('rating')) if rr.get('rating') is not None else None,
+                            "title": rr.get('title'),
+                            "body": rr.get('body'),
+                            "created_at": rr.get('created_at')
+                        }
+                for it in items:
+                    pidk = int(it['product_id'])
+                    if pidk in rev_map:
+                        it['reviewed'] = True
+                        it['rating'] = rev_map[pidk].get('rating')
+                        it['review'] = rev_map[pidk]
+        except Exception as e:
+            current_app.logger.exception("Could not fetch reviews for order detail: %s", str(e))
+
+        # prepare order object for template
+        order = {
+            "order_id": order_row['order_id'],
+            "order_date": order_row['order_date'],
+            "total_amount": float(order_row['total_amount']) if order_row.get('total_amount') is not None else 0.0,
+            "currency": order_row.get('currency') or 'INR',
+            "order_status": order_row.get('order_status'),
+            "shipping_cost": float(order_row.get('shipping_cost') or 0.0),
+            "payment_status": order_row.get('payment_status'),
+            "payment_gateway": order_row.get('payment_gateway'),
+            "updated_at": order_row.get('updated_at'),
+            "shipping_address": order_row.get('shipping_address') if 'shipping_address' in order_row else {
+                "address_id": order_row.get('shipping_address_id'),
+                "name": order_row.get('shipping_name'),
+                "phone": order_row.get('shipping_phone'),
+                "line1": order_row.get('shipping_line1'),
+                "line2": order_row.get('shipping_line2'),
+                "city": order_row.get('shipping_city'),
+                "state": order_row.get('shipping_state'),
+                "postal_code": order_row.get('shipping_postal_code'),
+                "country": order_row.get('shipping_country'),
+            },
+            "items": items
+        }
+
+        cur.close()
+        conn.close()
+
+    except Exception as e:
+        current_app.logger.exception("Error building order detail page: %s", str(e))
+        try:
+            cur.close()
+        except:
+            pass
+        try:
+            conn.close()
+        except:
+            pass
+        flash("Could not load order information. Please try again.", "warning")
+        return redirect(url_for('main.view_orders'))
+
+    # render mobile template (we assume mobile here; if you detect device switch as before, you may choose templates)
+    try:
+        return render_template('customer/view_order_mobile.html', order=order)
+    except Exception as e:
+        current_app.logger.exception("Error rendering order detail template: %s", str(e))
+        # fallback to desktop template if exists
+        return redirect(url_for('main'))
 
 
 @main.route('/submit_review', methods=['POST'])

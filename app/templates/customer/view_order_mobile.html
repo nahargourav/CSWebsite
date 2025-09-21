@@ -1,0 +1,651 @@
+{# templates/customer/view_order_mobile.html #}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Order #{{ order.order_id }} — Details</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+  <style>
+    :root{
+      --accent: #ff7f66;
+      --accent-2: #ff6b6b;
+      --muted: #6b7280;
+      --card-shadow: 0 10px 28px rgba(2,6,23,0.06);
+      --page-bg: #fff7f5;
+      font-family: 'Poppins', system-ui, -apple-system, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%;margin:0;background:var(--page-bg);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;color:#0f1724;}
+    a{color:inherit;text-decoration:none}
+    .root{max-width:720px;margin:0 auto;padding:12px 14px 0px;}
+    .h-lg{font-size:20px;font-weight:700;margin:6px 0 12px;text-align:left}
+    .order-card { background:#fff;border-radius:14px;padding:12px;box-shadow:var(--card-shadow);border:1px solid rgba(15,23,36,0.04);margin-bottom:12px }
+    .item-row { display:flex; gap:12px; align-items:center; padding:12px; border-radius:12px; background:linear-gradient(180deg,#fff,#fbfbfd); border:1px solid rgba(15,23,36,0.03); }
+    .item-thumb { width:72px;height:72px;border-radius:12px;overflow:hidden;background:#faf7f6;display:flex;align-items:center;justify-content:center;border:1px solid rgba(15,23,36,0.03);flex-shrink:0 }
+    .item-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .item-meta{flex:1;min-width:0}
+    .item-title{font-weight:700;font-size:15px;color:#0f1724;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .item-sub{color:var(--muted);font-size:13px;margin-top:6px;display:flex;align-items:center;justify-content:space-between}
+    .stars{display:flex;gap:8px;align-items:center}
+    .stars .star{font-size:18px;color:#e9e9e9;cursor:pointer;user-select:none;line-height:1;transition:transform .08s,filter .08s;display:inline-block}
+    .stars .star.filled{color:transparent;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 6px 18px rgba(255,127,102,0.08);transform:translateY(-2px)}
+    .qty-price{font-size:13px;color:var(--muted)}
+    .status-box{border-radius:14px;border:2px solid rgba(59,130,246,0.18);padding:18px 10px;background:linear-gradient(180deg,#fff,#fbfdff);margin-bottom:12px}
+    .status-head{display:flex;align-items:center;justify-content:space-between}
+    .status-title{font-weight:800;color:#0b365a;font-size:18px}
+    .status-desc{color:var(--muted);font-size:13px;margin-top:6px}
+    .timeline{display:flex;align-items:center;margin-top:12px}
+    .timeline .dot{width:18px;height:18px;border-radius:999px;background:#10b981;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px}
+    .timeline .line{height:4px;background:linear-gradient(90deg,#10b981,#10b981);flex:1;border-radius:4px}
+    .address-card{background:#fff;border-radius:14px;padding:12px;border:1px solid rgba(15,23,36,0.04);box-shadow:var(--card-shadow);margin-bottom:12px}
+    .price-card{background:#fff;border-radius:14px;padding:12px;border:1px solid rgba(15,23,36,0.04);box-shadow:var(--card-shadow);margin-bottom:12px}
+    .price-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(15,23,36,0.04)}
+    .price-row:last-child{border-bottom:none}
+    /* bottom actions: default is non-fixed flow; toggle .fixed to make sticky */
+    .bottom-actions{position:static; left:0; right:0; background:linear-gradient(180deg,rgba(255,255,255,0.0),#fff);padding:10px 14px; padding-top: 0px; border-top:1px solid rgba(15,23,36,0.04); z-index:1200}
+    .bottom-actions.fixed{position:fixed;bottom:0;left:0;right:0;box-shadow:0 -8px 30px rgba(2,6,23,0.06);background:linear-gradient(180deg,#fff,#fff);border-top:1px solid rgba(15,23,36,0.06)}
+    .btn-blockish{display:block;width:100%;border-radius:12px;padding:12px 14px;text-align:center;font-weight:700}
+    .btn-inv{background:#fff;border:1px solid rgba(15,23,36,0.06);color:#0f1724}
+    .btn-cancel{background:transparent;border:1px solid rgba(255,0,0,0.08);color:#ff4d4f}
+    .muted{color:var(--muted);font-size:13px}
+    .small-note{font-size:12px;color:var(--muted);margin-top:10px}
+    /* modal styles reuse from previous template */
+    .modal-content { border-radius: 16px; background: linear-gradient(180deg, #ffffff, #fffdfa); box-shadow: 0 30px 60px rgba(2,6,23,0.12); border: none; overflow: hidden; padding: 0; }
+    #m-rv-stars .star { font-size: 28px; margin: 0 4px; color:#e9e9e9; cursor:pointer }
+    #m-rv-stars .star.filled{ color:transparent;background:linear-gradient(90deg,var(--accent),var(--accent-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+    #m-rv-stars.readonly .star{cursor:default;opacity:0.95}
+
+    /* blur when cancel modal opens */
+    .blurred-main { filter: blur(6px); transition: filter .18s ease-in-out; pointer-events: none; user-select: none; }
+    /* make sure modal is above blur */
+    .modal-backdrop.show { opacity: 0.45; }
+
+    /* icon styling */
+    .cancel-icon { width:18px;height:18px;vertical-align:middle;display:inline-block;margin-right:6px }
+    /* invoice button full width when cancel hidden */
+    .actions-two { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .actions-single { display:block; }
+    @media (min-width:720px){
+      .root{padding:18px 22px 120px;}
+    }
+  </style>
+</head>
+<body>
+  {% include 'customer/layout.html' %}
+  <main id="mainContent" class="root" role="main" aria-labelledby="orderHeading">
+    <h1 id="orderHeading" class="h-lg">Order #{{ order.order_id }}</h1>
+
+    {# Items list (unchanged) #}
+    <section class="order-card" aria-label="Ordered items">
+      {% for it in order['items'] %}
+        <div class="item-row" role="button" tabindex="0"
+             data-product-url="{{ url_for('main.view_prod_detail', product_id=it.product_id, variant_id=it.variant_id) if it.variant_id else url_for('main.view_prod_detail', product_id=it.product_id) }}">
+          <div class="item-thumb" aria-hidden="true">
+            {% if it.image_path %}
+              <img src="{{ url_for('static', filename=it.image_path.replace('\\','/')) }}" alt="{{ it.product_name }}">
+            {% else %}
+              <img src="{{ url_for('static', filename='images/placeholder-sm.png') }}" alt="placeholder">
+            {% endif %}
+          </div>
+
+          <div class="item-meta">
+            <div class="item-title">{{ it.product_name }}</div>
+            <div class="item-sub">
+              <div class="qty-price">Qty: {{ it.quantity }} &nbsp; • &nbsp; {{ order.currency }} {{ '%.2f'|format(it.total_price or 0) }}</div>
+
+              {% if order.order_status|lower == 'delivered' %}
+                <div class="stars" role="group" aria-label="Rating for {{ it.product_name }}">
+                  {% for s in range(1,6) %}
+                    {% set filled = (it.rating is not none and s <= it.rating) %}
+                    <span class="star {% if filled %}filled{% endif %}"
+                          data-rating="{{ s }}"
+                          data-product="{{ it.product_id }}"
+                          data-variant="{{ it.variant_id or '' }}"
+                          data-order="{{ order.order_id }}"
+                          data-reviewed="{{ '1' if it.reviewed else '0' }}"
+                          data-review-title="{{ it.review.title if it.review else '' }}"
+                          data-review-body="{{ it.review.body if it.review else '' }}"
+                          aria-checked="{{ 'true' if filled else 'false' }}">★</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% if not loop.last %}<div style="height:8px"></div>{% endif %}
+      {% endfor %}
+    </section>
+
+    {# Status box: main heading unchanged except we show only date there (no time) per your instruction.
+       Timeline left/right show date + HH:MM (no seconds). Right side icon depends on status. #}
+    <section class="status-box" aria-label="Order status">
+      <div class="status-head">
+        <div>
+          <div class="status-title">{{ order.order_status|title }}, {% if order.order_date %}{{ order.order_date.strftime('%b %d') }}{% endif %}</div>
+          <div class="status-desc">Your item is {{ order.order_status }}{% if order.updated_at %} • updated {{ order.updated_at.strftime('%b %d') }}{% endif %}</div>
+        </div>
+        
+      </div>
+
+      <div class="timeline" aria-hidden="true">
+        <div style="display:flex;flex-direction:column;align-items:flex-start;min-width:120px;">
+          <div style="width:40px;height:40px;border-radius:999px;background:#10b981;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">✓</div>
+          <div class="muted" style="margin-top:8px">Order placed</div>
+          <div class="muted" style="font-size:12px">
+            {% if order.order_date %}
+              {{ order.order_date.strftime('%b %d %H:%M') }}
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="line" aria-hidden="true"></div>
+
+        <div style="display:flex;flex-direction:column;align-items:flex-end;min-width:120px;">
+          <div aria-hidden="true">
+          {# show relevant symbol: tick only for delivered; other icons for other statuses #}
+          {% set st_lower = (order.order_status or '')|lower %}
+          {% if st_lower == 'delivered' %}
+            <div style="width:40px;height:40px;border-radius:999px;background:#10b981;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">✓</div>
+          {% elif st_lower in ['out for delivery','out_for_delivery','shipped'] %}
+            <div style="width:40px;height:40px;border-radius:10px;background:#f59e0b;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">🚚</div>
+          {% elif st_lower in ['processing','confirmed'] %}
+            <div style="width:40px;height:40px;border-radius:10px;background:#3b82f6;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">⏳</div>
+          {% elif st_lower in ['cancellation-request','cancellation requested'] %}
+            <div style="width:40px;height:40px;border-radius:10px;background:#ef4444;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">⚠</div>
+          {% else %}
+            <div style="width:40px;height:40px;border-radius:10px;background:#6b7280;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">•</div>
+          {% endif %}
+        </div>
+          <div class="muted" style="margin-top:8px">{{ order.order_status|title }}</div>
+          <div class="muted" style="font-size:12px">
+            {% if order.updated_at %}
+              {{ order.updated_at.strftime('%b %d %H:%M') }}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    {# Shipping address: expanded to show complete details including country and postal code #}
+    
+    <section class="address-card" aria-label="Shipping address">
+      <div style="font-weight:700;margin-bottom:8px;font-size:18px">Shipping Address</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700">{{ order.shipping_address.name }}</div>
+          <div class="muted">{{ order.shipping_address.phone }}</div>
+        </div>
+        <div class="muted">Deliver to</div>
+      </div>
+
+      <div style="margin-top:8px;color:#0f1724;">
+        {{ order.shipping_address.line1 }}{% if order.shipping_address.line2 %}{{ ', ' + order.shipping_address.line2 }}{% endif %}
+      </div>
+      <div style="margin-top:8px" class="muted">
+        {{ order.shipping_address.city }}, {{ order.shipping_address.state }} - {{ order.shipping_address.postal_code }}
+      </div>
+      <div class="muted" style="margin-top:6px">{{ order.shipping_address.country }}</div>
+      {% if order.shipping_address.email %}
+        <div class="muted" style="margin-top:6px">Email: {{ order.shipping_address.email }}</div>
+      {% endif %}
+    </section>
+
+    {# Price summary: full break-up list (product name, sku, qty, unit price, line total). No thumbnails here. #}
+    <section id="priceCard" class="price-card" aria-label="Price details">
+      <div style="font-weight:800;margin-bottom:8px">Price details</div>
+
+      {# Itemized table-like list #}
+      <div style="margin-bottom:8px;border-radius:8px;padding:8px;background:linear-gradient(180deg,#fff,#fafafa);border:1px solid rgba(15,23,36,0.03)">
+        {% for it in order['items'] %}
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:1px dashed rgba(15,23,36,0.04);">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ it.product_name }}</div>
+              <div class="muted" style="font-size:13px;margin-top:4px">SKU: {{ it.variant.sku or '-' }} • Qty: {{ it.quantity }}</div>
+            </div>
+            <div style="text-align:right;min-width:92px;margin-left:12px">
+              <div class="muted" style="font-size:13px">{{ order.currency }} {{ '%.2f'|format(it.unit_price or 0) }}</div>
+              <div style="font-weight:800;margin-top:6px">{{ order.currency }} {{ '%.2f'|format(it.total_price or 0) }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="price-row"><div class="muted">Subtotal</div><div class="muted">{{ order.currency }} {{ '%.2f'|format((order['items']|sum(attribute='total_price')) if order['items'] else order.total_amount) }}</div></div>
+      <div class="price-row"><div class="muted">Shipping</div><div class="muted">{{ order.currency }} {{ '%.2f'|format(order.shipping_cost) }}</div></div>
+      <div class="price-row" style="font-weight:800"><div>Total amount</div><div style="font-weight:800">{{ order.currency }} {{ '%.2f'|format(order.total_amount) }}</div></div>
+    </section>
+
+  </main>
+
+  {# Bottom actions: download invoice and cancel (conditional). It's placed after main so it can become non-fixed when needed. #}
+  <div id="bottomActions" class="bottom-actions" aria-label="Order actions">
+    {# server-side determine button states; we add more branches to reflect cancellation-request and cancelled states #}
+    {% set st = (order.order_status or '')|lower %}
+    <div id="actionsInner" class="{% if st in ['processing','confirmed'] %}actions-two{% else %}actions-single{% endif %}">
+        
+      <a id="btn-download-invoice" class="btn btn-inv btn-blockish" href="{{ url_for('main.download_invoice', order_id=order.order_id) if (url_for is defined) else '#' }}" target="_blank" rel="noopener">
+        ⬇️ &nbsp; Download Invoice
+      </a>
+
+      {# cancellation button logic:
+         - active request option only for processing/confirmed
+         - show disabled 'Cancellation requested' for 'cancellation-request'
+         - show disabled 'Cancelled' for 'cancelled' or 'refunded'
+         - hide for delivered/out for delivery/shipped etc (no cancel button)
+      #}
+      {% if st in ['processing','confirmed'] %}
+        <button id="btn-cancel-order" class="btn btn-cancel btn-blockish" data-order-id="{{ order.order_id }}" aria-live="polite">
+          <span class="cancel-icon" aria-hidden="true">
+            <!-- replacement icon: prohibition circle (SVG) -->
+            <svg viewBox="0 0 24 24" width="18" height="18" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#ff4d4f" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"></circle>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </span>
+          Request cancellation
+        </button>
+      {% elif st in ['cancellation-request','cancellation requested'] %}
+        <button id="btn-cancel-order-disabled" class="btn btn-cancel btn-blockish" disabled aria-disabled="true">Cancellation requested</button>
+      {% elif st in ['cancelled','refunded'] %}
+        <button id="btn-cancel-order-disabled" class="btn btn-cancel btn-blockish" disabled aria-disabled="true">Cancelled</button>
+      {% else %}
+        {# no cancel button for delivered/out for delivery/shipped etc. invoice should take full width via CSS class above #}
+      {% endif %}
+    </div>
+  </div>
+
+  {# Cancel confirmation modal (replaces alert). On open the main content will be blurred. #}
+  <div class="modal fade" id="cancelConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header" style="border-bottom:none;padding:14px 16px">
+          <h5 class="modal-title">Confirm cancellation</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body" style="padding:14px 16px;">
+          <p class="mb-2">Are you sure you want to request cancellation for this order?<br><strong>Order #{{ order.order_id }}</strong></p>
+          <div class="small text-muted">If the order is already being prepared or shipped, cancellation may not be possible. We'll notify you about the result.</div>
+        </div>
+
+        <div class="modal-footer" style="padding:10px 14px;">
+          <button type="button" id="cancelModalClose" class="btn btn-ghost" data-bs-dismiss="modal">No, keep order</button>
+          <button type="button" id="cancelModalConfirm" class="btn btn-cancel" style="background:#fff;border-radius:10px;padding:10px 14px;border:1px solid rgba(255,0,0,0.12);">Yes, request cancellation</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Review modal (unchanged behavior) #}
+  <div class="modal fade" id="mobileReviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <form id="mobileReviewForm" class="modal-content" method="post" action="{{ url_for('main.submit_review') }}">
+        <div class="modal-header" style="border-bottom:none;padding:14px 16px">
+          <h5 class="modal-title" id="mobileReviewModalTitle">Write a review</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body" style="padding:14px 16px;">
+          <input type="hidden" name="product_id" id="m-rv-product-id" value="">
+          <input type="hidden" name="variant_id" id="m-rv-variant-id" value="">
+          <input type="hidden" name="order_id" id="m-rv-order-id" value="{{ order.order_id }}">
+          <input type="hidden" name="rating" id="m-rv-rating" value="">
+
+          <div class="mb-2">
+            <div class="small text-muted">Product</div>
+            <div id="m-rv-product-name" class="fw-bold"></div>
+          </div>
+
+          <label class="form-label small">Your rating</label>
+          <div class="rv-stars" id="m-rv-stars" role="radiogroup" aria-label="Rating" style="display:flex;gap:6px;justify-content:center;font-size:26px;margin-top:8px">
+            <span class="star" data-value="1">★</span>
+            <span class="star" data-value="2">★</span>
+            <span class="star" data-value="3">★</span>
+            <span class="star" data-value="4">★</span>
+            <span class="star" data-value="5">★</span>
+          </div>
+
+          <div class="mb-3 mt-3">
+            <label class="form-label">Title (optional)</label>
+            <input type="text" name="title" id="m-rv-title" class="form-control" maxlength="255" placeholder="Short summary (optional)">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Review</label>
+            <textarea name="body" id="m-rv-body" class="form-control" rows="4" placeholder="Write what you liked / disliked"></textarea>
+          </div>
+
+          <div id="m-rv-readonly-note" class="small text-muted" style="display:none;">This review is read-only.</div>
+        </div>
+
+        <div class="modal-footer" style="padding:10px 14px;">
+          <button type="button" class="btn btn-ghost btn-ghost" data-bs-dismiss="modal">Close</button>
+          <button type="submit" id="m-rv-submit" class="btn btn-modern" style="background:linear-gradient(90deg,var(--accent),var(--accent-2));color:#fff;">Submit review</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+
+      // Helper references
+      const mainContent = document.getElementById('mainContent');
+      const bottomActions = document.getElementById('bottomActions');
+      const priceCard = document.getElementById('priceCard');
+      const actionsInner = document.getElementById('actionsInner');
+      const downloadBtn = document.getElementById('btn-download-invoice');
+
+      // initially set classes depending on presence of cancel button
+      function refreshActionsLayout() {
+        const cancelBtn = document.getElementById('btn-cancel-order') || document.getElementById('btn-cancel-order-disabled');
+        if (!cancelBtn) {
+          // only invoice -> single wide action
+          actionsInner.className = 'actions-single';
+        } else {
+          // two-column when cancel present and active/disabled
+          {% if st in ['processing','confirmed'] %}
+            actionsInner.className = 'actions-two';
+          {% else %}
+            actionsInner.className = 'actions-single';
+          {% endif %}
+        }
+      }
+      refreshActionsLayout();
+
+      // ------------------ Sticky behaviour for bottom actions ------------------
+      // bottomActions has .fixed when we want it sticky. We will make it sticky until the priceCard bottom is within the viewport:
+      function updateBottomActionsSticky() {
+        if (!priceCard) return;
+        const rect = priceCard.getBoundingClientRect();
+        const viewportH = window.innerHeight || document.documentElement.clientHeight;
+        // if bottom of priceCard is above or equal to the viewport bottom -> we have scrolled past price card
+        // then we should remove fixed (let it be in flow)
+        if (rect.bottom <= viewportH) {
+          bottomActions.classList.remove('fixed');
+        } else {
+          bottomActions.classList.add('fixed');
+        }
+
+        // additionally if footer intersects with viewport (so fixed would overlap footer) we should remove fixed
+        // attempt quick check: get page bottom distance
+        const docHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+        const bottomOffsetFromDocBottom = docHeight - (window.scrollY + viewportH);
+        // if we are within 72px of doc bottom (rough footer area), remove fixed to avoid overlap
+        if (bottomOffsetFromDocBottom <= 90) {
+          bottomActions.classList.remove('fixed');
+        }
+      }
+      // initial and on scroll/resize
+      updateBottomActionsSticky();
+      window.addEventListener('scroll', updateBottomActionsSticky, {passive:true});
+      window.addEventListener('resize', updateBottomActionsSticky);
+
+      // ------------------ click delegation (items / stars) - unchanged logic with minor tweaks ------------------
+      function openReviewModal(opts){
+        // opts: {product_id, variant_id, order_id, rating, title, body, readonly, product_name}
+        document.getElementById('mobileReviewModalTitle').textContent = opts.readonly ? 'Your review' : 'Write a review';
+        document.getElementById('m-rv-product-id').value = opts.product_id || '';
+        document.getElementById('m-rv-variant-id').value = opts.variant_id || '';
+        document.getElementById('m-rv-order-id').value = opts.order_id || '';
+        document.getElementById('m-rv-rating').value = opts.rating || 0;
+        document.getElementById('m-rv-product-name').textContent = opts.product_name || '';
+        document.getElementById('m-rv-title').value = opts.title || '';
+        document.getElementById('m-rv-body').value = opts.body || '';
+
+        Array.from(document.querySelectorAll('#m-rv-stars .star')).forEach(function(s){
+          const v = parseInt(s.getAttribute('data-value'),10);
+          if (v <= (opts.rating || 0)) s.classList.add('filled'); else s.classList.remove('filled');
+        });
+
+        const mStars = document.getElementById('m-rv-stars');
+        if (opts.readonly) {
+          document.getElementById('m-rv-title').readOnly = true;
+          document.getElementById('m-rv-body').readOnly = true;
+          document.getElementById('m-rv-readonly-note').style.display = '';
+          document.getElementById('m-rv-submit').style.display = 'none';
+          mStars.classList.add('readonly');
+          mStars.setAttribute('aria-disabled','true');
+        } else {
+          document.getElementById('m-rv-title').readOnly = false;
+          document.getElementById('m-rv-body').readOnly = false;
+          document.getElementById('m-rv-readonly-note').style.display = 'none';
+          document.getElementById('m-rv-submit').style.display = '';
+          mStars.classList.remove('readonly');
+          mStars.removeAttribute('aria-disabled');
+        }
+
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('mobileReviewModal')).show();
+      }
+
+      document.body.addEventListener('click', function(e){
+        // product card navigation
+        const itemRow = e.target.closest('.item-row');
+        if (itemRow && !e.target.closest('.star')) {
+          const url = itemRow.getAttribute('data-product-url');
+          if (url) window.location.href = url;
+          return;
+        }
+
+        // inline star clicked
+        const star = e.target.closest('.star');
+        if (star && star.closest('.item-row')) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const productId = star.getAttribute('data-product') || '';
+          const variantId = star.getAttribute('data-variant') || '';
+          const orderId = star.getAttribute('data-order') || '{{ order.order_id }}';
+          const clickedRating = parseInt(star.getAttribute('data-rating') || '0', 10) || 0;
+          const reviewed = star.getAttribute('data-reviewed') === '1';
+          const reviewTitle = star.getAttribute('data-review-title') || '';
+          const reviewBody = star.getAttribute('data-review-body') || '';
+          const productName = star.closest('.item-row')?.querySelector('.item-title')?.textContent?.trim() || '';
+
+          if (reviewed) {
+            const itemRowEl = star.closest('.item-row');
+            let storedRating = clickedRating;
+            if (itemRowEl) {
+              const filledStars = itemRowEl.querySelectorAll('.stars .star.filled');
+              storedRating = filledStars ? filledStars.length : clickedRating;
+            }
+            openReviewModal({
+              product_id: productId,
+              variant_id: variantId,
+              order_id: orderId,
+              rating: storedRating,
+              title: reviewTitle,
+              body: reviewBody,
+              readonly: true,
+              product_name: productName
+            });
+            return;
+          }
+
+          // only allow rating if order is delivered
+          const statusText = '{{ order.order_status }}'.toLowerCase();
+          if (statusText !== 'delivered') {
+            alert('You can only rate products from delivered orders.');
+            return;
+          }
+
+          openReviewModal({
+            product_id: productId,
+            variant_id: variantId,
+            order_id: orderId,
+            rating: clickedRating,
+            title: '',
+            body: '',
+            readonly: false,
+            product_name: productName
+          });
+          return;
+        }
+      });
+
+      // modal star clicks (choose rating)
+      document.getElementById('m-rv-stars').addEventListener('click', function(e){
+        if (this.classList.contains('readonly') || this.getAttribute('aria-disabled') === 'true') return;
+        const s = e.target.closest('.star');
+        if (!s) return;
+        const v = parseInt(s.getAttribute('data-value'),10) || 0;
+        document.getElementById('m-rv-rating').value = v;
+        Array.from(document.querySelectorAll('#m-rv-stars .star')).forEach(function(x){
+          const xv = parseInt(x.getAttribute('data-value'),10);
+          if (xv <= v) x.classList.add('filled'); else x.classList.remove('filled');
+        });
+      });
+
+      // submit review AJAX (unchanged)
+      document.getElementById('mobileReviewForm').addEventListener('submit', function(e){
+        e.preventDefault();
+        const submitBtn = document.getElementById('m-rv-submit');
+        submitBtn.disabled = true;
+        const fd = new FormData(this);
+        const rating = parseInt(fd.get('rating') || '0', 10);
+        if (!rating || rating < 1 || rating > 5) {
+          alert('Please select a rating (1-5).');
+          submitBtn.disabled = false;
+          return;
+        }
+
+        fetch(this.action, {
+          method: 'POST',
+          body: fd,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(r => r.json().catch(()=>({success:false,message:'Server error'})))
+          .then(function(data){
+            if (data && data.success) {
+              // update inline stars for the matching item
+              const pid = String(data.product_id);
+              const vid = String(data.variant_id || '');
+              const oid = String(data.order_id);
+              const items = document.querySelectorAll('.item-row');
+              items.forEach(function(it){
+                const firstStar = it.querySelector('.stars .star');
+                if (!firstStar) return;
+                const ip = String(firstStar.getAttribute('data-product')||'');
+                const iv = String(firstStar.getAttribute('data-variant')||'');
+                if (ip === pid && ( !vid || iv === vid || !iv )) {
+                  const stars = it.querySelectorAll('.stars .star');
+                  stars.forEach(function(s){
+                    const rVal = parseInt(s.getAttribute('data-rating')||'0',10);
+                    if (rVal <= data.rating) {
+                      s.classList.add('filled'); s.setAttribute('aria-checked','true');
+                    } else {
+                      s.classList.remove('filled'); s.setAttribute('aria-checked','false');
+                    }
+                    s.setAttribute('data-reviewed','1');
+                    if (data.title !== undefined && data.title !== null) s.setAttribute('data-review-title', data.title);
+                    if (data.body !== undefined && data.body !== null) s.setAttribute('data-review-body', data.body);
+                  });
+                }
+              });
+
+              bootstrap.Modal.getInstance(document.getElementById('mobileReviewModal'))?.hide();
+              showToast(data.message || 'Review submitted');
+            } else {
+              showToast(data && data.message ? data.message : 'Failed to submit review');
+            }
+          })
+          .catch(function(err){ console.error(err); showToast('Network error'); })
+          .finally(function(){ submitBtn.disabled = false; });
+      });
+
+      // ------------------ Cancellation flow: modal + AJAX + UI update (no reload) ------------------
+      const cancelBtn = document.getElementById('btn-cancel-order');
+      const cancelModalEl = document.getElementById('cancelConfirmModal');
+      const cancelModal = new bootstrap.Modal(cancelModalEl, { backdrop: true, keyboard: true });
+      const cancelModalConfirm = document.getElementById('cancelModalConfirm');
+
+      // when opening modal, blur main content
+      cancelModalEl.addEventListener('show.bs.modal', function(){
+        mainContent.classList.add('blurred-main');
+      });
+      cancelModalEl.addEventListener('hidden.bs.modal', function(){
+        mainContent.classList.remove('blurred-main');
+      });
+
+      if (cancelBtn) {
+        cancelBtn.addEventListener('click', function(){
+          // open modal instead of confirm()
+          cancelModal.show();
+        });
+      }
+
+      // perform cancellation on confirm
+      cancelModalConfirm && cancelModalConfirm.addEventListener('click', function(){
+        // disable button to avoid duplicate clicks
+        cancelModalConfirm.disabled = true;
+        const orderId = '{{ order.order_id }}';
+        const fd = new FormData();
+        fd.append('order_id', orderId);
+
+        fetch("{{ url_for('main.request_order_cancellation') }}", {
+          method: 'POST',
+          body: fd,
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        }).then(r => r.json().catch(()=>({success:false,message:'Server error'})))
+          .then(function(data){
+            if (data && data.success) {
+              showToast(data.message || 'Cancellation requested');
+              // Update UI: replace cancel button with 'Cancellation requested' disabled (no reload)
+              const oldBtn = document.getElementById('btn-cancel-order');
+              if (oldBtn) {
+                const parent = oldBtn.parentElement;
+                const newBtn = document.createElement('button');
+                newBtn.id = 'btn-cancel-order-disabled';
+                newBtn.className = oldBtn.className;
+                newBtn.disabled = true;
+                newBtn.setAttribute('aria-disabled','true');
+                newBtn.textContent = 'Cancellation requested';
+                parent.replaceChild(newBtn, oldBtn);
+                // if previously single action layout, ensure layout changes are respected
+                refreshActionsLayout();
+                updateBottomActionsSticky();
+              }
+              // hide modal
+              cancelModal.hide();
+            } else {
+              showToast(data && data.message ? data.message : 'Failed to request cancellation');
+            }
+          }).catch(function(err){ console.error(err); showToast('Network error'); })
+          .finally(function(){ cancelModalConfirm.disabled = false; });
+      });
+
+      // ------------------ small helper: when cancel button is absent expand invoice action ------------------
+      function ensureInvoiceWidth() {
+        const cancelExists = document.getElementById('btn-cancel-order') || document.getElementById('btn-cancel-order-disabled');
+        if (!cancelExists) {
+          actionsInner.className = 'actions-single';
+        }
+      }
+      ensureInvoiceWidth();
+
+      // ------------------ toast helper ------------------
+      function showToast(msg, ms=2200){
+        const el = document.createElement('div');
+        el.textContent = msg;
+        el.style.position='fixed';
+        el.style.left='50%';
+        el.style.transform='translateX(-50%)';
+        el.style.bottom='100px';
+        el.style.background='rgba(17,24,39,0.95)';
+        el.style.color='white';
+        el.style.padding='10px 14px';
+        el.style.borderRadius='10px';
+        el.style.zIndex='99999';
+        el.style.boxShadow='0 8px 36px rgba(2,6,23,0.25)';
+        document.body.appendChild(el);
+        setTimeout(()=>{ el.style.opacity='0'; el.remove(); }, ms);
+      }
+
+    });
+  </script>
+
+  {% include 'customer/footer.html' %}
+</body>
+</html>

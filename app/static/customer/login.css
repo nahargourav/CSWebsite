@@ -1,73 +1,216 @@
-/* Background: Yellow-Green Gradient */
-body {
-    background: linear-gradient(to right, #FFD600, #00C853);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    font-family: 'Arial', sans-serif;
+/* login.css - modern, premium login UI */
+/* Variables */
+:root{
+  --bg-0: #fff8f2;
+  --accent: #f59e0b; /* amber */
+  --accent-2: #ff7f66;
+  --muted: #6b7280;
+  --card: #ffffff;
+  --glass: rgba(255,255,255,0.7);
+  --shadow-soft: 0 10px 30px rgba(2,6,23,0.06);
+  --radius: 16px;
+  --pad: 20px;
+  --max-w: 980px;
+  font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* Card Styling */
-.card {
-    width: 100%;
-    max-width: 400px;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px 0 #00C85333;
-    background: #fff;
-    text-align: center;
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:linear-gradient(120deg, rgba(245,158,11,0.06), rgba(255,127,102,0.04)) fixed; color:var(--accent-2); -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
+
+.login-root{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:32px 16px;
 }
 
-/* InternSync Branding */
-.brand-title {
-    font-size: 26px;
-    font-weight: bold;
+/* container holds two panes (left decorative, right card) */
+.login-container{
+  width:100%;
+  max-width:var(--max-w);
+  display:flex;
+  gap:28px;
+  align-items:stretch;
+  justify-content:center;
+  padding: 12px;
 }
 
-.brand-title .intern {
-    color: #FFD600; /* Bright yellow */
+/* left decorative panel */
+.login-left{
+  flex: 1 1 44%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10%;
 }
 
-.brand-title .sync {
-    color: #00C853; /* Vivid green */
+/* ===========================
+   BRAND HERO — UPDATED TO MAKE
+   THE LOGO FILL THE WHOLE PANE
+   =========================== */
+.brand-hero{
+  /* keep same visual card look but make it a positioned container */
+  width:100%;
+  /* no fixed max-width so it naturally fills the left pane */
+  border-radius: var(--radius);
+  padding: 28px;                    /* keep your original padding for spacing of text */
+  box-shadow: var(--shadow-soft);
+  text-align: center;
+  color: #111;
+  position: relative;               /* important: stack image + overlay + text */
+  overflow: hidden;                 /* crop the image to rounded corners */
+  min-height: 420px;                /* maintain a nice visual height */
 }
 
-/* Form Fields */
-.form-control {
-    width: 100%;
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    margin-bottom: 20px;
+/* Make the brand image cover the ENTIRE decorative pane */
+.brand-art{
+  /* full-bleed image behavior */
+  position: absolute;
+  inset: 0;                         /* top:0; right:0; bottom:0; left:0 */
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;                /* fills & crops to cover whole pane */
+  object-position: center;
+  z-index: 2;                       /* sits behind the text */
+  user-select: none;
+  -webkit-user-drag: none;
+  /* remove previous fixed height/drop-shadow so full-bleed looks clean */
+  filter: none;
+  margin: 0;
+  padding: 0;
 }
 
-/* Button Styling */
-.btn-primary {
-    width: 100%;
-    border-radius: 8px;
-    background-color: #00C853;
-    border-color: #00C853;
-    border: none;
-    transition: 0.3s;
-    padding: 10px;
-    font-size: 16px;
-    color: white;
-    cursor: pointer;
-    margin-top: 10px;
+/* subtle light overlay to preserve the original bright ethnic theme
+   while improving text legibility on top of the image */
+.brand-hero::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  /* very subtle, keeps warm amber tint — preserves theme */
+  background: linear-gradient(180deg, rgba(245,158,11,0.3), rgba(255,127,102,0.3));
+  pointer-events: none;
 }
 
-.btn-primary:hover {
-    background-color: #FFD600;
-    border-color: #FFD600;
-    color: #212121;
+
+
+/* right card wrapper */
+.login-card-wrap{
+  flex: 0 1 420px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
 }
 
-/* Footer Link */
-.register-link {
-    font-size: 14px;
-    margin-top: 10px;
+/* Card */
+.login-card{
+  width:100%;
+  border-radius:14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.96));
+  box-shadow: 0 20px 40px rgba(2,6,23,0.06);
+  border: 1px solid rgba(13,110,253,0.03);
+  overflow: hidden;
 }
 
+/* branding */
+.brand-title{
+  font-size:1.6rem;
+  font-weight:700;
+  margin:0;
+  letter-spacing: -0.4px;
+}
+.brand-title .brand-a{ color: #111; }
+.brand-title .brand-b{ color: var(--accent-2); }
+
+/* modern form controls */
+.form-modern{
+  height:48px;
+  padding: 1rem .9rem;
+  border-radius:10px;
+  border:1px solid rgba(17,24,39,0.06);
+  background: linear-gradient(180deg,#fff,#fbfbfb);
+  transition: box-shadow .18s ease, border-color .18s ease, transform .08s ease;
+  font-size:0.95rem;
+  color:#222;
+}
+.form-modern:focus{
+  outline: none;
+  border-color: rgba(245,158,11,0.9);
+  box-shadow: 0 6px 22px rgba(245,158,11,0.06);
+  transform: translateY(-1px);
+}
+
+/* password toggle button */
+.password-toggle{
+  position: absolute;
+  right:12px;
+  top:50%;
+  transform: translateY(-50%);
+  border:0;
+  background:transparent;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px;
+  color:var(--muted);
+  cursor:pointer;
+}
+.password-toggle:hover{ color: #111 }
+
+/* submit button */
+.btn-submit{
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color:white;
+  border:0;
+  height:48px;
+  border-radius:10px;
+  font-weight:600;
+  box-shadow: 0 10px 30px rgba(245,158,11,0.12);
+  transition: transform .14s ease, box-shadow .14s ease;
+}
+.btn-submit:hover{ transform: translateY(-2px); box-shadow: 0 18px 40px rgba(245,158,11,0.14); }
+
+/* google button */
+.btn-google{
+  background: #fff;
+  border:1px solid rgba(17,24,39,0.06);
+  color:#111;
+  height:46px;
+  border-radius:10px;
+  font-weight:600;
+  transition: box-shadow .12s ease, transform .12s ease;
+}
+.btn-google img{ filter: none; }
+.btn-google:hover{ transform: translateY(-2px); box-shadow: 0 8px 30px rgba(17,24,39,0.06); }
+
+/* divider */
+.divider{ display:flex; align-items:center; gap:12px; margin:16px 0; justify-content:center; color:var(--muted); font-size:0.9rem; }
+.divider::before, .divider::after{ content:''; height:1px; flex:1; background: linear-gradient(90deg, rgba(17,24,39,0.04), rgba(17,24,39,0.02)); border-radius:2px; }
+
+/* small helpers */
+.login-footer{ opacity:0.8; }
+
+/* RESPONSIVE: Mobile first adjustments */
+@media (max-width: 991.98px) {
+  .login-container{ gap:18px; padding:12px; }
+  .login-left{ display:none; } /* hide decorative panel on smaller screens to keep focus on form */
+  .login-card-wrap{ flex: 1 1 auto; max-width: 480px; width:100%; }
+  .login-card{ border-radius:12px; }
+  .brand-title{ font-size:1.4rem; }
+}
+
+/* Narrow phone tweaks */
+@media (max-width: 480px) {
+  .login-card .card-body{ padding:18px; }
+  .form-modern{ height:46px; font-size:0.95rem; }
+  .password-toggle{ right:10px; }
+  .brand-hero{ padding:18px; }
+  .login-container{ max-width: 680px; padding: 8px; }
+}
+
+/* Reduce visual noise for very small heights */
+@media (max-height:520px){
+  .login-container{ align-items:flex-start; padding-top:20px; padding-bottom:20px; }
+}

@@ -449,17 +449,7 @@
               <div class="order-details" aria-hidden="false">
                 <div class="items-list">
                   {% for item in order['items'] %}
-                    {% set vid_attr = item.variant_id if item.variant_id is not none else '' %}
-                    <div id="item-{{ order_id }}-{{ item.product_id }}{% if vid_attr %}-{{ vid_attr }}{% endif %}"
-                         class="item-row"
-                         role="group"
-                         aria-label="Item {{ item.product_name }}"
-                         data-product-id="{{ item.product_id }}"
-                         data-variant-id="{{ item.variant_id or '' }}"
-                         data-reviewed="{{ '1' if item.reviewed else '0' }}"
-                         data-rating="{{ item.rating if item.rating is not none else '' }}"
-                         data-review-title="{{ item.review.title if item.review else '' }}"
-                         data-review-body="{{ item.review.body if item.review else '' }}">
+                    <div class="item-row" role="group" aria-label="Item {{ item.product_name }}" data-product-id="{{ item.product_id }}" data-variant-id="{{ item.variant_id or '' }}">
                       <div class="item-thumb">
                         {% if item.image_path %}
                           <img src="{{ url_for('static', filename=item.image_path.replace('\\','/')) }}" alt="{{ item.product_name }}">
@@ -484,7 +474,7 @@
                         {% set status_lc = order.order_status|lower %}
                         {% if status_lc == 'delivered' %}
                           <div class="stars-inline" role="radiogroup" aria-label="Rate {{ item.product_name }}">
-                            {% set r = item.rating if item.rating is defined and item.rating is not none else (item.review.rating if item.review is defined and item.review else None) %}
+                            {% set r = item.rating if item.rating is defined else (item.review.rating if item.review is defined and item.review else None) %}
                             {% for s in range(1,6) %}
                               {% set filled = (r is not none and s <= r) %}
                               <span tabindex="0"
@@ -497,7 +487,7 @@
                                     data-rating="{{ s }}"
                                     data-reviewed="{{ '1' if item.reviewed else '0' }}"
                                     data-review-title="{{ item.review.title if item.review }}"{% if item.review and item.review.body %} data-review-body="{{ item.review.body|e }}" {% endif %}>
-                                  ★
+                                ★
                               </span>
                             {% endfor %}
                           </div>
@@ -930,7 +920,7 @@
       }, ms);
     }
 
-    // ---------- Review modal & AJAX submit (robust updates & auto-close) ----------
+    // ---------- Review modal & AJAX submit ----------
     const reviewModalEl = document.getElementById('reviewModal');
     const bsReviewModal = new bootstrap.Modal(reviewModalEl);
     const rvProductId = document.getElementById('rv-product-id');
@@ -977,7 +967,6 @@
       }
     });
 
-    // When clicking inline-star we open modal, prefill modal from star or from the row dataset.
     document.body.addEventListener('click', function (e) {
       // disabled-cancel handling (if any)
       const disabledBtn = e.target.closest('.btn-disabled');
@@ -996,26 +985,20 @@
       if (!star) return;
       e.preventDefault();
 
-      const productId = star.getAttribute('data-product') || '';
+      const productId = star.getAttribute('data-product');
       const variantId = star.getAttribute('data-variant') || '';
-      const orderId = star.getAttribute('data-order') || '';
+      const orderId = star.getAttribute('data-order');
       const clickedRating = parseInt(star.getAttribute('data-rating'), 10) || 0;
       const reviewedFlag = star.getAttribute('data-reviewed') === '1';
       const itemRow = star.closest('.item-row');
       const prodName = itemRow ? (itemRow.querySelector('.item-title')?.textContent || '') : '';
 
-      // Prefer review info attached to the star itself, else fallback to the row dataset (populated after AJAX)
-      const reviewTitle = star.getAttribute('data-review-title') || (itemRow && itemRow.dataset.reviewTitle) || '';
-      const reviewBody = star.getAttribute('data-review-body') || (itemRow && itemRow.dataset.reviewBody) || '';
-      const rowRating = (itemRow && itemRow.dataset.rating) ? parseInt(itemRow.dataset.rating,10) : null;
-
       let existingRating = 0;
-      if (rowRating) existingRating = rowRating;
-      else {
-        const ariaChecked = itemRow && itemRow.querySelectorAll('.inline-star[aria-checked="true"]');
+      if (itemRow) {
+        const ariaChecked = itemRow.querySelectorAll('.inline-star[aria-checked="true"]');
         if (ariaChecked && ariaChecked.length) existingRating = ariaChecked.length;
         else {
-          const filled = itemRow && itemRow.querySelectorAll('.inline-star.filled, .star.filled');
+          const filled = itemRow.querySelectorAll('.inline-star.filled, .star.filled');
           if (filled && filled.length) existingRating = filled.length;
         }
       }
@@ -1027,13 +1010,15 @@
       rvTitle.value = '';
       rvBody.value = '';
 
+      const reviewBody = star.getAttribute('data-review-body');
+      const reviewTitle = star.getAttribute('data-review-title');
       if (reviewTitle) rvTitle.value = reviewTitle;
       if (reviewBody) rvBody.value = reviewBody;
 
       const ratingToShow = existingRating || clickedRating || 0;
       setModalStars(ratingToShow);
 
-      if (reviewedFlag || (itemRow && itemRow.dataset.reviewed === '1')) {
+      if (reviewedFlag) {
         rvStars.classList.add('readonly');
         rvTitle.readOnly = true;
         rvBody.readOnly = true;
@@ -1052,10 +1037,6 @@
       bsReviewModal.show();
     });
 
-    // REVIEW FORM submit (AJAX). On success:
-    // - Close modal
-    // - Update item-row dataset and inline-star elements (filled state, attributes)
-    // - Ensure modal will show saved details if reopened (we store review-title/body on DOM)
     const rvForm = document.getElementById('reviewForm');
     rvForm.addEventListener('submit', function (e) {
       if (rvSubmitBtn.style.display === 'none') {
@@ -1082,43 +1063,17 @@
       .then(data => {
         if (data && data.success) {
           try {
-            // Normalize ids to strings for matching:
             const pid = String(data.product_id);
-            const vid = (data.variant_id === "" || data.variant_id === null || typeof data.variant_id === 'undefined') ? "" : String(data.variant_id);
-            // Find matching row robustly (prefer exact variant match, else product-only)
+            const vid = (data.variant_id === "" || data.variant_id === null) ? "" : String(data.variant_id);
             let matched = null;
-            const rows = Array.from(document.querySelectorAll('.item-row'));
-            for (let i=0;i<rows.length;i++){
-              const row = rows[i];
-              const rid = String(row.getAttribute('data-product-id') || (row.dataset && row.dataset.productId) || '');
-              const rvid = String(row.getAttribute('data-variant-id') || (row.dataset && row.dataset.variantId) || '');
-              if (rid === pid) {
-                // if both have variants, require variant equal; otherwise accept product-only match
-                if ((vid && rvid && rvid === vid) || (!vid && !rvid) || (!vid && rvid === '') || (vid && rvid === '')) {
-                  matched = row;
-                  break;
-                }
-                // also allow match where vid is empty but row variant is empty
-                if (!vid && (rvid === '' || typeof rvid === 'undefined')) { matched = row; break; }
-              }
-            }
-
-            // If not found by product+variant, fallback to product-only match
+            document.querySelectorAll('.item-row').forEach(function(row){
+              const rid = String(row.dataset.productId || row.getAttribute('data-product-id') || '');
+              const rvid = String(row.dataset.variantId || row.getAttribute('data-variant-id') || '');
+              if (rid === pid && rvid === vid) matched = row;
+            });
             if (!matched) matched = document.querySelector('.item-row[data-product-id="' + pid + '"]');
 
             if (matched) {
-              // Update persistent dataset on the row
-              try {
-                matched.dataset.reviewed = '1';
-                matched.dataset.rating = String(data.rating);
-                matched.dataset.reviewTitle = data.title || '';
-                matched.dataset.reviewBody = data.body || '';
-              } catch (err) {
-                // fallback to setAttribute if dataset not supported
-                try { matched.setAttribute('data-reviewed','1'); matched.setAttribute('data-rating', String(data.rating)); matched.setAttribute('data-review-title', data.title || ''); matched.setAttribute('data-review-body', data.body || ''); } catch(e){}
-              }
-
-              // Update inline stars within that row
               const stars = matched.querySelectorAll('.inline-star');
               stars.forEach(function(s){
                 const sVal = parseInt(s.getAttribute('data-rating') || '0', 10);
@@ -1130,33 +1085,12 @@
                   s.setAttribute('aria-checked','false');
                 }
                 s.setAttribute('data-reviewed', '1');
-                if (data.title !== undefined && data.title !== null) s.setAttribute('data-review-title', data.title);
-                if (data.body !== undefined && data.body !== null) s.setAttribute('data-review-body', data.body);
               });
             }
-
-            // Populate modal fields with saved values (so user can immediately see them if they re-open)
-            try {
-              if (data.title !== undefined && data.title !== null) rvTitle.value = data.title;
-              if (data.body !== undefined && data.body !== null) rvBody.value = data.body;
-              setModalStars(data.rating);
-
-              // Make modal read-only appearance (but we will close it now)
-              rvStars.classList.add('readonly');
-              rvTitle.readOnly = true;
-              rvBody.readOnly = true;
-              rvReadonlyMsg.style.display = 'block';
-              rvSubmitBtn.style.display = 'none';
-              document.getElementById('reviewModalLabel').textContent = 'Your review';
-            } catch (err) {
-              console.warn('Failed to populate modal after review', err);
-            }
-
-            // Close the modal and show inline confirmation
-            bsReviewModal.hide();
           } catch (err) { console.warn('DOM update after review error', err); }
 
           showInlineMessage(data.message || 'Review submitted');
+          bsReviewModal.hide();
         } else {
           showInlineMessage(data && data.message ? data.message : 'Failed to submit review');
         }
@@ -1172,7 +1106,6 @@
       return false;
     });
 
-    // When modal is hidden, reset interactive state (but keep row dataset so reopening will show saved review)
     reviewModalEl.addEventListener('hidden.bs.modal', function () {
       rvSubmitBtn.disabled = false;
       rvStars.classList.remove('readonly');
@@ -1221,7 +1154,7 @@
     // safety refresh
     setTimeout(() => { try { if (loco && loco.update) loco.update(); ScrollTrigger.refresh(); } catch(e) {} }, 120);
 
-    // ---------- Infinite scroll (unchanged) ----------
+    // ---------- Infinite scroll: load more orders via AJAX ----------
     let isLoading = false;
     const ordersListEl = document.getElementById('orders-list');
     const loaderEl = document.getElementById('orders-loader');
@@ -1229,8 +1162,6 @@
     function buildFetchUrl(page) {
       const params = new URLSearchParams();
       params.set('page', page);
-      // Request 10 orders per page
-      params.set('per_page', '10');
       const q = document.querySelector('input[name="q"]')?.value || '';
       const sort = document.querySelector('select[name="sort"]')?.value || '';
       const status = new URLSearchParams(window.location.search).get('status') || '';
@@ -1249,6 +1180,8 @@
       try { if (loco && loco.update) loco.update(); ScrollTrigger.refresh(); } catch(e) {}
 
       // IMPORTANT FIX:
+      // some `.order-details` inside newly inserted cards might remain in their GSAP "start" state (opacity:0/scaleY)
+      // if ScrollTrigger hasn't played them yet — ensure they are visible so shipping address and summary show.
       if (insertedNodes && insertedNodes.length) {
         insertedNodes.forEach(function(node){
           try {
@@ -1256,15 +1189,21 @@
             if (!card) return;
             const details = card.querySelector('.order-details');
             if (details) {
+              // clear any lingering transform/opacity that prevents visibility
               details.style.opacity = '1';
+              // remove scaleY transform if present
+              // many browsers use transform matrix; reset transform property so content is visible
               details.style.transform = 'none';
               details.style.transition = 'none';
             }
           } catch (err) {
+            // don't break the flow for any single node
             console.warn('post-insert visibility fix failed', err);
           }
         });
+        // small timeout to let browser paint before allowing animations again
         setTimeout(() => {
+          // clear inline styles we forcibly set so future animations can run normally if needed
           insertedNodes.forEach(function(node){
             try {
               const card = node.nodeType === 1 && node.matches('.order-card') ? node : node.querySelector && node.querySelector('.order-card');
@@ -1272,6 +1211,7 @@
               const details = card.querySelector('.order-details');
               if (details) {
                 details.style.transition = '';
+                // leave opacity/transform cleared so content is visible
               }
             } catch (e) {}
           });
@@ -1328,20 +1268,16 @@
       if (!ordersListEl) return;
       const hasMore = ordersListEl.dataset.hasMore === '1';
       if (!hasMore) return;
-
-      const cards = Array.from(ordersListEl.querySelectorAll('.order-card'));
-      if (!cards.length) return;
-
+      let scrollY = 0;
+      let totalH = scrollerEl ? scrollerEl.scrollHeight : document.documentElement.scrollHeight;
       const vh = window.innerHeight || document.documentElement.clientHeight;
-      let lastVisibleIndex = -1;
-      for (let i = 0; i < cards.length; i++) {
-        const rect = cards[i].getBoundingClientRect();
-        if (rect.top < vh) lastVisibleIndex = i;
+      if (loco && loco.scroll && loco.scroll.instance) {
+        scrollY = loco.scroll.instance.scroll.y;
+      } else {
+        scrollY = window.scrollY || window.pageYOffset;
       }
-      const remaining = lastVisibleIndex === -1 ? cards.length : (cards.length - (lastVisibleIndex + 1));
-      if (remaining <= 5) {
-        loadNextPage();
-      }
+      const remaining = totalH - (scrollY + vh);
+      if (remaining < 800) loadNextPage();
     }
 
     if (loco && loco.on) {

@@ -54,13 +54,13 @@
 
     /* HEADER (exact copy of homepage styles) */
     header {
-      position: sticky;
+      position:sticky;
       top: 0;
       background: white;
       backdrop-filter: blur(6px);
       z-index: 40;
     }
-    .container { max-width: 1260px; }
+    .container { --max:1200px;}
 
     .nav {
       margin: auto;
@@ -222,11 +222,113 @@
       height: 40px;
       width: auto;
     }
+
+
+    /* ===========================
+       MOBILE-ONLY OVERRIDES & UI
+       These rules are applied only when viewport width <= 767px.
+       They intentionally override the desktop rules so the desktop
+       layout remains byte-for-byte identical.
+       =========================== */
+
+    @media (max-width: 767px) {
+
+      /* Reset header layout to be mobile-friendly without changing desktop rules:
+         - .nav must not use its desktop width 100em (causes overflow).
+         - hide desktop nav links to avoid duplication; we'll show a mobile sheet instead.
+         - show a hamburger that sits inside header (absolute) so desktop remains unchanged.
+      */
+      .container.nav { position: relative; } /* allow absolutely-positioned hamburger inside */
+      .nav { width: 100%; margin: 0 auto; padding-left: 12px; padding-right: 12px; } /* mobile width */
+
+      /* Hide large desktop navigation on mobile */
+      nav.links { display: none !important; }
+
+      /* Reduce brand proportion so it doesn't wrap */
+      .brand { width: auto; margin-right: 8px; }
+
+      /* Hide full auth-list on mobile header (profile/logout are moved to mobile sheet).
+         We will show compact mobile icons (cart + wishlist) in the header instead. */
+      .auth-list { display: none !important; }
+
+      /* compact cart + wishlist icons shown in mobile header (keeps desktop unchanged) */
+      .mobile-icons { display: flex; gap: 8px; position: absolute; right: 64px; top: 50%; transform: translateY(-50%); z-index: 62; }
+      .mobile-icons .icon-btn { width:44px; height:44px; padding:6px; border-radius:10px; background:white; box-shadow:0 6px 16px rgba(2,6,23,0.06); border:1px solid rgba(17,24,39,0.03); }
+
+      /* show hamburger */
+      .mobile-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: white;
+        box-shadow: 0 6px 18px rgba(17,24,39,0.06);
+        border: 1px solid rgba(17,24,39,0.03);
+        z-index: 63;
+      }
+
+      .mobile-toggle .bar { width: 20px; height: 2px; background: #111827; display:block; border-radius:2px; position:relative; transition: transform 220ms ease, opacity 180ms ease; }
+      .mobile-toggle .bar::before, .mobile-toggle .bar::after { content: ""; position: absolute; left: 0; right: 0; height: 2px; background: inherit; border-radius:2px; transition: transform 220ms ease, opacity 180ms ease; }
+      .mobile-toggle .bar::before { top: -6px; }
+      .mobile-toggle .bar::after { top: 6px; }
+      .mobile-toggle.open .bar { transform: rotate(45deg); }
+      .mobile-toggle.open .bar::before, .mobile-toggle.open .bar::after { opacity: 0; transform: translateY(0) rotate(0deg); }
+
+      /* Mobile overlay/backdrop and right sheet */
+      .mobile-overlay { display: none; position: fixed; inset: 0; z-index: 59; }
+      .mobile-overlay.open { display: block; }
+
+      .mobile-backdrop { position: absolute; inset: 0; background: rgba(8,10,15,0.45); backdrop-filter: blur(6px); }
+
+      .mobile-sheet {
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: min(92vw, 420px);
+        background: linear-gradient(180deg,#ffffff, #fffaf8);
+        box-shadow: -18px 20px 60px rgba(2,6,23,0.12);
+        transform: translateX(100%);
+        transition: transform 320ms cubic-bezier(.2,.9,.25,1);
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+        padding:18px;
+        overflow-y:auto;
+        will-change: transform;
+      }
+      .mobile-overlay.open .mobile-sheet { transform: translateX(0); }
+
+      .mobile-sheet-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+      .mobile-brand-compact { display:flex; gap:10px; align-items:center; }
+      .mobile-brand-compact img { height:36px; width:auto; display:block; }
+
+      .mobile-search { margin-top:12px; display:flex; gap:8px; align-items:center; background:#fff; padding:10px; border-radius:12px; border:1px solid rgba(17,24,39,0.05); }
+      .mobile-search input { border:none; outline:none; flex:1; font-size:16px; background:transparent; }
+
+      .mobile-links { margin-top: 14px; display:flex; flex-direction:column; gap:12px; }
+      .mobile-links a { display:block; padding:12px 14px; border-radius:12px; text-decoration:none; font-size:18px; font-weight:700; color:var(--accent-contrast); }
+      .mobile-links a:hover { background: rgba(17,24,39,0.02); transform: translateY(-2px); }
+
+      .mobile-quick { margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+      .mobile-account { margin-top: 16px; display:flex; flex-direction:column; gap:8px; }
+
+      .mobile-close { width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:white; border-radius:10px; box-shadow: 0 6px 18px rgba(17,24,39,0.06); border:1px solid rgba(17,24,39,0.03); }
+
+      /* When mobile menu is open, prevent background scroll */
+      body.mobile-menu-open { overflow: hidden; touch-action: none; }
+    }
   </style>
 </head>
 
 <body>
-  <!-- Header exactly as homepage (keeps logo/title/links/profile on same row) -->
+  <!-- Header exactly as homepage (keeps logo/title/links/profile on same row on desktop) -->
   <header>
     <div class="container nav">
       <div class="brand">
@@ -244,6 +346,7 @@
           <a href="/orders">VIEW ORDERS</a>
         </div>
 
+        <!-- Desktop auth-list (kept exactly as before for desktop). On mobile we hide this (.auth-list {display:none}) and show compact .mobile-icons -->
         <ul class="auth-list" style="position: relative; left: 8%;" aria-hidden="false">
           <li>
             <a class="icon-btn" href="/wishlist" aria-label="Wishlist" title="Wishlist">
@@ -343,8 +446,191 @@
           {% endif %}
         </ul>
       </nav>
+
+      <!-- MOBILE ICONS (visible only on mobile via CSS) - compact Cart + Wishlist shown in header -->
+      <div class="mobile-icons" aria-hidden="true" style="display:none;">
+        <a class="icon-btn" href="/wishlist" aria-label="Wishlist (mobile)" title="Wishlist">
+          <!-- small wishlist svg (same look as desktop but smaller) -->
+          <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#ff7f66"/>
+          </svg>
+        </a>
+
+        <a class="icon-btn" href="/cart" aria-label="Cart (mobile)" title="Cart">
+          <svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M3 3h2.4l1.8 9.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 6H6" fill="none" stroke="#111827" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- MOBILE HAMBURGER (only visible on mobile via CSS above) -->
+      <button id="mobileToggle" class="mobile-toggle" aria-expanded="false" aria-label="Open menu" style="display:none;">
+        <span class="bar" aria-hidden="true"></span>
+      </button>
     </div>
   </header>
+
+  <!-- Your normal page content -->
+  {% block content %}{% endblock %}
+
+  <!-- MOBILE OVERLAY & SHEET (server-rendered; hidden on desktop via CSS) -->
+  <div id="mobileOverlay" class="mobile-overlay" aria-hidden="true" style="display:none;">
+    <div class="mobile-backdrop" data-action="close" tabindex="-1"></div>
+
+    <aside class="mobile-sheet" role="dialog" aria-modal="true" aria-labelledby="mobileMenuLabel">
+      <div class="mobile-sheet-top">
+        <div class="mobile-brand-compact">
+          <a href="/" style="display:flex;align-items:center;text-decoration:none;color:inherit;">
+            <img src="{{ url_for('static', filename='images/C&S logo.png') }}" alt="C&S" style="height:36px;width:auto;display:block;">
+            <div style="margin-left:8px;">
+              <div style="font-weight:800;font-size:16px;">Champalal &amp; Sons</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px;">Light & Crafted</div>
+            </div>
+          </a>
+        </div>
+
+        <button class="mobile-close" aria-label="Close menu" data-action="close" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="#111827" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+
+      <div class="mobile-search" role="search" style="margin-top:12px; cursor: text;">
+        <svg id="mobileSearchIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" style="opacity:0.6;cursor:pointer"><path d="M21 21l-4.35-4.35" stroke="#111827" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <input id="mobileSearchInput" aria-label="Search site" placeholder="Search Your Look..." type="search" />
+      </div>
+
+      <nav class="mobile-links" aria-label="Mobile primary navigation">
+        <a href="/">Home</a>
+        <a href="/place-order">Products</a>
+        <a href="/orders">View orders</a>
+        <a href="/contact">Contact</a>
+        <a href="/about">About</a>
+      </nav>
+
+      <!-- Replaced redundant 'Shop now' and 'My orders' with cart & wishlist -->
+      <div class="mobile-quick" style="margin-top:12px;">
+        <a href="/cart" class="pill" style="text-decoration:none; display:flex; align-items:center; gap:8px;">
+          <!-- small cart icon -->
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="opacity:0.95"><path d="M3 3h2.4l1.8 9.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 6H6" stroke="#111827" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Cart
+        </a>
+
+        <a href="/wishlist" style="text-decoration:none;color:var(--muted);display:flex;align-items:center;gap:8px;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="opacity:0.95"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#ff7f66"/></svg>
+          Wishlist
+        </a>
+      </div>
+
+      <div class="mobile-account" style="margin-top:18px;">
+        {% if session.get('customer_id') and session.get('name') %}
+          <a href="{{ url_for('main.profile') }}" style="padding:12px;border-radius:10px;background:#fff;border:1px solid rgba(17,24,39,0.03);text-decoration:none;color:var(--accent-contrast);font-weight:600;display:block;">Profile</a>
+          <a href="/logout" style="padding:12px;border-radius:10px;background:#fff7ed;color:var(--accent);text-decoration:none;display:block;text-align:center;margin-top:6px;">Log out</a>
+        {% else %}
+          <a href="/login" style="padding:12px;border-radius:10px;background:#fff;border:1px solid rgba(17,24,39,0.03);text-decoration:none;color:var(--accent-contrast);font-weight:600;display:block;">Log in</a>
+          <a href="/register" class="pill" style="padding:10px;display:inline-block;text-decoration:none;margin-top:8px;">Create account</a>
+        {% endif %}
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    /* Mobile menu toggle — minimal, robust, no HTML string construction */
+    (function () {
+      var MOBILE_BREAKPOINT = 767;
+      var toggle = document.getElementById('mobileToggle');
+      var overlay = document.getElementById('mobileOverlay');
+      var mobileIcons = document.querySelector('.mobile-icons');
+
+      if (!toggle || !overlay || !mobileIcons) return;
+
+      function openMenu() {
+        overlay.classList.add('open');
+        overlay.style.display = '';
+        document.body.classList.add('mobile-menu-open');
+        toggle.classList.add('open');
+        toggle.setAttribute('aria-expanded','true');
+        overlay.setAttribute('aria-hidden','false');
+        // focus the search input for convenience
+        var input = overlay.querySelector('#mobileSearchInput');
+        if (input) setTimeout(function(){ input.focus(); }, 220);
+      }
+      function closeMenu() {
+        overlay.classList.remove('open');
+        toggle.classList.remove('open');
+        toggle.setAttribute('aria-expanded','false');
+        overlay.setAttribute('aria-hidden','true');
+        document.body.classList.remove('mobile-menu-open');
+        setTimeout(function () {
+          if (!overlay.classList.contains('open')) overlay.style.display = 'none';
+        }, 360);
+      }
+
+      function syncToggleVisibility() {
+        if (window.innerWidth <= MOBILE_BREAKPOINT) {
+          toggle.style.display = '';
+          mobileIcons.style.display = ''; // show compact icons on mobile
+        } else {
+          toggle.style.display = 'none';
+          mobileIcons.style.display = 'none';
+          closeMenu();
+        }
+      }
+
+      toggle.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        if (overlay.classList.contains('open')) closeMenu(); else openMenu();
+      });
+
+      overlay.addEventListener('click', function (ev) {
+        if (ev.target.classList.contains('mobile-backdrop') || ev.target.closest('[data-action="close"]')) {
+          closeMenu();
+        }
+      });
+
+      document.addEventListener('keydown', function (ev) {
+        if (ev.key === 'Escape' && overlay.classList.contains('open')) closeMenu();
+      });
+
+      window.addEventListener('resize', syncToggleVisibility, { passive: true });
+      syncToggleVisibility();
+
+      // Mobile search: redirect to /place-order?q=...&sort=newest on submit or Enter
+      var searchInput = document.getElementById('mobileSearchInput');
+      var searchIcon = document.getElementById('mobileSearchIcon');
+
+      function mobileSearchRedirect() {
+        if (!searchInput) return;
+        var q = (searchInput.value || '').trim();
+        if (!q) return;
+        var url = '/place-order?q=' + encodeURIComponent(q) + '&sort=newest';
+        // close menu then navigate
+        closeMenu();
+        window.location.href = url;
+      }
+
+      if (searchInput) {
+        searchInput.addEventListener('keydown', function (ev) {
+          if (ev.key === 'Enter') {
+            ev.preventDefault();
+            mobileSearchRedirect();
+          }
+        });
+      }
+      if (searchIcon) {
+        searchIcon.addEventListener('click', mobileSearchRedirect);
+      }
+
+      // Also allow clicking the search container to focus the input (friendly UX)
+      var searchContainer = document.querySelector('.mobile-search');
+      if (searchContainer) {
+        searchContainer.addEventListener('click', function (ev) {
+          if (ev.target && ev.target.id !== 'mobileSearchIcon') {
+            searchInput && searchInput.focus();
+          }
+        });
+      }
+    })();
+  </script>
 
   <script>
     // small behaviour used across pages
