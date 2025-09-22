@@ -400,13 +400,13 @@ db_from_env = True
 
 def get_database_url():
     if db_from_env:
-        db = "postgresql://my_user:QCigpYVrdZ6HUeMKlRTZMcwiACsp1fNE@dpg-d2so6s75r7bs73ambfmg-a.singapore-postgres.render.com/myapp_db_acmo"
+        db = "postgresql://my_user:QCigpYVrdZ6HUeMKlRTZMcwiACsp1fNE@dpg-d2so6s75r7bs73ambfmg-a/myapp_db_acmo"
     else:
         db = None
 
     # fallback hardcoded (only used if env missing)
     if not db:
-        db = "postgresql://my_user:QCigpYVrdZ6HUeMKlRTZMcwiACsp1fNE@dpg-d2so6s75r7bs73ambfmg-a.singapore-postgres.render.com/myapp_db_acmo"
+        db = "postgresql://my_user:QCigpYVrdZ6HUeMKlRTZMcwiACsp1fNE@dpg-d2so6s75r7bs73ambfmg-a/myapp_db_acmo"
 
     if db.startswith("postgres://"):
         db = db.replace("postgres://", "postgresql://", 1)
