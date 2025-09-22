@@ -1,42 +1,275 @@
-<!-- Font Awesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!-- Footer CSS -->
-<link rel="stylesheet" href="{{ url_for('static', filename='customer/footer.css') }}">
+<!-- Footer component: paste this into your base layout (e.g. customer/layout.html) where footer belongs -->
+<!-- Uses the site's CSS variables: --accent, --accent-2, --muted, --card-shadow, --page-bg; font-family Poppins -->
+<footer class="site-footer" role="contentinfo" aria-label="Site footer">
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="/" class="brand-link" aria-label="Homepage">
+          <!-- simple stylized logo mark + text -->
+          <img class="brand-mark" src="{{ url_for('static', filename='images/C&S logo.png') }}" alt="C&amp;S logo" />
+          <div class="brand-text">
+            <div class="brand-name">C&amp;S Champalal &amp; Sons</div>
+            <div class="brand-tag">Serving cloth lovers</div>
+          </div>
+        </a>
+        <p class="brand-desc">Ethnic wear — quality fabrics, honest pricing, and a tradition of trust.</p>
+      </div>
 
-<footer class="footer">
-    <div class="container py-2">
-        <div class="row g-2">
-            <div class="col-lg-4 col-md-6 mb-4">
-                <div class="footer-brand mb-3">
-                    <span class="brand-text"></span><span class="brand-highlight">Champalal & Sons</span>
-                </div>
-                <p class="footer-text">Champalal & Sons is your trusted partner for seamless order processing and management.</p>
-            </div>
-            <div class="col-lg-4 col-md-6 mb-4">
-                <h5 class="footer-heading">Quick Links</h5>
-                <ul class="footer-links">
-                    <li><a href="/"><i class="fas fa-chevron-right"></i> Home</a></li>
-                    <li><a href="/place-order"><i class="fas fa-chevron-right"></i> Place Order</a></li>
-                    <li><a href="/orders"><i class="fas fa-chevron-right"></i> View Orders</a></li>
-                </ul>
-            </div>
-            <div class="col-lg-4 col-md-12 mb-2">
-                <h5 class="footer-heading">Contact Us</h5>
-                <div class="footer-contact">
-                    <p><i class="fas fa-envelope me-2"></i> gouravnahar3008@gmail.com</p>
-                    <p><i class="fas fa-phone me-2"></i> +1 234 567 890</p>
-                    <div class="social-icons mt-2">
-                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f fa-fw"></i></a>
-                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter fa-fw"></i></a>
-                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram fa-fw"></i></a>
-                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in fa-fw"></i></a>
-                        <a href="#" aria-label="GitHub"><i class="fab fa-github fa-fw"></i></a>
-                    </div>
-                </div>
-            </div>
+      <nav class="footer-nav" aria-label="Footer navigation">
+        <div class="footer-col">
+          <h4>Shop</h4>
+          <ul>
+            <li><a href="/collections/new-arrivals">New arrivals</a></li>
+            <li><a href="/collections/bestsellers">Bestsellers</a></li>
+            <li><a href="/collections/ethnic-wear">Ethnic wear</a></li>
+            <li><a href="/collections/accessories">Accessories</a></li>
+          </ul>
         </div>
+
+        <div class="footer-col">
+          <h4>Customer</h4>
+          <ul>
+            <li><a href="/help/shipping">Shipping & delivery</a></li>
+            <li><a href="/help/returns">Returns & refunds</a></li>
+            <li><a href="/help/faq">FAQ</a></li>
+            <li><a href="/account/orders">My orders</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="/about">About us</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/careers">Careers</a></li>
+            <li><a href="/privacy">Privacy policy</a></li>
+          </ul>
+        </div>
+
+        
+      </nav>
     </div>
-    <div class="footer-bottom text-center py-1">
-        <p class="mb-0">&copy; {{ 2025 }} C & S. All rights reserved.</p>
+
+    <div class="footer-bottom">
+      
+
+      <div class="footer-bottom-center">
+        <div class="social-row-centered" aria-hidden="false">
+          <a class="social" href="#" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg>
+          </a>
+          <a class="social" href="#" aria-label="Facebook">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a4 4 0 0 0-4 4v3H8v4h3v8h4v-8h3l1-4h-4V6a1 1 0 0 1 1-1h3z"></path></svg>
+          </a>
+          <a class="social" href="#" aria-label="Twitter">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53A4.48 4.48 0 0 0 16 3a4.48 4.48 0 0 0-4.5 4.5c0 .35.04.7.12 1.03A12.94 12.94 0 0 1 3 4s-4 9 5 13a13 13 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path></svg>
+          </a>
+        </div>
+
+        <div class="copyright">© 2025 &nbsp; C&amp;S Champalal &amp; Sons — All rights reserved</div>
+      </div>
+
+      <button id="backToTop" class="back-to-top" aria-label="Back to top">↑</button>
     </div>
+  </div>
+
+  <style>
+    /* Footer styles — self-contained; uses global variables from site where possible */
+    .site-footer{ --footer-bg: linear-gradient(180deg,var(--page-bg),#fff); padding:36px 14px; background:white; color:var(--muted);}
+    .footer-inner{ max-width:1200px; margin:0 auto; }
+    .footer-top{ display:flex; gap:28px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+    .footer-brand{ flex:1 1 260px; min-width:220px; }
+    .brand-link{ display:flex; gap:12px; align-items:center; text-decoration:none; color:inherit; }
+    .brand-mark{ width:56px; height:56px; flex-shrink:0; border-radius:8px; box-shadow:var(--card-shadow); }
+    .brand-text{ display:flex; flex-direction:column; }
+    .brand-name{ font-weight:800; color:#0f1724; font-size:16px; }
+    .brand-tag{ font-size:13px; color:var(--muted); }
+    .brand-desc{ margin-top:12px; color:var(--muted); font-size:14px; max-width:420px; }
+
+    .footer-nav{ display:flex; gap:18px; flex:2 1 520px; justify-content:space-between; flex-wrap:wrap; }
+    .footer-col{ min-width:140px; }
+    .footer-col h4{ font-size:14px; margin:0 0 10px; color:#0f1724; font-weight:700; }
+    .footer-col ul{ list-style:none; padding:0; margin:0; }
+    .footer-col li{ margin:6px 0; }
+    .footer-col a{ color:var(--muted); text-decoration:none; font-size:14px; }
+    .footer-col a:hover{ color:var(--accent); }
+
+    .footer-newsletter{ max-width:320px; }
+    .newsletter-form{ display:flex; gap:8px; margin-top:10px; }
+    .newsletter-form input[type="email"]{ flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(15,23,36,0.06); background:transparent; }
+    .newsletter-form input::placeholder{ color:#bfc7cc; }
+    .btn-sub{ padding:10px 14px; border-radius:10px; border:none; font-weight:700; background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:white; }
+
+    .social-row{ display:flex; gap:8px; margin-top:12px; }
+    .social{ display:inline-flex; width:36px; height:36px; align-items:center; justify-content:center; border-radius:8px; border:1px solid rgba(15,23,36,0.04); color:var(--muted); text-decoration:none; }
+    .social:hover{ color:var(--accent); transform:translateY(-2px); }
+
+    .footer-bottom{ display:flex; gap:12px; align-items:center; justify-content:space-between; margin-top:22px; border-top:1px dashed rgba(15,23,36,0.04); padding-top:16px; }
+    .footer-bottom-center{ display:flex; flex-direction:column; align-items:center; gap:8px; flex:1; }
+    .social-row-centered{ display:flex; gap:8px; align-items:center; justify-content:center; }
+    .payments{ display:flex; gap:8px; align-items:center; }
+    .payments{ display:flex; gap:8px; align-items:center; }
+    .pay{ width:48px; height:32px; opacity:0.95; border-radius:6px; background:#fff; }
+    .pay-img{
+      width:56px;
+      height:36px;
+      object-fit:contain;
+      background:#fff;
+      padding:6px;
+      border-radius:8px;
+      border:1px solid rgba(15,23,36,0.06);
+      box-shadow:var(--card-shadow);
+      display:inline-block;
+    }
+    .copyright{ color:var(--muted); font-size:13px; }
+
+    .back-to-top{ border:1px solid rgba(15,23,36,0.06); background:#fff; padding:8px 10px; border-radius:10px; cursor:pointer; box-shadow:var(--card-shadow); }
+
+    /* responsiveness */
+    @media (max-width:920px){
+      .footer-top{ gap:18px; }
+      .footer-nav{ flex-direction:row; gap:12px; }
+      .footer-col{ min-width:120px; }
+      .brand-desc{ max-width:300px; }
+    }
+    @media (max-width:640px){
+      .footer-top{ flex-direction:column; gap:18px; }
+      .footer-nav{ width:100%; order:3; }
+      .footer-brand{ order:1; }
+      .footer-bottom{ flex-direction:column; align-items:center; gap:12px; }
+      .payments{ order:1; }
+      .footer-bottom-center{ order:2; }
+      .back-to-top{ order:3; align-self:center; }
+      .back-to-top{ align-self:flex-end; }
+    }
+    /* === Mobile-only overrides (paste at end of existing <style>) ===
+   Targets narrow phones; does not affect desktop/tablet styles. */
+@media (max-width: 600px) {
+  .site-footer{ padding:18px 12px; }
+
+  .footer-inner{ padding:0 8px; }
+
+  /* Top section: stack and center */
+  .footer-top{
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+
+  /* Brand */
+  .footer-brand{ flex:0 0 auto; width:100%; text-align:center; order:1; }
+  .brand-link{ justify-content:center; gap:10px; }
+  .brand-mark{ width:48px; height:48px; border-radius:8px; }
+  .brand-text{ align-items:center; text-align:center; }
+  .brand-name{ font-size:15px; line-height:1.1; }
+  .brand-tag{ font-size:12px; }
+  .brand-desc{ margin-top:8px; font-size:13px; max-width:100%; margin-left:auto; margin-right:auto; }
+
+  /* Navigation columns stacked into single column */
+  .footer-nav{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    width:100%;
+    order:2;
+    align-items:stretch;
+  }
+  .footer-col{
+    min-width:0;
+    width:100%;
+    padding:8px 6px;
+    background:transparent;
+    border-radius:10px;
+  }
+  .footer-col h4{ font-size:14px; margin-bottom:8px; }
+  .footer-col ul{ display:flex; flex-direction:column; gap:6px; margin:0; }
+  .footer-col a{ display:block; font-size:14px; padding:6px 0; }
+
+  /* Newsletter: stack input + button for easier tapping */
+  .footer-newsletter{ width:100%; max-width:100%; }
+  .newsletter-form{ flex-direction:column; gap:8px; margin-top:8px; }
+  .newsletter-form input[type="email"]{ width:100%; padding:12px; border-radius:10px; }
+  .btn-sub{ width:100%; padding:12px; border-radius:10px; font-weight:700; }
+
+  /* Social + payments row */
+  .social-row, .social-row-centered{ gap:10px; justify-content:center; }
+  .social{ width:44px; height:44px; align-items:center; justify-content:center; border-radius:10px; }
+  .social svg{ width:18px; height:18px; }
+  .payments{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:6px; }
+  .pay-img{ width:52px; height:32px; padding:6px; }
+
+  /* Bottom */
+  .footer-bottom{
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    padding-top:12px;
+  }
+  .footer-bottom-center{ order:1; align-items:center; }
+  .copyright{ font-size:13px; text-align:center; }
+
+  /* Back-to-top — make it a fixed tap target on phones */
+  .back-to-top{
+    position:fixed;
+    right:14px;
+    bottom:14px;
+    z-index:60;
+    padding:10px 12px;
+    border-radius:999px;
+    box-shadow:var(--card-shadow);
+  }
+
+  /* Tapping / readability helpers */
+  .footer-col a, .footer-col li { word-break:break-word; -webkit-tap-highlight-color: rgba(0,0,0,0.06); }
+  .footer-col li a { padding:8px 4px; border-radius:6px; }
+  .footer-col li a:focus, .footer-col li a:hover { background:rgba(15,23,36,0.02); }
+
+  /* Reduce large max-widths that can cause overflow on tiny screens */
+  .brand-desc, .footer-newsletter, .footer-col { max-width:100%; box-sizing:border-box; }
+
+  /* Slightly increase hit area for inputs and links */
+  input, button, .social, .back-to-top { tap-highlight-color: rgba(0,0,0,0.06); }
+
+  /* Make sure everything remains visually separated but compact */
+  .footer-top, .footer-bottom { gap:12px; }
+
+  /* Fallback for extremely narrow devices */
+  @media (max-width: 320px) {
+    .brand-mark{ width:44px; height:44px; }
+    .back-to-top{ right:10px; bottom:10px; padding:9px; }
+  }
+}
+
+
+    /* a small accessibility helper */
+    .visually-hidden{ position:absolute !important; height:1px; width:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap; }
+  </style>
+
+  <script>
+    // Small JS: newsletter submit + back to top micro-interactions
+    (function(){
+      const form = document.getElementById('footerNewsletter');
+      if (form){
+        form.addEventListener('submit', function(e){
+          e.preventDefault();
+          const email = form.email.value && form.email.value.trim();
+          if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){
+            // gentle inline feedback
+            form.email.focus();
+            form.email.style.borderColor = 'rgba(255,107,107,0.9)';
+            setTimeout(()=> form.email.style.borderColor='rgba(15,23,36,0.06)', 1800);
+            return;
+          }
+          // graceful optimistic UI: show small thanks toast and clear
+          const btn = form.querySelector('.btn-sub');
+          btn.disabled = true;
+          btn.textContent = 'Thanks!';
+          setTimeout(function(){ btn.disabled = false; btn.textContent = 'Subscribe'; form.email.value = ''; }, 1500);
+          // you can actually post to /subscribe endpoint if exists
+        });
+      }
+      const back = document.getElementById('backToTop');
+      if (back){ back.addEventListener('click', function(){ window.scrollTo({top:0,behavior:'smooth'}); }); }
+    })();
+  </script>
 </footer>
