@@ -181,7 +181,7 @@
         </div>
       </div>
 
-      
+
     </section>
 
     <!-- REFINE & CATEGORIES -->
@@ -259,10 +259,16 @@
         <div class="muted" style="margin-top:8px;font-size:12px">We respect your privacy. Unsubscribe anytime.</div>
       </div>
     </section>
+    {% include 'customer/footer.html' %}
+    <footer>
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:space-between; display:none !important">
+        <div>© <span id="year"></span> Champalal & Sons — Cloth merchants since 1930</div>
+        <div style="display:flex;gap:12px"><a href="#">Privacy</a><a href="#">Terms</a></div>
+      </div>
 
-    <!-- Footer -->
+    </footer>
   </main>
-  {% include 'customer/footer.html' %}
+
 
   <!-- Mobile call CTA -->
 
