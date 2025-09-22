@@ -2141,6 +2141,7 @@ def generate_invoice_pdf(order_id, payment_db_id, invoice_dir=None):
         # Logo handling (tries several candidate places; scales to fit)
         logo_flowable = None
         logo_path = current_app.config.get("COMPANY_LOGO_PATH", "") or ""
+        logo_path="C&S Logo.png"
         candidate_paths = []
         if logo_path:
             if os.path.isabs(logo_path):
