@@ -14,7 +14,7 @@ def get_db():
     Expects an environment variable named DATABASE_URL (e.g. provided by Render).
     Returns a psycopg2 connection or None on failure.
     """
-    database_url = "postgresql://my_user:QCigpYVrdZ6HUeMKlRTZMcwiACsp1fNE@dpg-d2so6s75r7bs73ambfmg-a.singapore-postgres.render.com/myapp_db_acmo"
+    database_url = "postgresql://my_user:QCigpYVrdZ6HUeMKlRTZMcwiACsp1fNE@dpg-d2so6s75r7bs73ambfmg-a/myapp_db_acmo"
     if not database_url:
         print("DATABASE_URL not set; cannot connect.")
         return None
