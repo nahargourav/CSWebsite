@@ -225,9 +225,10 @@
     {% set st = (order.order_status or '')|lower %}
     <div id="actionsInner" class="{% if st in ['processing','confirmed'] %}actions-two{% else %}actions-single{% endif %}">
         
-      <a id="btn-download-invoice" class="btn btn-inv btn-blockish" href="{{ url_for('main.download_invoice', order_id=order.order_id) if (url_for is defined) else '#' }}" target="_blank" rel="noopener">
-        ⬇️ &nbsp; Download Invoice
-      </a>
+      <form method="POST" action="{{ url_for('main.download_invoice') }}" onsubmit="event.stopPropagation();"{% if True %} target="_blank" rel="noopener"{% endif %}>
+          <input type="hidden" name="order_id" value="{{ order.order_id }}">
+          <button type="submit" class="btn btn-inv btn-blockish" title="Download invoice">⬇️ &nbsp; Download Invoice</button>
+      </form>
 
       {# cancellation button logic:
          - active request option only for processing/confirmed
