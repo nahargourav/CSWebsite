@@ -795,9 +795,7 @@
             <div class="col-lg-3 col-md-4 col-sm-6 product-col">
               <div class="product-card h-100 position-relative">
                 <div class="product-frame">
-                  <button class="wish-btn" aria-label="Add to wishlist">
-                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20.8 7.2c0 4.2-8.8 11-8.8 11s-8.8-6.9-8.8-11a5 5 0 0 1 8.8-3.2A5 5 0 0 1 20.8 7.2z" stroke="#ff6b6b" stroke-width="1.2" fill="rgba(255,107,107,0.06)"/></svg>
-                  </button>
+                  
 
                   <a href="{{ url_for('main.view_prod_detail', product_id=product.product_id) }}" style="width:100%; display:block;">
                     <img src="{{ url_for('static', filename=(product.image_path or 'uploads/placeholder.png')) }}" alt="{{ product.name }}" class="img-fluid">
