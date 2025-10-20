@@ -21,7 +21,7 @@ def get_db():
     Returns a psycopg2 connection or None on failure.
     """
     # Keep your connection string here (you can also read from env var DATABASE_URL)
-    database_url = "postgresql://my_user:QCigpYVrdZ6HUeMKlRTZMcwiACsp1fNE@dpg-d2so6s75r7bs73ambfmg-a.singapore-postgres.render.com/myapp_db_acmo"
+    database_url = "postgresql://my_user:8SUWSufu7kwfowzU5C74vgzUmFbciJRj@dpg-d3qvu3ili9vc73cn8kk0-a.singapore-postgres.render.com/myapp_db_dcg7"
 
     if not database_url:
         print("DATABASE_URL not set; cannot connect.")
