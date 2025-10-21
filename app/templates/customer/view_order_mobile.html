@@ -83,7 +83,7 @@
              data-product-url="{{ url_for('main.view_prod_detail', product_id=it.product_id, variant_id=it.variant_id) if it.variant_id else url_for('main.view_prod_detail', product_id=it.product_id) }}">
           <div class="item-thumb" aria-hidden="true">
             {% if it.image_path %}
-              <img src="{{ url_for('static', filename=it.image_path.replace('\\','/')) }}" alt="{{ it.product_name }}">
+              <img src="{{ it.image_path.replace('\\','/')}}" alt="{{ it.product_name }}">
             {% else %}
               <img src="{{ url_for('static', filename='images/placeholder-sm.png') }}" alt="placeholder">
             {% endif %}

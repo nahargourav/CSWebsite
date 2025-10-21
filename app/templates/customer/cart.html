@@ -239,7 +239,7 @@
               <article class="ci" data-cart-item-id="{{ item.cart_item_id }}">
                 <a class="ci-image" href="{{ prod_url }}" aria-label="View product">
                   {% if item.image_path %}
-                    <img src="{{ url_for('static', filename=item.image_path.replace('\\','/')) }}" alt="{{ item.name }}">
+                    <img src="{{ item.image_path.replace('\\','/') }}" alt="{{ item.name }}">
                   {% else %}
                     <img src="{{ url_for('static', filename='uploads/placeholder.png') }}" alt="No image">
                   {% endif %}

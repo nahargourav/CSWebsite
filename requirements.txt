@@ -31,3 +31,4 @@ gunicorn
 
 razorpay
 setuptools<81
+boto3

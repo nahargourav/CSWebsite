@@ -23,6 +23,15 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from markupsafe import escape, Markup
 
+
+# R2
+
+import boto3
+from botocore.exceptions import ClientError
+
+
+
+
 # OAuth / auth helpers
 from flask_dance.contrib.google import make_google_blueprint, google
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -215,6 +224,90 @@ def nocache(view):
     return no_cache
 
 main.register_blueprint(google_bp, url_prefix="/login")
+
+
+# r2 setup
+
+# initialize R2 client (module-level)
+R2_ENDPOINT = os.environ.get("R2_ENDPOINT") or f"https://{os.environ.get('R2_ACCOUNT_ID')}.r2.cloudflarestorage.com"
+R2_ACCESS_KEY = os.environ.get("R2_ACCESS_KEY_ID")
+R2_SECRET_KEY = os.environ.get("R2_SECRET_ACCESS_KEY")
+R2_BUCKET = os.environ.get("R2_BUCKET")
+
+s3 = boto3.client(
+    "s3",
+    endpoint_url=R2_ENDPOINT,
+    aws_access_key_id=R2_ACCESS_KEY,
+    aws_secret_access_key=R2_SECRET_KEY,
+)
+
+# helper to upload a FileStorage object to R2 and return the public URL (or raise)
+def upload_to_r2(file_storage, key):
+    """
+    Upload a werkzeug FileStorage to Cloudflare R2 and return a public URL.
+
+    - key: s3-style key (e.g. "products/123/main/abc.jpg")
+    - Returns: public URL string (constructed from R2_PUBLIC_BASE if present,
+               otherwise R2_ENDPOINT/R2_BUCKET/key).
+    """
+    # normalize key (no leading slash)
+    key = str(key).lstrip('/')
+
+    # ensure stream at start
+    try:
+        file_storage.stream.seek(0)
+    except Exception:
+        pass
+
+    content_type = getattr(file_storage, "content_type", None) or "application/octet-stream"
+    extra_args = {"ContentType": content_type}
+
+    # ensure there is an s3 client (module-level 's3' may already exist)
+    s3_client = None
+    try:
+        # prefer an existing module-level 's3' if defined
+        s3_client = globals().get('s3')
+    except Exception:
+        s3_client = None
+
+    if not s3_client:
+        # create a fresh boto3 client using env vars
+        R2_ENDPOINT_ENV = os.environ.get("R2_ENDPOINT")
+        ACCESS_KEY = os.environ.get("R2_ACCESS_KEY_ID")
+        SECRET_KEY = os.environ.get("R2_SECRET_ACCESS_KEY")
+        # create client (region_name is not required for R2)
+        s3_client = boto3.client(
+            "s3",
+            endpoint_url=R2_ENDPOINT_ENV,
+            aws_access_key_id=ACCESS_KEY,
+            aws_secret_access_key=SECRET_KEY,
+        )
+
+    # perform upload
+    try:
+        s3_client.upload_fileobj(file_storage.stream, os.environ.get("R2_BUCKET") or R2_BUCKET, key, ExtraArgs=extra_args)
+    except ClientError as e:
+        # log and re-raise so caller can handle rollback/flash
+        try:
+            current_app.logger.exception("R2 upload failed for key=%s: %s", key, e)
+        except Exception:
+            pass
+        raise
+
+    # Construct public URL
+    # 1) Preferred: explicit public base (e.g. https://pub-xxxx.r2.dev or https://cdn.yourdomain.com)
+    public_base = os.environ.get("R2_PUBLIC_BASE")
+    if public_base:
+        return public_base.rstrip('/') + '/' + key
+
+    # 2) Fallback: use endpoint + bucket
+    endpoint = os.environ.get("R2_ENDPOINT") or (R2_ENDPOINT if 'R2_ENDPOINT' in globals() else None)
+    bucket = os.environ.get("R2_BUCKET") or (R2_BUCKET if 'R2_BUCKET' in globals() else None)
+    if endpoint and bucket:
+        return f"{endpoint.rstrip('/')}/{bucket}/{key}"
+
+    # last resort: return the key (caller stores it and can later transform)
+    return key
 
 
 @main.route('/')
@@ -922,6 +1015,7 @@ def place_order():
         'request_args': request.args
     }
     return render_template('customer/view_products.html', **context)
+
 
 
 
@@ -3514,13 +3608,14 @@ def owner_logout():
 # --------------------add product--------------------
 
 
-ALLOWED_IMAGE_EXT = {"png", "jpg", "jpeg", "gif","webp","avif"}
-
+# Keep your allowed_file and ALLOWED_IMAGE_EXT definition
+ALLOWED_IMAGE_EXT = {"png", "jpg", "jpeg", "gif", "webp", "avif"}
 
 def allowed_file(filename):
     return bool(filename) and "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_IMAGE_EXT
 
 
+# Modified add_product route (replace your original function with this)
 @main.route('/add-product', methods=['GET', 'POST'])
 @nocache
 def add_product():
@@ -3554,17 +3649,14 @@ def add_product():
         is_active = 1 if request.form.get('is_active') else 0
 
         main_image = request.files.get('main_image')  # single main image
-
-        # Variant arrays (may contain empty entries — we will filter them)
+        additional_images = request.files.getlist('images')
+        # Variant arrays
         variant_sizes = request.form.getlist('variant_size[]')
         variant_colors = request.form.getlist('variant_color[]')
         variant_color_hex = request.form.getlist('variant_color_hex[]')
         variant_skus = request.form.getlist('variant_sku[]')
         variant_prices = request.form.getlist('variant_price[]')
         variant_stocks = request.form.getlist('variant_stock[]')
-
-        # Additional product-level images (optional)
-        additional_images = request.files.getlist('images')
 
         if not name:
             flash("Product name is required", "danger")
@@ -3573,7 +3665,7 @@ def add_product():
         conn = None
         cursor = None
         try:
-            conn = get_db()
+            conn = get_db()   # assume this returns a psycopg2 connection (Postgres)
             cursor = conn.cursor()
 
             # generate SKU if not provided
@@ -3581,13 +3673,14 @@ def add_product():
                 base = ''.join(ch for ch in (name or 'prod') if ch.isalnum())[:20]
                 sku = f"{base}{int(time.time()) % 10000}"
 
-            # insert product (image_path set below if main image uploaded)
+            # insert product (image_path set below if main image uploaded) - use RETURNING
             insert_product_q = """
                 INSERT INTO products
                 (name, brand, sku, category, short_description, description, image_path,
                  currency, stock_count, weight, material, fit, pattern, occasion,
                  season, sustainability, care_instructions, is_returnable, is_active)
                 VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                RETURNING product_id
             """
             product_values = (
                 name, brand, sku, category, short_description, description, None,
@@ -3595,49 +3688,43 @@ def add_product():
                 season, sustainability, care_instructions, is_returnable, is_active
             )
             cursor.execute(insert_product_q, product_values)
-            product_id = cursor.lastrowid
-            print(f"[DEBUG] Inserted product_id={product_id}")
+            product_id = cursor.fetchone()[0]
+            current_app.logger.debug("[DEBUG] Inserted product_id=%s", product_id)
 
-            # compute upload dir inside the Flask app root so it's reliable
-            UPLOAD_BASE = os.path.join(current_app.root_path, 'static', 'uploads', 'products')
-            os.makedirs(UPLOAD_BASE, exist_ok=True)
-            print(f"[DEBUG] Upload base path: {UPLOAD_BASE}")
-
-            # ---------- Save main product image (ONLY to products.image_path) ----------
-            if main_image and main_image.filename and allowed_file(main_image.filename):
+            # ---------- Save main product image to R2 (ONLY update products.image_path) ----------
+            if main_image and getattr(main_image, 'filename', None) and allowed_file(main_image.filename):
                 orig = secure_filename(main_image.filename)
                 unique = f"{product_id}_{int(time.time())}_{uuid.uuid4().hex[:6]}"
                 filename = f"{unique}_{orig}"
-                saved_path = os.path.join(UPLOAD_BASE, filename)
+                key = f"products/{product_id}/main/{filename}"
                 try:
-                    main_image.save(saved_path)
-                    rel_path = os.path.join('uploads', 'products', filename).replace(os.path.sep, '/')
-                    cursor.execute("UPDATE products SET image_path = %s WHERE product_id = %s", (rel_path, product_id))
-                    print(f"[DEBUG] Saved main image to {saved_path} (exists: {os.path.exists(saved_path)})")
+                    url = upload_to_r2(main_image, key)
+                    # store HTTP URL in products.image_path
+                    cursor.execute("UPDATE products SET image_path = %s WHERE product_id = %s", (url, product_id))
+                    current_app.logger.debug("[DEBUG] Uploaded main image to R2: %s", url)
                 except Exception as e:
-                    print(f"[ERROR] Failed saving main image: {e}")
-                    flash(f"Failed to save main image: {e}", "danger")
-                    # continue — do not abort entire product creation for one save failure
+                    current_app.logger.exception("Failed uploading main image for product %s: %s", product_id, e)
+                    # do not abort full product creation for one upload failure
+                    flash(f"Warning: failed to upload main image ({e})", "warning")
 
-            # ---------- Save additional product-level images (if any) ----------
+            # ---------- Save additional product-level images to R2 ----------
             pos = 1
             for img in (additional_images or []):
-                if img and img.filename and allowed_file(img.filename):
+                if img and getattr(img, 'filename', None) and allowed_file(img.filename):
                     orig = secure_filename(img.filename)
                     filename = f"{product_id}_add_{pos}_{int(time.time())}_{uuid.uuid4().hex[:6]}_{orig}"
-                    saved_path = os.path.join(UPLOAD_BASE, filename)
+                    key = f"products/{product_id}/images/{filename}"
                     try:
-                        img.save(saved_path)
-                        rel = os.path.join('uploads', 'products', filename).replace(os.path.sep, '/')
+                        url = upload_to_r2(img, key)
                         cursor.execute(
                             "INSERT INTO product_images (product_id, variant_id, path, alt_text, position, is_primary) VALUES (%s,%s,%s,%s,%s,%s)",
-                            (product_id, None, rel, None, pos, 0)
+                            (product_id, None, url, None, pos, 0)
                         )
-                        print(f"[DEBUG] Saved additional product image {saved_path} (exists: {os.path.exists(saved_path)})")
+                        current_app.logger.debug("[DEBUG] Uploaded additional image to R2: %s", url)
                         pos += 1
                     except Exception as e:
-                        print(f"[ERROR] Failed saving additional product image: {e}")
-                        # continue
+                        current_app.logger.exception("Failed uploading additional image for product %s: %s", product_id, e)
+                        # continue — don't abort
 
             # ---------- Build filtered variant list (skip fully empty entries) ----------
             variants = []
@@ -3675,29 +3762,22 @@ def add_product():
 
             # ---------- Helper to collect files for a given variant index robustly ----------
             def collect_variant_files(idx):
-                """
-                1) Try request.files.getlist(f"variant_images_{idx}") -> preferred
-                2) Fallback: collect any request.files entries whose key startswith "variant_images_{idx}"
-                   or contains the index in brackets (some browsers/tools send variant_images_0[] or variant_images_0)
-                3) As a last resort, scan all request.files and pick names containing "_{idx}" (conservative)
-                """
                 files = []
                 try:
                     files = request.files.getlist(f"variant_images_{idx}") or []
                 except Exception:
                     files = []
 
-                # fallback heuristics
                 if not files:
                     for key in request.files:
                         if key == f"variant_images_{idx}" or key.startswith(f"variant_images_{idx}") or key.endswith(f"_{idx}") or f"[{idx}]" in key:
                             files.extend(request.files.getlist(key))
-                # final fallback: any key that contains f"variant_images" and idx as substring
+
                 if not files:
                     for key in request.files:
                         if "variant_images" in key and str(idx) in key:
                             files.extend(request.files.getlist(key))
-                # ensure unique file objects (avoid duplicates)
+
                 unique_files = []
                 seen_names = set()
                 for f in files:
@@ -3707,7 +3787,7 @@ def add_product():
                         unique_files.append(f)
                 return unique_files
 
-            # ---------- Insert variants and save variant images ----------
+            # ---------- Insert variants and save variant images to R2 ----------
             total_stock_from_variants = 0
             first_variant_has_images = False
 
@@ -3716,39 +3796,40 @@ def add_product():
                 vsku = v['sku'] or f"{sku}{vindex}"
                 is_def = 1 if idx == 0 else 0
 
-                cursor.execute(
-                    """INSERT INTO product_variants
-                       (product_id, sku, size, color, price, color_hex, stock_count, is_default)
-                       VALUES (%s,%s,%s,%s,%s,%s,%s,%s)""",
-                    (product_id, vsku, v['size'], v['color'], v['price'], v['color_hex'], v['stock'], is_def)
-                )
-                variant_id = cursor.lastrowid
+                insert_variant_q = """
+                    INSERT INTO product_variants
+                    (product_id, sku, size, color, price, color_hex, stock_count, is_default)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                    RETURNING variant_id
+                """
+                cursor.execute(insert_variant_q, (product_id, vsku, v['size'], v['color'], v['price'], v['color_hex'], v['stock'], is_def))
+                variant_id = cursor.fetchone()[0]
                 total_stock_from_variants += v['stock']
-                print(f"[DEBUG] Inserted variant id={variant_id} sku={vsku} stock={v['stock']}")
+                current_app.logger.debug("[DEBUG] Inserted variant id=%s sku=%s stock=%s", variant_id, vsku, v['stock'])
 
                 # collect files robustly for this variant index
                 vfiles = collect_variant_files(idx)
-                print(f"[DEBUG] Collected {len(vfiles)} file(s) for variant index {idx}: keys -> {[getattr(f, 'filename', None) for f in vfiles]}")
+                current_app.logger.debug("[DEBUG] Collected %s file(s) for variant index %s", len(vfiles), idx)
 
                 vpos = 0
                 for vf in vfiles:
                     if vf and getattr(vf, 'filename', None) and allowed_file(vf.filename):
                         orig = secure_filename(vf.filename)
                         filename = f"{product_id}_var{idx}_{vpos}_{int(time.time())}_{uuid.uuid4().hex[:6]}_{orig}"
-                        saved_path = os.path.join(UPLOAD_BASE, filename)
+                        key = f"products/{product_id}/variants/{variant_id}/{filename}"
                         try:
-                            vf.save(saved_path)
-                            vrel = os.path.join('uploads', 'products', filename).replace(os.path.sep, '/')
+                            url = upload_to_r2(vf, key)
                             is_primary = 1 if (idx == 0 and vpos == 0 and not first_variant_has_images) else 0
                             cursor.execute(
                                 "INSERT INTO product_images (product_id, variant_id, path, alt_text, position, is_primary) VALUES (%s,%s,%s,%s,%s,%s)",
-                                (product_id, variant_id, vrel, None, vpos, is_primary)
+                                (product_id, variant_id, url, None, vpos, is_primary)
                             )
-                            print(f"[DEBUG] Saved variant image to {saved_path} (exists: {os.path.exists(saved_path)})")
+                            current_app.logger.debug("[DEBUG] Uploaded variant image to R2: %s", url)
                             vpos += 1
                         except Exception as e:
-                            print(f"[ERROR] Failed saving variant image {orig}: {e}")
+                            current_app.logger.exception("Failed uploading variant image for product %s variant %s: %s", product_id, variant_id, e)
                             # continue
+
                 if idx == 0 and vpos > 0:
                     first_variant_has_images = True
 
@@ -3769,16 +3850,10 @@ def add_product():
             flash('Product added successfully!', 'success')
             return render_template('owner/add_product.html')
 
-        except mysql.connector.Error as err:
-            if conn:
-                conn.rollback()
-            print("[MYSQL ERROR]", err)
-            flash(f'Error adding product: {err}', 'danger')
-            return render_template('owner/add_product.html')
         except Exception as e:
             if conn:
                 conn.rollback()
-            print("[UNEXPECTED ERROR]", e)
+            current_app.logger.exception("[ERROR] Error adding product: %s", e)
             flash(f'Error adding product: {e}', 'danger')
             return render_template('owner/add_product.html')
         finally:

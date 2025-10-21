@@ -42,7 +42,7 @@
              data-product-url="{{ prod_url }}">
           <div class="item-thumb" aria-hidden="true">
             {% if item.image_path %}
-              <img src="{{ url_for('static', filename=item.image_path.replace('\\','/')) }}" alt="{{ item.product_name }}">
+              <img src="{{ item.image_path.replace('\\','/')}}" alt="{{ item.product_name }}">
             {% else %}
               <img src="{{ url_for('static', filename='images/placeholder-sm.png') }}" alt="placeholder">
             {% endif %}

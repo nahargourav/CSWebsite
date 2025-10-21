@@ -798,7 +798,7 @@
                   
 
                   <a href="{{ url_for('main.view_prod_detail', product_id=product.product_id) }}" style="width:100%; display:block;">
-                    <img src="{{ url_for('static', filename=(product.image_path or 'uploads/placeholder.png')) }}" alt="{{ product.name }}" class="img-fluid">
+                    <img src="{{ product.image_path }}" alt="{{ product.name }}" class="img-fluid">
                   </a>
                 </div>
                 <div class="card-body">

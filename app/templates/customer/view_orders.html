@@ -463,7 +463,7 @@
                          data-review-body="{{ item.review.body if item.review else '' }}">
                       <div class="item-thumb">
                         {% if item.image_path %}
-                          <img src="{{ url_for('static', filename=item.image_path.replace('\\','/')) }}" alt="{{ item.product_name }}">
+                          <img src="{{ item.image_path.replace('\\','/') }}" alt="{{ item.product_name }}">
                         {% else %}
                           <div style="padding:10px;color:var(--muted)"><i class="bi bi-image"></i></div>
                         {% endif %}

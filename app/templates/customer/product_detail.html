@@ -297,8 +297,10 @@
         </div>
 
         <div class="image-wrap">
+          {# Use public URL from DB directly (product_images[].path or product.image_path). Fallback to static placeholder. #}
+          {% set main_src = (product_images[0].path if product_images and product_images[0].path else (product.image_path or None)) %}
           <img id="mainImage" class="main-image"
-               src="{{ url_for('static', filename=(product_images[0].path if product_images else (product.image_path or 'uploads/placeholder.png')) ) }}"
+               src="{{ main_src if main_src else url_for('static', filename='uploads/placeholder.png') }}"
                alt="{{ product.name }}">
           <div class="image-nav" aria-hidden="true">
             <button id="imgPrev" type="button" title="Previous image" aria-label="Previous image">‹</button>
@@ -400,7 +402,7 @@
                  data-color="{{ v.color or '' }}"
                  data-color-hex="{{ v.color_hex or '' }}"
                  data-thumb="{{ v.thumb }}">
-              <img class="variant-thumb" src="{{ url_for('static', filename=v.thumb) }}" alt="thumb">
+              <img class="variant-thumb" src="{{ v.thumb }}" alt="thumb">
               <div>
                 <!-- Removed SKU display here as requested.
                      Display only size and color with emphasized styling. -->
@@ -653,7 +655,7 @@
     document.addEventListener('DOMContentLoaded', function(){
       const productImages = [
         {% for img in product_images %}
-          "{{ url_for('static', filename=img.path) }}",
+          "{{ img.path }}",
         {% endfor %}
       ].filter(Boolean);
 
@@ -661,7 +663,7 @@
       {% for vid, imgs in variant_images.items() %}
         variantImages[{{ vid }}] = [
           {% for img in imgs %}
-            "{{ url_for('static', filename=img.path) }}",
+            "{{ img.path }}",
           {% endfor %}
         ].filter(Boolean);
       {% endfor %}

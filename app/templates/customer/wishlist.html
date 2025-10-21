@@ -226,7 +226,7 @@
           <article class="wish-card" data-variant-id="{{ item.variant.variant_id }}" data-product-id="{{ item.product.product_id }}">
             <div class="wish-media">
               <a href="{{ url_for('main.view_prod_detail', product_id=item.product.product_id, variant_id=item.variant.variant_id) }}" style="display:block; width:100%; height:100%;">
-                <img alt="{{ item.product.name }}" src="{{ url_for('static', filename=(item.thumb or item.product.image_path or 'uploads/placeholder.png')) }}">
+                <img alt="{{ item.product.name }}" src="{{ item.thumb or item.product.image_path or 'uploads/placeholder.png'}}">
               </a>
 
               <!-- Heart overlay (remove/unwish). Keep data attrs for JS. -->
