@@ -114,8 +114,10 @@
       <div class="col-lg-7">
         <div class="card p-3" style="border-radius:12px;">
           <div id="imagePanel" class="image-area">
+            {# Use public URL from DB for main image (product_images[0].path or variant_images[variants[0].variant_id][0].path). Fallback to static placeholder. #}
+            {% set main_src = (product_images[0].path if product_images and product_images[0].path else ( variant_images[variants[0].variant_id][0].path if variants and variants|length and variant_images.get(variants[0].variant_id) and variant_images[variants[0].variant_id][0].path else None )) %}
             <img id="mainImage" class="main-image"
-                 src="{{ url_for('static', filename=(product_images[0].path if product_images else ( variant_images[variants[0].variant_id][0].path if variants and variants|length and variant_images.get(variants[0].variant_id) else 'uploads/placeholder.png' )) ) }}"
+                 src="{{ main_src if main_src else url_for('static', filename='uploads/placeholder.png') }}"
                  alt="{{ product.name }}">
             <div class="image-nav" aria-hidden="true">
               <button id="imgPrev" type="button" title="Previous image" aria-label="Previous image">‹</button>
@@ -149,7 +151,7 @@
                    data-color="{{ v.color or '' }}"
                    data-color-hex="{{ v.color_hex or '' }}"
                    data-thumb="{{ v.thumb }}">
-                <img class="variant-thumb" src="{{ url_for('static', filename=v.thumb) }}" alt="thumb">
+                <img class="variant-thumb" src="{{ v.thumb }}" alt="thumb">
                 <div>
                   <div style="font-weight:700;font-size:.98rem;">{{ v.sku or 'SKU' }}</div>
                   <div class="small text-muted">{{ (v.size or 'N/A') }} &nbsp;•&nbsp; {{ (v.color or 'N/A') }}</div>
@@ -463,7 +465,7 @@
       // Data provided by server
       const productImages = [
         {% for img in product_images %}
-          "{{ url_for('static', filename=img.path) }}",
+          "{{ img.path }}",
         {% endfor %}
       ].filter(Boolean);
 
@@ -471,7 +473,7 @@
       {% for vid, imgs in variant_images.items() %}
         variantImages[{{ vid }}] = [
           {% for img in imgs %}
-            { id: {{ img.image_id }}, src: "{{ url_for('static', filename=img.path) }}" },
+            { id: {{ img.image_id }}, src: "{{ img.path }}" },
           {% endfor %}
         ];
       {% endfor %}

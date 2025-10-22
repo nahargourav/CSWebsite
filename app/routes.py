@@ -228,12 +228,14 @@ main.register_blueprint(google_bp, url_prefix="/login")
 
 # r2 setup
 
-# initialize R2 client (module-level)
+# ---------- R2 / S3 client initialization (module-level) ----------
 R2_ENDPOINT = os.environ.get("R2_ENDPOINT") or f"https://{os.environ.get('R2_ACCOUNT_ID')}.r2.cloudflarestorage.com"
 R2_ACCESS_KEY = os.environ.get("R2_ACCESS_KEY_ID")
 R2_SECRET_KEY = os.environ.get("R2_SECRET_ACCESS_KEY")
 R2_BUCKET = os.environ.get("R2_BUCKET")
+R2_PUBLIC_BASE = os.environ.get("R2_PUBLIC_BASE")  # optional public base like https://pub-xxxx.r2.dev
 
+# create boto3 client (module-level)
 s3 = boto3.client(
     "s3",
     endpoint_url=R2_ENDPOINT,
@@ -241,19 +243,15 @@ s3 = boto3.client(
     aws_secret_access_key=R2_SECRET_KEY,
 )
 
-# helper to upload a FileStorage object to R2 and return the public URL (or raise)
+# ---------- Helpers for R2 operations ----------
+
 def upload_to_r2(file_storage, key):
     """
-    Upload a werkzeug FileStorage to Cloudflare R2 and return a public URL.
-
-    - key: s3-style key (e.g. "products/123/main/abc.jpg")
-    - Returns: public URL string (constructed from R2_PUBLIC_BASE if present,
-               otherwise R2_ENDPOINT/R2_BUCKET/key).
+    Upload a werkzeug FileStorage to R2 and return a public URL.
+    key: "products/{product_id}/main/filename.ext"
     """
-    # normalize key (no leading slash)
     key = str(key).lstrip('/')
 
-    # ensure stream at start
     try:
         file_storage.stream.seek(0)
     except Exception:
@@ -262,52 +260,83 @@ def upload_to_r2(file_storage, key):
     content_type = getattr(file_storage, "content_type", None) or "application/octet-stream"
     extra_args = {"ContentType": content_type}
 
-    # ensure there is an s3 client (module-level 's3' may already exist)
-    s3_client = None
     try:
-        # prefer an existing module-level 's3' if defined
-        s3_client = globals().get('s3')
-    except Exception:
-        s3_client = None
-
-    if not s3_client:
-        # create a fresh boto3 client using env vars
-        R2_ENDPOINT_ENV = os.environ.get("R2_ENDPOINT")
-        ACCESS_KEY = os.environ.get("R2_ACCESS_KEY_ID")
-        SECRET_KEY = os.environ.get("R2_SECRET_ACCESS_KEY")
-        # create client (region_name is not required for R2)
-        s3_client = boto3.client(
-            "s3",
-            endpoint_url=R2_ENDPOINT_ENV,
-            aws_access_key_id=ACCESS_KEY,
-            aws_secret_access_key=SECRET_KEY,
-        )
-
-    # perform upload
-    try:
-        s3_client.upload_fileobj(file_storage.stream, os.environ.get("R2_BUCKET") or R2_BUCKET, key, ExtraArgs=extra_args)
+        s3.upload_fileobj(file_storage.stream, R2_BUCKET, key, ExtraArgs=extra_args)
     except ClientError as e:
-        # log and re-raise so caller can handle rollback/flash
-        try:
-            current_app.logger.exception("R2 upload failed for key=%s: %s", key, e)
-        except Exception:
-            pass
+        current_app.logger.exception("R2 upload failed for key=%s: %s", key, e)
         raise
 
-    # Construct public URL
-    # 1) Preferred: explicit public base (e.g. https://pub-xxxx.r2.dev or https://cdn.yourdomain.com)
-    public_base = os.environ.get("R2_PUBLIC_BASE")
-    if public_base:
-        return public_base.rstrip('/') + '/' + key
+    # construct public URL
+    if R2_PUBLIC_BASE:
+        return R2_PUBLIC_BASE.rstrip('/') + '/' + key
+    if R2_ENDPOINT and R2_BUCKET:
+        return f"{R2_ENDPOINT.rstrip('/')}/{R2_BUCKET}/{key}"
+    return key  # last resort
 
-    # 2) Fallback: use endpoint + bucket
-    endpoint = os.environ.get("R2_ENDPOINT") or (R2_ENDPOINT if 'R2_ENDPOINT' in globals() else None)
-    bucket = os.environ.get("R2_BUCKET") or (R2_BUCKET if 'R2_BUCKET' in globals() else None)
-    if endpoint and bucket:
-        return f"{endpoint.rstrip('/')}/{bucket}/{key}"
+def delete_from_r2(key):
+    """
+    Delete an object from R2 by key. Key must be the S3 key (no leading slash).
+    Returns True if deleted (or not found), False if failure.
+    """
+    if not key:
+        return True
+    key = str(key).lstrip('/')
+    try:
+        s3.delete_object(Bucket=R2_BUCKET, Key=key)
+        return True
+    except ClientError as e:
+        # If object not found or other error, log and return False
+        current_app.logger.exception("R2 delete failed for key=%s: %s", key, e)
+        return False
 
-    # last resort: return the key (caller stores it and can later transform)
-    return key
+def _r2_key_from_public_url(url):
+    """
+    Given a public URL stored in DB, try to derive the R2 object key.
+    Handles:
+      - R2_PUBLIC_BASE + '/' + key
+      - R2_ENDPOINT + '/' + BUCKET + '/' + key
+      - raw key (already stored)
+    Returns key (string) or None.
+    """
+    if not url or not isinstance(url, str):
+        return None
+    url = url.strip()
+
+    # If stored already as a bare key (no scheme)
+    if not (url.startswith('http://') or url.startswith('https://')):
+        return url.lstrip('/')
+
+    try:
+        # If public base is known and URL starts with it
+        if R2_PUBLIC_BASE and url.startswith(R2_PUBLIC_BASE.rstrip('/')):
+            key = url[len(R2_PUBLIC_BASE.rstrip('/')):].lstrip('/')
+            return key
+
+        # If endpoint + bucket form (endpoint may include scheme and host)
+        if R2_ENDPOINT and R2_BUCKET:
+            prefix = f"{R2_ENDPOINT.rstrip('/')}/{R2_BUCKET}/"
+            if url.startswith(prefix):
+                key = url[len(prefix):]
+                return key
+
+        # Last attempt: remove scheme+host and bucket if present
+        # Example: https://.../<bucket>/products/... => extract after /<bucket>/
+        # Parse path component
+        from urllib.parse import urlparse
+        parsed = urlparse(url)
+        path = parsed.path.lstrip('/')  # e.g. "pub-xxx.r2.dev/products/1/main/..."
+        # If bucket appears as first path segment:
+        if path.startswith(f"{R2_BUCKET}/"):
+            return path[len(R2_BUCKET)+1:]
+        # If path contains 'products/' then return from that segment onward
+        idx = path.find('products/')
+        if idx != -1:
+            return path[idx:]
+    except Exception as e:
+        current_app.logger.debug("Failed to parse R2 key from url=%s : %s", url, e)
+
+    # Could not reliably compute key
+    return None
 
 
 @main.route('/')
@@ -4294,6 +4323,26 @@ def view_product_detail(product_id):
     )
 
 # ---------- Edit product (POST only) ----------
+# ---------- Utility to get a dict-like cursor compatible across DB wrappers ----------
+def _get_dict_cursor(conn):
+    """
+    Try to return a cursor that yields dict-like rows.
+    Works with psycopg2 (RealDictCursor) and fallbacks to other styles.
+    """
+    try:
+        # psycopg2
+        from psycopg2.extras import RealDictCursor
+        return conn.cursor(cursor_factory=RealDictCursor)
+    except Exception:
+        # try MySQL-style dictionary parameter
+        try:
+            return conn.cursor(dictionary=True)
+        except Exception:
+            # final fallback: regular cursor (tuples) — caller must handle
+            return conn.cursor()
+
+# ---------- Route: edit product (with R2 main image replacement) ----------
+
 @main.route('/product/<int:product_id>/edit', methods=['POST'])
 @nocache
 def edit_product(product_id):
@@ -4306,16 +4355,22 @@ def edit_product(product_id):
     cursor = None
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
 
-        # Fetch product (ensure exists)
-        cursor.execute("SELECT * FROM products WHERE product_id = %s", (product_id,))
+        # We'll try to use a dict-like cursor for convenience
+        cursor = _get_dict_cursor(conn)
+
+        # Lock & fetch the product row for update to avoid races
+        # Note: psycopg2 supports FOR UPDATE; wrappers should too. If not, fallback to a normal SELECT.
+        try:
+            cursor.execute("SELECT * FROM products WHERE product_id = %s FOR UPDATE", (product_id,))
+        except Exception:
+            cursor.execute("SELECT * FROM products WHERE product_id = %s", (product_id,))
         product = cursor.fetchone()
         if not product:
             flash("Product not found.", "danger")
             return redirect(url_for('main.view_owner_products'))
 
-        # Read and sanitize common fields
+        # --- Read and sanitize fields (same as before) ---
         name = (request.form.get('name') or '').strip()
         brand = (request.form.get('brand') or '').strip() or None
         category = (request.form.get('category') or '').strip() or None
@@ -4330,31 +4385,35 @@ def edit_product(product_id):
         season = (request.form.get('season') or '').strip() or None
         sustainability = (request.form.get('sustainability') or '').strip() or None
 
-        # numeric fields
         weight_raw = (request.form.get('weight') or '').strip()
         try:
             weight = float(weight_raw) if weight_raw != '' else None
         except Exception:
             weight = None
 
-        # boolean-like
         is_returnable = 1 if request.form.get('is_returnable') in ('1', 'on', 'true', 'yes') else 0
-
-        # optional SKU / meta
         sku = (request.form.get('sku') or '').strip() or None
 
-        # Fields controlling product-level image deletions and uploads
-        delete_image_ids = request.form.getlist('delete_image_ids')  # list of strings
+        # product_images deletion (optional)
+        delete_image_ids = request.form.getlist('delete_image_ids') or []
         try:
             delete_image_ids = [int(x) for x in delete_image_ids if str(x).strip() != '']
         except Exception:
             delete_image_ids = []
 
-        new_files = request.files.getlist('product_images')
+        # new product image files (the UI field is product_images). We only care if at least one file provided.
+        new_files = request.files.getlist('product_images') or []
+        # normalize to first valid file for the product main image replacement (per spec there's only one main)
+        new_main_file = None
+        for f in new_files:
+            if f and getattr(f, 'filename', None) and f.filename.strip():
+                # optional: validate extension via allowed_file() if you have one
+                new_main_file = f
+                break
 
-        # Build update dict (if you prefer to skip NULL-on-empty change logic adjust here)
+        # --- Build and execute product update (non-image fields) ---
         update_fields = {
-            'name': name or product.get('name'),
+            'name': name or (product.get('name') if isinstance(product, dict) else product[1]),
             'brand': brand,
             'category': category,
             'short_description': short_description,
@@ -4376,91 +4435,156 @@ def edit_product(product_id):
         for k, v in update_fields.items():
             set_clauses.append(f"{k} = %s")
             params.append(v)
-        params.append(product_id)
+        # also update updated_at to now()
+        set_clauses.append("updated_at = (now() AT TIME ZONE 'Asia/Kolkata')")
         sql = f"UPDATE products SET {', '.join(set_clauses)} WHERE product_id = %s"
+        params.append(product_id)
         cursor.execute(sql, tuple(params))
 
-        # Delete selected product images (and files)
+        # ---------- Handle deletion of specific product_images rows (if provided) ----------
         if delete_image_ids:
-            format_ids = ",".join(["%s"] * len(delete_image_ids))
-            cursor.execute(f"SELECT image_id, path FROM product_images WHERE image_id IN ({format_ids}) AND product_id = %s",
-                           tuple(delete_image_ids + [product_id]))
-            rows = cursor.fetchall() or []
-            for r in rows:
-                path = r.get('path') or ''
-                if path:
-                    abs_path = os.path.join(current_app.root_path, 'static', path.replace('/', os.path.sep))
+            # fetch their paths and delete objects from R2
+            fmt = ",".join(["%s"] * len(delete_image_ids))
+            cursor.execute(f"SELECT image_id, path FROM product_images WHERE image_id IN ({fmt}) AND product_id = %s", tuple(delete_image_ids + [product_id]))
+            to_delete_rows = cursor.fetchall() or []
+            # delete DB rows
+            cursor.execute(f"DELETE FROM product_images WHERE image_id IN ({fmt}) AND product_id = %s", tuple(delete_image_ids + [product_id]))
+            # attempt to remove S3 objects (best-effort; log failures)
+            for r in to_delete_rows:
+                # r may be dict-like
+                path = r.get('path') if isinstance(r, dict) else r[2] if len(r) > 2 else None
+                if not path:
+                    continue
+                key = _r2_key_from_public_url(path)
+                if key:
                     try:
-                        if os.path.exists(abs_path):
-                            os.remove(abs_path)
+                        delete_from_r2(key)
                     except Exception as e:
-                        current_app.logger.warning("Failed to delete product image file %s: %s", abs_path, e)
-            cursor.execute(f"DELETE FROM product_images WHERE image_id IN ({format_ids}) AND product_id = %s",
-                           tuple(delete_image_ids + [product_id]))
+                        current_app.logger.exception("Failed to delete product_images object %s: %s", key, e)
 
-        # Handle uploads of new product-level images
-        if new_files:
-            UPLOAD_BASE = os.path.join(current_app.root_path, 'static', 'uploads', 'products')
-            os.makedirs(UPLOAD_BASE, exist_ok=True)
+        # ---------- Handle replacement of main product image (ONLY if a new file was provided) ----------
+        old_image_url = product.get('image_path') if isinstance(product, dict) else product[6]  # best-effort index fallback
+        new_uploaded_key = None
+        new_public_url = None
+        if new_main_file:
+            # Choose a safe filename and key under main/
+            orig = secure_filename(getattr(new_main_file, "filename"))
+            unique = f"{product_id}_{int(time.time())}_{uuid.uuid4().hex[:6]}_{orig}"
+            key = f"products/{product_id}/main/{unique}"
 
-            cursor.execute("SELECT COALESCE(MAX(position), -1) AS m FROM product_images WHERE product_id = %s AND variant_id IS NULL", (product_id,))
-            row = cursor.fetchone()
-            next_pos = (row['m'] if row and row.get('m') is not None else -1) + 1
+            # Upload new file to R2 (private upload, public url returned by upload_to_r2)
+            try:
+                new_public_url = upload_to_r2(new_main_file, key)
+                new_uploaded_key = key
+            except Exception as e:
+                # Upload failed — rollback DB and inform owner
+                if conn:
+                    try:
+                        conn.rollback()
+                    except Exception:
+                        pass
+                current_app.logger.exception("Failed uploading new main image for product %s: %s", product_id, e)
+                flash(f"Failed to upload new image: {e}", "danger")
+                # redirect back to product page
+                vid = _extract_variant_id_from_request()
+                if vid:
+                    return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=vid))
+                return redirect(url_for('main.view_product_detail', product_id=product_id))
 
-            inserted = 0
-            for f in (new_files or []):
-                if not f or not getattr(f, 'filename', None):
-                    continue
-                if not allowed_file(f.filename):
-                    continue
-                orig = secure_filename(f.filename)
-                unique = f"{product_id}_p_{next_pos}_{int(time.time())}_{uuid.uuid4().hex[:6]}"
-                filename = f"{unique}_{orig}"
-                saved_path = os.path.join(UPLOAD_BASE, filename)
+            # Now that upload succeeded, update DB: set image_path and update product_images primary flags and insert new product_images row
+            try:
+                # set other product_images.is_primary = 0 for this product
+                cursor.execute("UPDATE product_images SET is_primary = 0 WHERE product_id = %s", (product_id,))
+
+                # determine next position for product-level images (variant_id IS NULL)
+                cursor.execute("SELECT COALESCE(MAX(position), -1) AS m FROM product_images WHERE product_id = %s AND variant_id IS NULL", (product_id,))
+                row = cursor.fetchone()
+                # row may be dict-like or tuple
+                max_pos = None
+                if isinstance(row, dict):
+                    max_pos = row.get('m')
+                elif row and len(row) >= 1:
+                    max_pos = row[0]
+                next_pos = (max_pos if max_pos is not None else -1) + 1
+
+                # insert new product_images record with is_primary=1
+                cursor.execute(
+                    "INSERT INTO product_images (product_id, variant_id, path, alt_text, position, is_primary) VALUES (%s,%s,%s,%s,%s,%s)",
+                    (product_id, None, new_public_url, None, next_pos, 1)
+                )
+
+                # update products.image_path to new public url
+                cursor.execute("UPDATE products SET image_path = %s, updated_at = (now() AT TIME ZONE 'Asia/Kolkata') WHERE product_id = %s", (new_public_url, product_id))
+
+                # commit DB transaction now (so DB points to the new URL)
+                conn.commit()
+
+                # after commit, delete the previous object from R2 (best-effort)
                 try:
-                    f.save(saved_path)
-                    rel = os.path.join('uploads', 'products', filename).replace(os.path.sep, '/')
-                    is_primary = 1 if (inserted == 0 and not has_primary_product_image(cursor, product_id)) else 0
-                    cursor.execute("INSERT INTO product_images (product_id, variant_id, path, alt_text, position, is_primary) VALUES (%s,%s,%s,%s,%s,%s)",
-                                   (product_id, None, rel, None, next_pos, is_primary))
-                    next_pos += 1
-                    inserted += 1
+                    old_key = _r2_key_from_public_url(old_image_url)
+                    if old_key:
+                        deleted = delete_from_r2(old_key)
+                        if not deleted:
+                            current_app.logger.warning("Could not delete old R2 object for product %s key=%s", product_id, old_key)
                 except Exception as e:
-                    current_app.logger.exception("Failed to save uploaded product image: %s", e)
-                    # continue
+                    current_app.logger.exception("Failed to delete previous product main image for product %s: %s", product_id, e)
 
-        # Set product.image_path fallback from product_images if present
-        cursor.execute("SELECT path FROM product_images WHERE product_id = %s AND variant_id IS NULL ORDER BY is_primary DESC, position ASC LIMIT 1", (product_id,))
-        row = cursor.fetchone()
-        new_image_path = None
-        if row and row.get('path'):
-            new_image_path = row['path'].replace('\\', '/')
-        if new_image_path:
-            cursor.execute("UPDATE products SET image_path = %s WHERE product_id = %s", (new_image_path, product_id))
+                flash("Product updated successfully.", "success")
+                vid = _extract_variant_id_from_request()
+                if vid:
+                    return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=vid))
+                return redirect(url_for('main.view_product_detail', product_id=product_id))
 
-        conn.commit()
-        flash("Product updated successfully.", "success")
+            except Exception as e:
+                # DB update/commit failed after upload — try to remove newly uploaded object to avoid orphaning
+                try:
+                    if new_uploaded_key:
+                        delete_from_r2(new_uploaded_key)
+                except Exception:
+                    current_app.logger.exception("Failed to cleanup newly uploaded object after DB failure: %s", new_uploaded_key)
+                if conn:
+                    try:
+                        conn.rollback()
+                    except Exception:
+                        pass
+                current_app.logger.exception("Database error while updating product image/records for product %s: %s", product_id, e)
+                flash(f"Database error updating product: {e}", "danger")
+                vid = _extract_variant_id_from_request()
+                if vid:
+                    return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=vid))
+                return redirect(url_for('main.view_product_detail', product_id=product_id))
 
-        # Preserve variant selection if present in form/args/referrer
-        vid = _extract_variant_id_from_request()
-        if vid:
-            return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=vid))
         else:
+            # No new main image provided — we only updated non-image fields and possibly deleted selected product_images above.
+            try:
+                conn.commit()
+            except Exception as e:
+                if conn:
+                    try:
+                        conn.rollback()
+                    except Exception:
+                        pass
+                current_app.logger.exception("Failed committing product update (no-image flow) for product %s: %s", product_id, e)
+                flash(f"Database error: {e}", "danger")
+                vid = _extract_variant_id_from_request()
+                if vid:
+                    return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=vid))
+                return redirect(url_for('main.view_product_detail', product_id=product_id))
+
+            flash("Product updated successfully.", "success")
+            vid = _extract_variant_id_from_request()
+            if vid:
+                return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=vid))
             return redirect(url_for('main.view_product_detail', product_id=product_id))
 
-    except mysql.connector.Error as err:
-        if conn:
-            conn.rollback()
-        current_app.logger.exception("MySQL error editing product: %s", err)
-        flash(f"Database error: {err}", "danger")
-        vid = _extract_variant_id_from_request()
-        if vid:
-            return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=vid))
-        return redirect(url_for('main.view_product_detail', product_id=product_id))
     except Exception as e:
+        # Generic error handler
         if conn:
-            conn.rollback()
-        current_app.logger.exception("Unexpected error editing product: %s", e)
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+        current_app.logger.exception("Unexpected error editing product %s: %s", product_id, e)
         flash(f"Unexpected error: {e}", "danger")
         vid = _extract_variant_id_from_request()
         if vid:
@@ -4468,16 +4592,21 @@ def edit_product(product_id):
         return redirect(url_for('main.view_product_detail', product_id=product_id))
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
-# --- Delete a single image (AJAX / owner-only) ---
+# ---------- Delete a single image (AJAX) (updated to delete R2 object) ----------
 @main.route('/product/image/<int:image_id>/delete', methods=['POST'])
 @nocache
 def delete_image(image_id):
-    # owner check
     if 'owner_id' not in session:
         return jsonify({"ok": False, "error": "Owner login required"}), 403
 
@@ -4485,34 +4614,39 @@ def delete_image(image_id):
     cursor = None
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = _get_dict_cursor(conn)
+
+        # fetch image row
         cursor.execute("SELECT image_id, product_id, variant_id, path FROM product_images WHERE image_id = %s", (image_id,))
         row = cursor.fetchone()
         if not row:
             return jsonify({"ok": False, "error": "Image not found"}), 404
 
-        # Remove file from disk where possible
-        path = row.get('path') or ''
-        if path:
-            abs_path = os.path.join(current_app.root_path, 'static', path.replace('/', os.path.sep))
+        # parse key for R2 deletion (if path looks like an R2 public URL)
+        path = row.get('path') if isinstance(row, dict) else (row[3] if len(row) > 3 else None)
+        key = _r2_key_from_public_url(path) if path else None
+
+        # delete DB row inside transaction
+        try:
+            cursor.execute("DELETE FROM product_images WHERE image_id = %s", (image_id,))
+            conn.commit()
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            current_app.logger.exception("DB error deleting product_images row %s: %s", image_id, e)
+            return jsonify({"ok": False, "error": "Database error"}), 500
+
+        # After DB commit, attempt to delete R2 object (best-effort)
+        if key:
             try:
-                if os.path.exists(abs_path):
-                    os.remove(abs_path)
+                delete_from_r2(key)
             except Exception as e:
-                current_app.logger.warning("Failed to delete image file %s: %s", abs_path, e)
-                # continue to delete row anyway
+                current_app.logger.exception("Failed to delete R2 object for image %s key=%s: %s", image_id, key, e)
+                # still return success because DB row deleted; but include warning
+                return jsonify({"ok": True, "deleted": int(image_id), "warning": "Failed to delete remote object"}), 200
 
-        # Delete DB row
-        cursor.execute("DELETE FROM product_images WHERE image_id = %s", (image_id,))
+        return jsonify({"ok": True, "deleted": int(image_id)}), 200
 
-        # If variant_id exists, recompute no. of images positions? (we keep it simple)
-        conn.commit()
-        return jsonify({"ok": True, "deleted": int(image_id)})
-    except mysql.connector.Error as err:
-        if conn:
-            conn.rollback()
-        current_app.logger.exception("MySQL error deleting image: %s", err)
-        return jsonify({"ok": False, "error": str(err)}), 500
     except Exception as e:
         if conn:
             conn.rollback()
@@ -4520,16 +4654,20 @@ def delete_image(image_id):
         return jsonify({"ok": False, "error": str(e)}), 500
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
 
-
-# ---------- Edit variant route (new) ----------
+# ---------- Edit variant route (upload/delete to R2 + DB ACID) ----------
 @main.route('/product/<int:product_id>/variant/<int:variant_id>/edit', methods=['GET', 'POST'])
 @nocache
 def edit_variant(product_id, variant_id):
-    # only ensure owner session exists (single-owner setup)
     if 'owner_id' not in session:
         flash("Please log in as an owner.", "warning")
         return redirect('/login')
@@ -4538,48 +4676,36 @@ def edit_variant(product_id, variant_id):
     cursor = None
     try:
         conn = get_db()
-        cursor = conn.cursor(dictionary=True)
+        cursor = _get_dict_cursor(conn)
 
-        # Confirm product exists
+        # Verify product
         cursor.execute("SELECT product_id, name FROM products WHERE product_id = %s", (product_id,))
         prod = cursor.fetchone()
         if not prod:
             flash("Product not found.", "danger")
             return redirect(url_for('main.view_owner_products'))
 
-        # Fetch the variant to edit
-        cursor.execute("SELECT * FROM product_variants WHERE variant_id = %s AND product_id = %s", (variant_id, product_id))
+        # Fetch variant (lock for update if possible)
+        try:
+            cursor.execute("SELECT * FROM product_variants WHERE variant_id = %s AND product_id = %s FOR UPDATE", (variant_id, product_id))
+        except Exception:
+            cursor.execute("SELECT * FROM product_variants WHERE variant_id = %s AND product_id = %s", (variant_id, product_id))
         variant = cursor.fetchone()
         if not variant:
             flash("Variant not found for this product.", "danger")
             return redirect(url_for('main.view_product_detail', product_id=product_id))
 
-        # GET -> render edit form
         if request.method == 'GET':
-            # fetch variant images
             cursor.execute("SELECT * FROM product_images WHERE variant_id = %s ORDER BY is_primary DESC, position ASC, image_id ASC", (variant_id,))
             v_images = cursor.fetchall() or []
-
-            # fetch product-level images (for display)
             cursor.execute("SELECT * FROM product_images WHERE product_id = %s AND variant_id IS NULL ORDER BY is_primary DESC, position ASC", (product_id,))
             p_images = cursor.fetchall() or []
-
-            # normalize paths for template
             for img in (v_images + p_images):
-                if img.get('path'):
+                if isinstance(img, dict) and img.get('path'):
                     img['path'] = img['path'].replace('\\', '/')
+            return render_template('owner/variant_edit.html', product=prod, variant=variant, variant_images=v_images, product_images=p_images)
 
-            # pass to template (you will need owner/variant_edit.html)
-            return render_template(
-                'owner/variant_edit.html',
-                product=prod,
-                variant=variant,
-                variant_images=v_images,
-                product_images=p_images
-            )
-
-        # POST -> apply updates
-        # Read form fields
+        # POST: apply updates
         sku = (request.form.get('sku') or '').strip() or None
         size = (request.form.get('size') or '').strip() or None
         color = (request.form.get('color') or '').strip() or None
@@ -4598,126 +4724,170 @@ def edit_variant(product_id, variant_id):
         except Exception:
             stock_count = 0
 
-        # Check SKU uniqueness (if a SKU provided)
+        # SKU uniqueness check
         if sku:
             cursor.execute("SELECT 1 FROM product_variants WHERE sku = %s AND variant_id != %s LIMIT 1", (sku, variant_id))
             if cursor.fetchone():
                 flash("SKU already in use by another variant.", "danger")
                 return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=variant_id))
 
-        # Handle image deletions (checkboxes named delete_image_ids[])
-        delete_ids = request.form.getlist('delete_image_ids')
+        # Deletions requested (checkboxes named delete_image_ids)
+        delete_ids = request.form.getlist('delete_image_ids') or []
         try:
             delete_ids = [int(x) for x in delete_ids if str(x).strip() != '']
         except Exception:
             delete_ids = []
 
-        # Files uploaded with input name "variant_images" (multiple)
-        uploaded_files = request.files.getlist('variant_images')
+        # New uploaded files for this variant
+        uploaded_files = request.files.getlist('variant_images') or []
+        # Filter out empty entries
+        uploaded_files = [f for f in uploaded_files if f and getattr(f, 'filename', None) and f.filename.strip()]
 
-        # Begin update transaction
-        # If this variant is set as default, clear other variants' is_default first
-        if is_default_flag:
-            cursor.execute("UPDATE product_variants SET is_default = 0 WHERE product_id = %s", (product_id,))
+        # Pre-check: existing images count for variant (to determine primary logic)
+        cursor.execute("SELECT COUNT(*) AS cnt FROM product_images WHERE variant_id = %s", (variant_id,))
+        row = cursor.fetchone()
+        existing_count = 0
+        if isinstance(row, dict):
+            existing_count = int(row.get('cnt', 0))
+        elif row and len(row) >= 1:
+            existing_count = int(row[0])
 
-        # Update variant row
-        cursor.execute("""
-            UPDATE product_variants
-            SET sku = %s, size = %s, color = %s, color_hex = %s, price = %s, stock_count = %s, is_default = %s
-            WHERE variant_id = %s AND product_id = %s
-        """, (sku, size, color, color_hex, price, stock_count, 1 if is_default_flag else 0, variant_id, product_id))
+        # Prepare to upload files to R2 first
+        uploaded_records = []  # list of dicts: { key, public_url, filename }
+        try:
+            # Upload each file to R2 (collect public URLs)
+            for idx, f in enumerate(uploaded_files):
+                # optional: check allowed_file if you have it
+                try:
+                    filename_safe = secure_filename(getattr(f, "filename"))
+                except Exception:
+                    filename_safe = f"upload_{int(time.time())}_{idx}"
 
-        # Delete selected variant images (and remove files)
-        if delete_ids:
-            # only delete images which belong to this variant and product
-            format_ids = ",".join(["%s"] * len(delete_ids))
-            cursor.execute(f"SELECT image_id, path FROM product_images WHERE image_id IN ({format_ids}) AND variant_id = %s AND product_id = %s",
-                           tuple(delete_ids + [variant_id, product_id]))
-            rows = cursor.fetchall() or []
-            for r in rows:
-                path = r.get('path') or ''
-                if path:
-                    abs_path = os.path.join(current_app.root_path, 'static', path.replace('/', os.path.sep))
-                    try:
-                        if os.path.exists(abs_path):
-                            os.remove(abs_path)
-                    except Exception as e:
-                        current_app.logger.warning("Failed to delete variant image file %s: %s", abs_path, e)
-            # delete from DB
-            cursor.execute(f"DELETE FROM product_images WHERE image_id IN ({format_ids}) AND variant_id = %s AND product_id = %s",
-                           tuple(delete_ids + [variant_id, product_id]))
+                unique = f"{product_id}_var{variant_id}_{int(time.time())}_{uuid.uuid4().hex[:6]}_{filename_safe}"
+                key = f"products/{product_id}/variants/{variant_id}/{unique}"
+                try:
+                    public_url = upload_to_r2(f, key)
+                    uploaded_records.append({"key": key, "public_url": public_url})
+                except Exception as e:
+                    # cleanup any previously uploaded objects in this loop
+                    for rec in uploaded_records:
+                        try:
+                            delete_from_r2(rec.get('key'))
+                        except Exception:
+                            current_app.logger.exception("Failed cleanup after upload error for key=%s", rec.get('key'))
+                    raise
 
-        # Save uploaded variant images
-        if uploaded_files:
-            UPLOAD_BASE = os.path.join(current_app.root_path, 'static', 'uploads', 'products')
-            os.makedirs(UPLOAD_BASE, exist_ok=True)
+            # All uploads succeeded — now perform DB updates in transaction
+            # If this variant is set as default, clear other variants first
+            if is_default_flag:
+                cursor.execute("UPDATE product_variants SET is_default = 0 WHERE product_id = %s", (product_id,))
 
-            # find next position index for this variant
+            # Update variant row fields
+            cursor.execute("""
+                UPDATE product_variants
+                SET sku = %s, size = %s, color = %s, color_hex = %s, price = %s, stock_count = %s, is_default = %s, updated_at = (now() AT TIME ZONE 'Asia/Kolkata')
+                WHERE variant_id = %s AND product_id = %s
+            """, (sku, size, color, color_hex, price, stock_count, 1 if is_default_flag else 0, variant_id, product_id))
+
+            # Handle deletion of selected variant images:
+            delete_old_keys = []  # collect keys to delete AFTER commit
+            if delete_ids:
+                fmt = ",".join(["%s"] * len(delete_ids))
+                cursor.execute(f"SELECT image_id, path FROM product_images WHERE image_id IN ({fmt}) AND variant_id = %s AND product_id = %s",
+                               tuple(delete_ids + [variant_id, product_id]))
+                rows = cursor.fetchall() or []
+                # remove DB rows
+                cursor.execute(f"DELETE FROM product_images WHERE image_id IN ({fmt}) AND variant_id = %s AND product_id = %s",
+                               tuple(delete_ids + [variant_id, product_id]))
+                # collect keys for deletion
+                for r in rows:
+                    path = r.get('path') if isinstance(r, dict) else (r[2] if len(r) > 2 else None)
+                    if path:
+                        k = _r2_key_from_public_url(path)
+                        if k:
+                            delete_old_keys.append(k)
+
+            # Insert uploaded records into product_images
+            inserted = 0
+            # figure starting position for variant images
             cursor.execute("SELECT COALESCE(MAX(position), -1) AS m FROM product_images WHERE variant_id = %s", (variant_id,))
             currow = cursor.fetchone()
-            next_pos = (currow['m'] if currow and currow.get('m') is not None else -1) + 1
+            maxpos = None
+            if isinstance(currow, dict):
+                maxpos = currow.get('m')
+            elif currow and len(currow) >= 1:
+                maxpos = currow[0]
+            next_pos = (maxpos if maxpos is not None else -1) + 1
 
-            vpos = next_pos
-            inserted = 0
-            for f in (uploaded_files or []):
-                if not f or not getattr(f, 'filename', None):
-                    continue
-                if not allowed_file(f.filename):
-                    # skip invalid file
-                    continue
-                orig = secure_filename(f.filename)
-                unique = f"{product_id}_var{variant_id}_{vpos}_{int(time.time())}_{uuid.uuid4().hex[:6]}"
-                filename = f"{unique}_{orig}"
-                saved_path = os.path.join(UPLOAD_BASE, filename)
+            # If there were no images before (existing_count == 0) and uploaded_records not empty, mark the first as is_primary
+            for rec_idx, rec in enumerate(uploaded_records):
+                is_primary = 1 if (existing_count == 0 and rec_idx == 0) else 0
+                cursor.execute(
+                    "INSERT INTO product_images (product_id, variant_id, path, alt_text, position, is_primary) VALUES (%s,%s,%s,%s,%s,%s)",
+                    (product_id, variant_id, rec['public_url'], None, next_pos, is_primary)
+                )
+                next_pos += 1
+                inserted += 1
+
+            # Recalculate product.stock_count (sum of variant stock_count)
+            cursor.execute("SELECT COALESCE(SUM(stock_count), 0) AS tot FROM product_variants WHERE product_id = %s", (product_id,))
+            row = cursor.fetchone()
+            total_stock = int(row['tot'] if isinstance(row, dict) and row.get('tot') is not None else (row[0] if row else 0))
+            cursor.execute("UPDATE products SET stock_count = %s, updated_at = (now() AT TIME ZONE 'Asia/Kolkata') WHERE product_id = %s", (total_stock, product_id))
+
+            # Commit transaction
+            conn.commit()
+
+            # After commit: delete old R2 objects (best-effort)
+            for k in delete_old_keys:
                 try:
-                    f.save(saved_path)
-                    rel = os.path.join('uploads', 'products', filename).replace(os.path.sep, '/')
-                    # is_primary -> if this is the first image for this variant, mark primary
-                    is_primary = 1 if (vpos == next_pos and not inserted) else 0
-                    cursor.execute("INSERT INTO product_images (product_id, variant_id, path, alt_text, position, is_primary) VALUES (%s,%s,%s,%s,%s,%s)",
-                                   (product_id, variant_id, rel, None, vpos, is_primary))
-                    vpos += 1
-                    inserted += 1
-                except Exception as e:
-                    current_app.logger.exception("Failed saving uploaded variant image: %s", e)
-                    # continue with other files
+                    delete_from_r2(k)
+                except Exception:
+                    current_app.logger.exception("Failed to delete old variant image key=%s after commit", k)
 
-        # Recalculate product stock_count (sum of variant stock_count)
-        cursor.execute("SELECT COALESCE(SUM(stock_count), 0) AS tot FROM product_variants WHERE product_id = %s", (product_id,))
-        row = cursor.fetchone()
-        total_stock = int(row['tot'] if row and row.get('tot') is not None else 0)
-        cursor.execute("UPDATE products SET stock_count = %s WHERE product_id = %s", (total_stock, product_id))
+            flash("Variant updated successfully.", "success")
+            return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=variant_id))
 
-        conn.commit()
-        flash("Variant updated successfully.", "success")
+        except Exception as e:
+            # Any exception in uploads or DB updates:
+            if conn:
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+            current_app.logger.exception("Error editing variant (R2/DB) product=%s variant=%s: %s", product_id, variant_id, e)
+            flash(f"Error updating variant: {e}", "danger")
+            # cleanup: delete any newly uploaded objects (if present in uploaded_records)
+            try:
+                for rec in uploaded_records:
+                    try:
+                        delete_from_r2(rec.get('key'))
+                    except Exception:
+                        current_app.logger.exception("Failed to cleanup uploaded object %s", rec.get('key'))
+            except Exception:
+                pass
+            return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=variant_id))
 
-        # Always return to product page with this variant selected
-        return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=variant_id))
-
-    except mysql.connector.Error as err:
-        if conn:
-            conn.rollback()
-        current_app.logger.exception("MySQL error editing variant: %s", err)
-        flash(f"Database error editing variant: {err}", "danger")
-        # try to preserve variant selection if possible
-        vid = variant_id or _extract_variant_id_from_request()
-        if vid:
-            return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=vid))
-        return redirect(url_for('main.view_product_detail', product_id=product_id))
     except Exception as e:
         if conn:
-            conn.rollback()
+            try:
+                conn.rollback()
+            except Exception:
+                pass
         current_app.logger.exception("Unexpected error editing variant: %s", e)
         flash(f"Unexpected error: {e}", "danger")
-        vid = variant_id or _extract_variant_id_from_request()
-        if vid:
-            return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=vid))
-        return redirect(url_for('main.view_product_detail', product_id=product_id))
+        return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=variant_id))
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 
 # ---------- Delete variant route ----------
@@ -4730,56 +4900,106 @@ def delete_variant(product_id, variant_id):
 
     conn = None
     cursor = None
+    r2_keys_to_delete = []
     try:
         conn = get_db()
-        cursor = conn.cursor()
+        # try to get a dict-like cursor if available for nicer access
+        try:
+            from psycopg2.extras import RealDictCursor
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+        except Exception:
+            try:
+                cursor = conn.cursor(dictionary=True)
+            except Exception:
+                cursor = conn.cursor()
 
-        # Fetch all image paths for this variant
-        cursor.execute("SELECT path FROM product_images WHERE variant_id = %s", (variant_id,))
-        rows = cursor.fetchall()
-        # Delete files from disk
-        for (path,) in rows:
+        # Fetch all image paths for this variant (collect R2 keys to delete later)
+        cursor.execute("SELECT image_id, path FROM product_images WHERE variant_id = %s", (variant_id,))
+        rows = cursor.fetchall() or []
+
+        # derive R2 keys for deletion (but do not delete yet)
+        for r in rows:
+            # r may be dict-like or tuple
+            path = None
+            if isinstance(r, dict):
+                path = r.get('path')
+            else:
+                # assume tuple (image_id, path)
+                if len(r) >= 2:
+                    path = r[1]
             if not path:
                 continue
-            abs_path = os.path.join(current_app.root_path, 'static', path.replace('/', os.path.sep))
-            try:
-                if os.path.exists(abs_path):
-                    os.remove(abs_path)
-            except Exception as e:
-                # log but continue
-                print(f"[WARN] Failed to remove file {abs_path}: {e}")
+            key = _r2_key_from_public_url(path)
+            if key:
+                r2_keys_to_delete.append(key)
 
-        # Remove image rows from DB
-        cursor.execute("DELETE FROM product_images WHERE variant_id = %s", (variant_id,))
+        # Begin DB transaction: remove image rows, variant row, update product stock
+        try:
+            # delete image rows for this variant
+            cursor.execute("DELETE FROM product_images WHERE variant_id = %s", (variant_id,))
 
-        # Remove variant row
-        cursor.execute("DELETE FROM product_variants WHERE variant_id = %s AND product_id = %s", (variant_id, product_id))
+            # delete the variant row (ensure product match)
+            cursor.execute("DELETE FROM product_variants WHERE variant_id = %s AND product_id = %s", (variant_id, product_id))
 
-        # Recalculate total product stock from remaining variants and update products table
-        cursor.execute("SELECT COALESCE(SUM(stock_count),0) FROM product_variants WHERE product_id = %s", (product_id,))
-        total_stock = cursor.fetchone()[0] or 0
-        cursor.execute("UPDATE products SET stock_count = %s WHERE product_id = %s", (total_stock, product_id))
+            # Recalculate total product stock from remaining variants and update products table
+            cursor.execute("SELECT COALESCE(SUM(stock_count),0) AS tot FROM product_variants WHERE product_id = %s", (product_id,))
+            tot_row = cursor.fetchone()
+            total_stock = 0
+            if isinstance(tot_row, dict):
+                total_stock = int(tot_row.get('tot', 0) or 0)
+            else:
+                # tuple
+                total_stock = int(tot_row[0] if tot_row and tot_row[0] is not None else 0)
 
-        conn.commit()
-        flash("Variant deleted successfully.", "success")
-    except mysql.connector.Error as err:
-        if conn:
-            conn.rollback()
-        print("[MYSQL ERROR] deleting variant:", err)
-        flash(f"Error deleting variant: {err}", "danger")
+            cursor.execute("UPDATE products SET stock_count = %s, updated_at = (now() AT TIME ZONE 'Asia/Kolkata') WHERE product_id = %s", (total_stock, product_id))
+
+            # commit DB changes
+            conn.commit()
+            flash("Variant deleted successfully.", "success")
+
+        except Exception as db_err:
+            if conn:
+                conn.rollback()
+            current_app.logger.exception("DB error deleting variant %s for product %s: %s", variant_id, product_id, db_err)
+            flash(f"Error deleting variant: {db_err}", "danger")
+            return redirect(url_for('main.view_product_detail', product_id=product_id))
+
     except Exception as e:
+        # any unexpected error in fetch phase
         if conn:
-            conn.rollback()
-        print("[ERROR] deleting variant:", e)
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+        current_app.logger.exception("Unexpected error while preparing to delete variant %s of product %s: %s", variant_id, product_id, e)
         flash(f"Unexpected error: {e}", "danger")
+        return redirect(url_for('main.view_product_detail', product_id=product_id))
     finally:
+        # close DB resources
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
 
-    # After deletion we redirect to the product page without a variant_id (deleted)
+    # After successful DB commit, attempt to delete the remote R2 objects (best-effort).
+    # We do this after commit to avoid the risk of deleting remote objects and then failing DB commit.
+    for key in r2_keys_to_delete:
+        try:
+            ok = delete_from_r2(key)
+            if not ok:
+                current_app.logger.warning("delete_from_r2 returned False for key=%s", key)
+        except Exception as de:
+            current_app.logger.exception("Failed to delete R2 object key=%s for deleted variant %s: %s", key, variant_id, de)
+
+    # Redirect to the product page without a variant id (deleted)
     return redirect(url_for('main.view_product_detail', product_id=product_id))
+
 
 
 # ---------- Add variant route ----------
@@ -4812,79 +5032,195 @@ def add_variant(product_id):
 
     conn = None
     cursor = None
+    uploaded_r2_keys = []   # keep track of uploaded keys for cleanup if needed
     try:
         conn = get_db()
-        cursor = conn.cursor()
+        # try to obtain a dict-like cursor if available for nicer access, fallback otherwise
+        try:
+            # If using psycopg2 wrapper, this may work; if not, cursor() fallback used
+            from psycopg2.extras import RealDictCursor
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+        except Exception:
+            try:
+                cursor = conn.cursor(dictionary=True)
+            except Exception:
+                cursor = conn.cursor()
 
-        # If SKU not provided, generate a SKU from product sku + timestamp fallback
+        # If SKU not provided, derive from product.sku or fallback
         cursor.execute("SELECT sku FROM products WHERE product_id = %s", (product_id,))
         prod_row = cursor.fetchone()
-        prod_sku = prod_row[0] if prod_row and prod_row[0] else f"P{product_id}"
+        prod_sku = None
+        if prod_row:
+            if isinstance(prod_row, dict):
+                prod_sku = prod_row.get('sku')
+            else:
+                # tuple-like
+                prod_sku = prod_row[0] if len(prod_row) > 0 else None
+        prod_sku = prod_sku or f"P{product_id}"
+
         if not vsku:
             vsku = f"{prod_sku}{int(time.time()) % 10000}"
 
-        # insert variant
-        cursor.execute("""
-            INSERT INTO product_variants
-            (product_id, sku, size, color, price, color_hex, stock_count, is_default)
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
-        """, (product_id, vsku, size, color, price, color_hex, vstock, 0))
-        variant_id = cursor.lastrowid
+        # Insert variant and obtain variant_id in a DB-portable way
+        # Use RETURNING for Postgres-friendly behavior; wrapper may support it.
+        try:
+            cursor.execute("""
+                INSERT INTO product_variants
+                  (product_id, sku, size, color, price, color_hex, stock_count, is_default)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                RETURNING variant_id
+            """, (product_id, vsku, size, color, price, color_hex, vstock, 0))
+            ins_row = cursor.fetchone()
+            if ins_row:
+                # ins_row may be dict or tuple
+                if isinstance(ins_row, dict):
+                    variant_id = ins_row.get('variant_id') or list(ins_row.values())[0]
+                else:
+                    variant_id = ins_row[0]
+            else:
+                # fallback to lastrowid (MySQL-style wrapper)
+                variant_id = getattr(cursor, 'lastrowid', None)
+        except Exception:
+            # Some DB drivers (MySQL older) don't support RETURNING; fallback to separate insert + lastrowid
+            cursor.execute("""
+                INSERT INTO product_variants
+                  (product_id, sku, size, color, price, color_hex, stock_count, is_default)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+            """, (product_id, vsku, size, color, price, color_hex, vstock, 0))
+            variant_id = getattr(cursor, 'lastrowid', None)
+            # if still None, try to fetch by unique fields (best-effort)
+            if not variant_id:
+                cursor.execute("SELECT variant_id FROM product_variants WHERE product_id = %s AND sku = %s ORDER BY created_at DESC LIMIT 1", (product_id, vsku))
+                row = cursor.fetchone()
+                if row:
+                    if isinstance(row, dict):
+                        variant_id = row.get('variant_id') or list(row.values())[0]
+                    else:
+                        variant_id = row[0]
 
-        # prepare upload dir
-        UPLOAD_BASE = os.path.join(current_app.root_path, 'static', 'uploads', 'products')
-        os.makedirs(UPLOAD_BASE, exist_ok=True)
+        if not variant_id:
+            raise Exception("Could not determine variant_id after insert.")
 
-        # save each file and insert into product_images
-        vpos = 0
+        # POSITION: find next position index for this variant (if any)
+        cursor.execute("SELECT COALESCE(MAX(position), -1) AS m FROM product_images WHERE variant_id = %s", (variant_id,))
+        p_row = cursor.fetchone()
+        if p_row:
+            if isinstance(p_row, dict):
+                next_pos = (p_row.get('m') if p_row.get('m') is not None else -1) + 1
+            else:
+                next_pos = ((p_row[0] if p_row[0] is not None else -1) + 1)
+        else:
+            next_pos = 0
+
+        # If no files uploaded, simply update product stock & commit
+        if not files or all(not f or not getattr(f, 'filename', None) for f in files):
+            # update product stock_count (recalculate sum)
+            cursor.execute("SELECT COALESCE(SUM(stock_count),0) AS tot FROM product_variants WHERE product_id = %s", (product_id,))
+            tot_row = cursor.fetchone()
+            total_stock = 0
+            if tot_row:
+                if isinstance(tot_row, dict):
+                    total_stock = int(tot_row.get('tot', 0) or 0)
+                else:
+                    total_stock = int(tot_row[0] if tot_row[0] is not None else 0)
+            cursor.execute("UPDATE products SET stock_count = %s, updated_at = (now() AT TIME ZONE 'Asia/Kolkata') WHERE product_id = %s", (total_stock, product_id))
+
+            conn.commit()
+            flash("Variant added successfully.", "success")
+            return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=variant_id))
+
+        # Upload files to R2 and insert product_images rows (all in the same DB transaction)
+        vpos = next_pos
+        inserted_count = 0
         for f in (files or []):
-            if f and getattr(f, 'filename', None) and allowed_file(f.filename):
-                orig = secure_filename(f.filename)
-                unique = f"{product_id}_var{variant_id}_{vpos}_{int(time.time())}_{uuid.uuid4().hex[:6]}"
-                filename = f"{unique}_{orig}"
-                saved_path = os.path.join(UPLOAD_BASE, filename)
-                try:
-                    f.save(saved_path)
-                    rel = os.path.join('uploads', 'products', filename).replace(os.path.sep, '/')
-                    # is_primary: if this is the very first image for this variant, mark as primary
-                    is_primary = 1 if vpos == 0 else 0
-                    cursor.execute(
-                        "INSERT INTO product_images (product_id, variant_id, path, alt_text, position, is_primary) VALUES (%s,%s,%s,%s,%s,%s)",
-                        (product_id, variant_id, rel, None, vpos, is_primary)
-                    )
-                    vpos += 1
-                except Exception as e:
-                    print("[ERROR] saving variant image:", e)
-                    # continue with other files
+            if not f or not getattr(f, 'filename', None):
+                continue
+            if not allowed_file(f.filename):
+                # skip invalid extension
+                continue
+            orig = secure_filename(f.filename)
+            unique = f"{product_id}_var{variant_id}_{vpos}_{int(time.time())}_{uuid.uuid4().hex[:6]}"
+            filename = f"{unique}_{orig}"
+            # key under the product's main/variants structure:
+            # user asked: product images go in "products/{product_id}/variants/{variant_id}/..."
+            key = f"products/{product_id}/variants/{variant_id}/{filename}"
+            try:
+                public_url = upload_to_r2(f, key)  # may raise
+                # remember key in case we need to cleanup
+                uploaded_r2_keys.append(key)
 
-        # update product stock_count (recalculate sum)
-        cursor.execute("SELECT COALESCE(SUM(stock_count),0) FROM product_variants WHERE product_id = %s", (product_id,))
-        total_stock = cursor.fetchone()[0] or 0
-        cursor.execute("UPDATE products SET stock_count = %s WHERE product_id = %s", (total_stock, product_id))
+                # is_primary: if this is the first inserted image for this variant mark primary
+                is_primary = 1 if (inserted_count == 0) else 0
 
+                # Insert DB row using public_url as path
+                cursor.execute(
+                    "INSERT INTO product_images (product_id, variant_id, path, alt_text, position, is_primary) VALUES (%s,%s,%s,%s,%s,%s)",
+                    (product_id, variant_id, public_url, None, vpos, is_primary)
+                )
+                vpos += 1
+                inserted_count += 1
+            except Exception as up_err:
+                # Something went wrong uploading or inserting -> rollback & cleanup uploaded R2 objects
+                current_app.logger.exception("Failed uploading/inserting variant image for product %s variant %s: %s", product_id, variant_id, up_err)
+                if conn:
+                    try:
+                        conn.rollback()
+                    except Exception:
+                        pass
+                # attempt to delete any uploaded objects so far
+                for k in uploaded_r2_keys:
+                    try:
+                        delete_from_r2(k)
+                    except Exception:
+                        current_app.logger.exception("Failed to cleanup R2 key %s after upload error", k)
+                flash(f"Error saving variant image: {up_err}", "danger")
+                return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=variant_id))
+
+        # Recalculate product stock_count (sum of variant stock_count)
+        cursor.execute("SELECT COALESCE(SUM(stock_count),0) AS tot FROM product_variants WHERE product_id = %s", (product_id,))
+        tot_row = cursor.fetchone()
+        total_stock = 0
+        if tot_row:
+            if isinstance(tot_row, dict):
+                total_stock = int(tot_row.get('tot', 0) or 0)
+            else:
+                total_stock = int(tot_row[0] if tot_row[0] is not None else 0)
+        cursor.execute("UPDATE products SET stock_count = %s, updated_at = (now() AT TIME ZONE 'Asia/Kolkata') WHERE product_id = %s", (total_stock, product_id))
+
+        # All good -> commit
         conn.commit()
         flash("Variant added successfully.", "success")
 
         # After adding, redirect to product detail with the newly created variant selected
         return redirect(url_for('main.view_product_detail', product_id=product_id, variant_id=variant_id))
 
-    except mysql.connector.Error as err:
-        if conn:
-            conn.rollback()
-        print("[MYSQL ERROR] adding variant:", err)
-        flash(f"Error adding variant: {err}", "danger")
-        return redirect(url_for('main.view_product_detail', product_id=product_id))
     except Exception as e:
+        # catch-all: rollback & cleanup uploaded objects
+        current_app.logger.exception("Unexpected error adding variant for product %s: %s", product_id, e)
         if conn:
-            conn.rollback()
-        print("[ERROR] adding variant:", e)
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+        for k in uploaded_r2_keys:
+            try:
+                delete_from_r2(k)
+            except Exception:
+                current_app.logger.exception("Failed to cleanup R2 key %s after unexpected error", k)
         flash(f"Unexpected error: {e}", "danger")
         return redirect(url_for('main.view_product_detail', product_id=product_id))
     finally:
         if cursor:
-            cursor.close()
+            try:
+                cursor.close()
+            except Exception:
+                pass
         if conn:
-            conn.close()
+            try:
+                conn.close()
+            except Exception:
+                pass
+
 
 # Delete a product
 
@@ -4910,31 +5246,48 @@ def delete_product(product_id):
             flash("Product not found", "danger")
             return redirect(url_for('main.view_owner_products'))
 
-        # fetch all image rows (product-level and variant-level) so we can remove files
+        # fetch all image rows (product-level and variant-level) so we can remove from R2
         cursor.execute("SELECT image_id, path FROM product_images WHERE product_id = %s", (product_id,))
         rows = cursor.fetchall() or []
+
+        # collect unique R2 keys to delete
+        r2_keys_to_delete = set()
 
         for r in rows:
             path = r.get('path') or ''
             if not path:
                 continue
-            # normalize path and build absolute path inside static/
-            abs_path = os.path.join(current_app.root_path, 'static', path.replace('/', os.path.sep))
-            try:
-                if os.path.exists(abs_path):
-                    os.remove(abs_path)
-            except Exception as ex:
-                current_app.logger.warning("Failed to remove product_images file %s: %s", abs_path, ex)
 
-        # also remove the standalone products.image_path (if set and different from product_images)
+            # try to derive R2 key from stored path/public url
+            try:
+                key = _r2_key_from_public_url(path)
+                if key:
+                    r2_keys_to_delete.add(key)
+                else:
+                    current_app.logger.debug("Could not derive R2 key from product_images.path: %s", path)
+            except Exception as ex:
+                current_app.logger.debug("Failed to compute R2 key for path %s : %s", path, ex)
+
+        # also consider the standalone products.image_path (if set and different from product_images)
         prod_img = product.get('image_path') or ''
         if prod_img:
-            abs_prod_img = os.path.join(current_app.root_path, 'static', prod_img.replace('/', os.path.sep))
             try:
-                if os.path.exists(abs_prod_img):
-                    os.remove(abs_prod_img)
+                key = _r2_key_from_public_url(prod_img)
+                if key:
+                    r2_keys_to_delete.add(key)
+                else:
+                    current_app.logger.debug("Could not derive R2 key from products.image_path: %s", prod_img)
             except Exception as ex:
-                current_app.logger.warning("Failed to remove products.image_path file %s: %s", abs_prod_img, ex)
+                current_app.logger.debug("Failed to compute R2 key for product.image_path %s : %s", prod_img, ex)
+
+        # Attempt to delete collected R2 objects (best-effort; log failures)
+        for k in list(r2_keys_to_delete):
+            try:
+                ok = delete_from_r2(k)
+                if not ok:
+                    current_app.logger.warning("delete_from_r2 reported failure for key: %s", k)
+            except Exception as ex:
+                current_app.logger.exception("Exception while deleting R2 key %s: %s", k, ex)
 
         # Now delete the product row (assumes FK cascade will remove product_images/product_variants)
         cursor.execute("DELETE FROM products WHERE product_id = %s", (product_id,))
@@ -4956,6 +5309,7 @@ def delete_product(product_id):
             cursor.close()
         if conn:
             conn.close()
+
 
 # --------------------- View and manage orders (customer and owner) ---------------------
 

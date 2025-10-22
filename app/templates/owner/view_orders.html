@@ -166,7 +166,7 @@
                              onkeypress="if(event.key==='Enter' || event.key===' '){ window.location='/product/{{ item.product_id }}' + ({% if item.variant_id %} '?variant_id={{ item.variant_id }}' {% else %} '' {% endif %}); }"
                         >
                           {% if item.image_path %}
-                            <img src="{{ url_for('static', filename=item.image_path.replace('\\','/')) }}" class="order-img" alt="{{ item.product_name }}">
+                            <img src="{{ item.image_path.replace('\\','/') }}" class="order-img" alt="{{ item.product_name }}">
                           {% else %}
                             <div class="no-image-box">No Image</div>
                           {% endif %}
