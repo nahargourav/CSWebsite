@@ -400,13 +400,13 @@ db_from_env = True
 
 def get_database_url():
     if db_from_env:
-        db = "postgresql://my_user:8SUWSufu7kwfowzU5C74vgzUmFbciJRj@dpg-d3qvu3ili9vc73cn8kk0-a.singapore-postgres.render.com/myapp_db_dcg7"
+        db = "postgresql://postgres.pxiezxcknjmkgnpgugmk:XJNAcJvtdoOz5JCo@aws-1-ap-south-1.pooler.supabase.com:5432/postgres"
     else:
         db = None
 
     # fallback hardcoded (only used if env missing)
     if not db:
-        db = "postgresql://my_user:8SUWSufu7kwfowzU5C74vgzUmFbciJRj@dpg-d3qvu3ili9vc73cn8kk0-a.singapore-postgres.render.com/myapp_db_dcg7"
+        db = "postgresql://postgres.pxiezxcknjmkgnpgugmk:XJNAcJvtdoOz5JCo@aws-1-ap-south-1.pooler.supabase.com:5432/postgres"
 
     if db.startswith("postgres://"):
         db = db.replace("postgres://", "postgresql://", 1)
@@ -626,7 +626,7 @@ def preview_list(lst, name, n=2):
         print(f"  ({i}) {preview}...")
 
 def main():
-    db_url = "postgresql://my_user:8SUWSufu7kwfowzU5C74vgzUmFbciJRj@dpg-d3qvu3ili9vc73cn8kk0-a.singapore-postgres.render.com/myapp_db_dcg7"
+    db_url = "postgresql://postgres.pxiezxcknjmkgnpgugmk:XJNAcJvtdoOz5JCo@aws-1-ap-south-1.pooler.supabase.com:5432/postgres"
     print("Using DATABASE_URL:", mask_db_url(db_url))
 
     statements = extract_statements(DDL)
