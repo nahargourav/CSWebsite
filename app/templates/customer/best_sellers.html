@@ -260,6 +260,30 @@
     let currentIndex = 0; // show first item initially (index 0)
     let prevEl = null, currEl = null, nextEl = null;
 
+    // helper to reset a card's "buried" transform to default
+    function setBuriedTransform(el) {
+      if (!el) return;
+      el.style.transform = 'scale(0.98) translateY(8px)';
+    }
+
+    // choose which neighbour should be directly under the current card
+    // reveal: 'next' | 'prev' | null -> null = default (next under)
+    function setUnderOrder(reveal) {
+      if (reveal === 'prev') {
+        if (prevEl) { prevEl.style.zIndex = '12'; setBuriedTransform(prevEl); }
+        if (nextEl) { nextEl.style.zIndex = '8'; setBuriedTransform(nextEl); }
+      } else if (reveal === 'next') {
+        if (nextEl) { nextEl.style.zIndex = '12'; setBuriedTransform(nextEl); }
+        if (prevEl) { prevEl.style.zIndex = '8'; setBuriedTransform(prevEl); }
+      } else {
+        // default order (next under current)
+        if (prevEl) prevEl.style.zIndex = '8';
+        if (nextEl) nextEl.style.zIndex = '12';
+        setBuriedTransform(prevEl);
+        setBuriedTransform(nextEl);
+      }
+    }
+
     function createCardForIndex(idx){
       if (idx === null || idx === undefined || idx < 0 || idx >= n) return null;
       const v = variants[idx];
@@ -346,26 +370,26 @@
 
       // append prev (if exists), then next (if exists), then current last so it's top
       if (prevEl) {
-        // prev should be lowest (farthest back)
         prevEl.style.zIndex = '8';
         prevEl.style.transform = 'scale(0.98) translateY(8px)';
         mobileRoot.appendChild(prevEl);
       }
       if (nextEl) {
-        // next must be directly under current so it reveals when current moves up
         nextEl.style.zIndex = '12';
         nextEl.style.transform = 'scale(0.98) translateY(8px)';
         mobileRoot.appendChild(nextEl);
       }
       if (currEl) {
-        // current always on top
         currEl.style.zIndex = '20';
         currEl.style.transform = '';
         mobileRoot.appendChild(currEl);
       }
 
-      // update wishlist state for current only
-      setTimeout(updateTopWishlistStatus, 90);
+      // ensure under-order default (next under)
+      setUnderOrder(null);
+
+      // ensure top wishlist state for current
+      setTimeout(updateTopWishlistStatus, 80);
     }
 
     // update wishlist status only for current card
@@ -417,7 +441,15 @@
       if (!dragMode){
         if (Math.abs(dx) > axisDetectPx || Math.abs(dy) > axisDetectPx){
           dragMode = (Math.abs(dx) > Math.abs(dy)) ? 'horizontal' : 'vertical';
+          // when we first discover vertical drag, pick which card should sit under the current
+          if (dragMode === 'vertical') {
+            if (dy > 0) setUnderOrder('prev');   // pulling down -> reveal previous under
+            else if (dy < 0) setUnderOrder('next'); // pulling up -> reveal next under
+          }
         }
+      } else if (dragMode === 'vertical') {
+        // if direction changed mid-drag, update under-order
+        if (dy > 0) setUnderOrder('prev'); else if (dy < 0) setUnderOrder('next');
       }
 
       if (dragMode === 'horizontal'){
@@ -531,14 +563,16 @@
         if (active._actionHeart) active._actionHeart.classList.remove('wished');
         if (active._actionCart) active._actionCart.classList.remove('wished');
         // reset buried card transforms (in case parallax nudged them)
-        if (nextEl) nextEl.style.transform = 'scale(0.98) translateY(8px)';
-        if (prevEl) prevEl.style.transform = 'scale(0.98) translateY(8px)';
+        if (nextEl) setBuriedTransform(nextEl);
+        if (prevEl) setBuriedTransform(prevEl);
       }
 
       // clean parallax transforms after a short delay to let animation settle
       setTimeout(()=> {
-        if (nextEl) nextEl.style.transform = 'scale(0.98) translateY(8px)';
-        if (prevEl) prevEl.style.transform = 'scale(0.98) translateY(8px)';
+        if (nextEl) setBuriedTransform(nextEl);
+        if (prevEl) setBuriedTransform(prevEl);
+        // restore default stacking (next under) AFTER interaction
+        setUnderOrder(null);
       }, 300);
 
       active = null; dragMode = null;
