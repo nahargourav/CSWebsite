@@ -1979,6 +1979,8 @@ def cart_add():
         if clamped:
             flash(f"Quantity reduced to available stock ({max_avail}).", "info")
         flash("Added to cart", "success")
+        return redirect(url_for('main.view_prod_detail', product_id=product_id, variant_id=variant_id))
+
 
 
 # NEW endpoint: update cart item quantity (AJAX)
@@ -2073,6 +2075,101 @@ def cart_update_qty():
             break
 
     return jsonify({'ok': True, 'message': 'Cart updated.', 'cart_count': cart_count, 'cart_item_qty': current_qty}), 200
+
+
+
+@main.route('/remove_cart_ajax', methods=['POST'])
+@nocache
+def remove_cart_ajax():
+    """
+    AJAX-friendly endpoint to remove a cart item.
+
+    Accepts form-encoded or JSON body with either:
+      - cart_item_id
+    OR:
+      - product_id and variant_id
+
+    Responses:
+      - 401 JSON with redirect_url if user not logged in
+      - 400 JSON if missing parameter(s)
+      - 200 JSON with ok: True when removed (includes updated cart_count)
+      - 404 JSON with ok: False when item not found (includes current cart_count)
+    """
+    # require login (same behavior as original but return JSON)
+    if 'customer_id' not in session:
+        # client can redirect to login URL provided
+        return jsonify({
+            'ok': False,
+            'message': 'Authentication required.',
+            'redirect_url': url_for('main.login')
+        }), 401
+
+    # Support both form-encoded and JSON payloads
+    body_json = request.get_json(silent=True) or {}
+    form = request.form or {}
+
+    # First, try cart_item_id (backwards compatible)
+    cart_item_id = None
+    if 'cart_item_id' in form:
+        cart_item_id = form.get('cart_item_id')
+    else:
+        cart_item_id = body_json.get('cart_item_id')
+
+    # If cart_item_id provided, remove by that as before
+    cart = session.get('cart', []) or []
+
+    if cart_item_id:
+        new_cart = [it for it in cart if str(it.get('cart_item_id')) != str(cart_item_id)]
+        removed = len(new_cart) != len(cart)
+        session['cart'] = new_cart
+        session.modified = True
+        cart_count = sum(int(i.get('qty', 0)) for i in new_cart)
+
+        if removed:
+            return jsonify({
+                'ok': True,
+                'message': 'Item removed from cart.',
+                'cart_item_id': cart_item_id,
+                'cart_count': cart_count
+            }), 200
+        else:
+            return jsonify({
+                'ok': False,
+                'message': 'Item not found in cart.',
+                'cart_item_id': cart_item_id,
+                'cart_count': cart_count
+            }), 404
+
+    # Otherwise, support removal by product_id + variant_id
+    product_id = form.get('product_id') or body_json.get('product_id')
+    variant_id = form.get('variant_id') or body_json.get('variant_id')
+
+    if not product_id or not variant_id:
+        return jsonify({'ok': False, 'message': 'Missing cart_item_id or product_id+variant_id.'}), 400
+
+    # Remove items matching both product_id and variant_id (string comparison)
+    new_cart = [it for it in cart if not (str(it.get('product_id')) == str(product_id) and str(it.get('variant_id')) == str(variant_id))]
+    removed = len(new_cart) != len(cart)
+    session['cart'] = new_cart
+    session.modified = True
+    cart_count = sum(int(i.get('qty', 0)) for i in new_cart)
+
+    if removed:
+        return jsonify({
+            'ok': True,
+            'message': 'Item(s) removed from cart.',
+            'product_id': product_id,
+            'variant_id': variant_id,
+            'cart_count': cart_count
+        }), 200
+    else:
+        return jsonify({
+            'ok': False,
+            'message': 'Item not found in cart.',
+            'product_id': product_id,
+            'variant_id': variant_id,
+            'cart_count': cart_count
+        }), 404
 
 
 # NEW endpoint: check cart item status (quick, read-only)
