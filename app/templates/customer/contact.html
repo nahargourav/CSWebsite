@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Contact — Champalal & Sons</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" >
+  <meta name="description" content="Contact Champalal & Sons for enquiries, orders, custom sourcing and support. Phone, email, store address and opening hours." />
+
+  <!-- Fonts and core site variables (keeps visuals consistent with the rest of the site) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#fff5ee;
+      --muted:#6b7280;
+      --accent:#f59e0b;
+      --accent-contrast:#111827;
+      --card:#ffffff;
+      --shadow:0 6px 18px rgba(17,24,39,0.06);
+      --max:1200px;
+      --radius:12px;
+      --focus: 3px solid rgba(245,158,11,0.12);
+      font-family: 'Poppins', Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--accent-contrast);-webkit-font-smoothing:antialiased}
+    /* prevent accidental horizontal scroll from any element */
+    body{overflow-x:hidden}
+    .container{max-width:var(--max);margin:0 auto;padding:28px}
+
+    /* Page-specific layout */
+    .contact-hero{display:flex;gap:28px;align-items:center;justify-content:space-between;margin:18px 0}
+    .contact-intro{max-width:720px}
+    .cta-row{display:flex;gap:12px;flex-wrap:wrap}
+    .cta-row a.btn{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
+
+    .contact-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;overflow:hidden}
+    .h1{font-size:22px;margin:0 0 8px}
+    .lead{color:var(--muted);margin:0 0 16px}
+
+    .grid-2{display:grid;grid-template-columns:1fr 420px;gap:20px}
+    .row{display:flex;gap:12px}
+    .row > div { min-width: 0; } /* allow flex children to shrink */
+
+    /* contact form */
+    form.contact-form{display:grid;gap:12px}
+    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+    input[type=text], input[type=email], input[type=tel], select, textarea{width:100%;padding:10px;border:1px solid #e6e7ea;border-radius:8px;font-size:15px;box-sizing:border-box}
+    textarea{min-height:140px;resize:vertical}
+    .btn{padding:10px 16px;border-radius:999px;border:none;cursor:pointer;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+    .btn.primary{background:var(--accent);color:white}
+    .muted{color:var(--muted)}
+    .inline-note{font-size:13px;color:var(--muted)}
+
+    /* Contact details */
+    .details{display:flex;flex-direction:column;gap:12px}
+    .details .item{display:flex;gap:12px;align-items:flex-start}
+    .details .item .meta{font-weight:700;color:var(--accent)}
+    .details .item div:last-child{overflow-wrap:break-word;word-break:break-word}
+    .hours{background:linear-gradient(180deg,#fff7ed,#fffbf7);padding:12px;border-radius:10px}
+
+    /* small helpers */
+    .card-title{font-size:16px;margin:0 0 8px}
+    .social-row{display:flex;gap:8px}
+    .social{display:inline-flex;width:36px;height:36px;align-items:center;justify-content:center;border-radius:8px;border:1px solid rgba(17,24,39,0.04);background:white;color:var(--muted);text-decoration:none}
+    .social svg{display:block}
+
+    /* map */
+    .map{width:100%;height:260px;border-radius:10px;overflow:hidden;border:1px solid #e9eef2}
+    .map iframe{width:100%;height:100%;border:0;display:block}
+
+    /* anchor navigation / quick links */
+    .toc{position:sticky;top:94px}
+    .toc a{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--accent-contrast);background:transparent}
+    .toc a:hover{background:rgba(17,24,39,0.03)}
+
+    /* small form note */
+    .note{font-size:13px;color:var(--muted)}
+
+    /* Accessibility focus states */
+    a:focus, button:focus, input:focus, textarea:focus{outline:none;box-shadow:var(--focus);border-color:var(--accent)}
+
+    /* small toast/copy UI */
+    .mini-toast{position:fixed;right:16px;bottom:16px;background:#111827;color:white;padding:10px 14px;border-radius:10px;box-shadow:0 8px 30px rgba(17,24,39,0.18);z-index:9999;display:flex;gap:10px;align-items:center}
+    .mini-toast button{background:transparent;border:1px solid rgba(255,255,255,0.16);color:white;padding:6px 8px;border-radius:8px;cursor:pointer}
+
+    /* Desktop -> tablet breakpoint */
+    @media (max-width: 900px) {
+      .contact-hero{flex-direction:column;align-items:stretch}
+      .grid-2{grid-template-columns:1fr}
+      .toc{position:static;top:auto}
+      /* allow right-column wrapper not to force a min width when stacked */
+      .contact-hero > div { min-width: 0 !important; }
+    }
+
+    /* Mobile-specific overrides - do not change desktop visuals */
+    @media (max-width: 640px) {
+      .container{padding:16px}
+      .contact-card{padding:16px}
+      .h1{font-size:20px}
+      .lead{font-size:15px}
+      .cta-row{flex-direction:column}
+      .cta-row a.btn{width:100%;justify-content:center}
+      .cta-row a.btn + a.btn{margin-top:8px}
+      .grid-2{grid-template-columns:1fr}
+      .row{flex-direction:column}
+      .row > div{width:100% !important}
+      input[type=text], input[type=email], input[type=tel], select, textarea{font-size:15px;padding:12px}
+      .btn{padding:12px 14px}
+      .toc{position:static;top:auto}
+      .map{height:220px}
+      .social{width:44px;height:44px}
+      .social svg{width:18px;height:18px}
+      .card-title{font-size:15px}
+      .muted, .note{font-size:13px}
+      .contact-hero{gap:14px}
+      .contact-intro{padding-bottom:6px}
+      /* override any inline min-width on the right column */
+      .contact-hero > div { min-width: 0 !important; }
+      /* ensure frequently asked block doesn't overflow */
+    }
+
+    /* Very small devices - keep readable */
+    @media (max-width: 360px) {
+      .h1{font-size:18px}
+      .container{padding:12px}
+      .map{height:200px}
+      .social{width:40px;height:40px}
+    }
+  </style>
+</head>
+<body>
+
+  {# include header / nav from your layout partial so header remains single-source #}
+  {% include 'customer/layout.html' %}
+
+  <main class="container">
+
+    <section class="contact-hero">
+      <div class="contact-intro">
+        <h1 class="h1">Get in touch — we’re here to help</h1>
+        <p class="lead">Whether you have a product question, need help with an order, want to request bulk sourcing or prefer to visit the store — choose the contact method that suits you. We aim to respond within 24 business hours.</p>
+
+        <div class="cta-row" style="margin-top:14px">
+          <a href="tel:+917070606600" class="btn primary" aria-label="Call Champalal & Sons">Call us: +91 7070606600</a>
+
+          <!-- Email button: still uses mailto but we also attach JS fallback to help laptops without a default mail client -->
+          <a id="emailBtn" href="mailto:champalalandsons@gmail.com" class="btn" style="background:white;border:1px solid #e6e7ea;border-radius:999px" aria-label="Email us">Email us</a>
+        </div>
+      </div>
+
+      <div style="min-width:260px">
+        <div class="contact-card">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:52px;height:52px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#ff7f66);display:flex;align-items:center;justify-content:center;color:white;font-weight:800">C&amp;S</div>
+            <div>
+              <div style="font-weight:700">Champalal & Sons</div>
+              <div class="muted">Since 1930 — Cloth merchants</div>
+            </div>
+          </div>
+          <hr style="margin:12px 0;border:none;border-top:1px dashed rgba(17,24,39,0.04)" />
+          <div class="muted" style="font-size:14px">Store hours</div>
+          <div class="hours" style="margin-top:8px;">
+            <div style="display:flex;justify-content:space-between"><strong>Mon — Sat</strong><span>10:00 — 21:00</span></div>
+            <div style="display:flex;justify-content:space-between"><strong>Sunday</strong><span>10:00 — 20:00</span></div>
+            <div style="margin-top:8px;font-size:13px;color:var(--muted)">Closed on major public holidays. For urgent requests please call.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid-2" aria-labelledby="contact-heading">
+      <div>
+        <div class="contact-card">
+          <h2 class="card-title" id="contact-heading">Contact form</h2>
+          <p class="muted">Use this form for general enquiries, order support and bulk requests. We'll never sell your personal data.</p>
+
+          <form id="contactForm" class="contact-form" method="post" action="/contact/submit" novalidate>
+            <div class="row">
+              <div style="flex:1">
+                <label for="name">Full name</label>
+                <input id="name" name="name" type="text" placeholder="Your name" required aria-required="true" />
+              </div>
+              <div style="width:220px">
+                <label for="phone">Phone</label>
+                <input id="phone" name="phone" type="tel" placeholder="+91 " inputmode="tel" />
+              </div>
+            </div>
+
+            <div class="row">
+              <div style="flex:1">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="you@email.com" required aria-required="true" />
+              </div>
+              <div style="width:220px">
+                <label for="subject">Subject</label>
+                <select id="subject" name="subject">
+                  <option value="order">Order / Shipping</option>
+                  <option value="product">Product question</option>
+                  <option value="wholesale">Wholesale / Bulk</option>
+                  <option value="returns">Returns / Refunds</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label for="message">Message</label>
+              <textarea id="message" name="message" placeholder="Tell us about your request..." required aria-required="true"></textarea>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:10px">
+              <input id="consent" name="consent" type="checkbox" required aria-required="true" />
+              <label for="consent" class="note">I agree to the processing of my personal data in accordance with the <a href="/privacy" style="color:var(--accent)">Privacy Policy</a>.</label>
+            </div>
+
+            <input type="hidden" name="source" value="contact-page" />
+
+            <div style="display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap">
+              <button type="submit" class="btn primary">Send message</button>
+              <div class="inline-note">Or email us at <a id="inlineEmailLink" href="mailto:champalalandsons@gmail.com">champalalandsons@gmail.com</a></div>
+            </div>
+
+            <div id="contactFeedback" role="status" aria-live="polite" style="margin-top:10px"></div>
+          </form>
+        </div>
+
+        <div class="contact-card" style="margin-top:18px">
+          <h3 class="card-title">Frequently asked</h3>
+          <div style="display:grid;gap:8px">
+            <div><strong>Order status</strong> — Email champalalandsons@gmail.com with your order ID.</div>
+            <div><strong>Bulk orders</strong> — Use subject "Wholesale / Bulk" above and include estimated quantities.</div>
+            <div><strong>Returns</strong> — We accept returns within 3 days. See our <a href="/help/returns">returns policy</a>.</div>
+          </div>
+        </div>
+      </div>
+
+      <aside>
+        <div class="contact-card toc">
+          <h4 class="card-title">Contact details</h4>
+          <div class="details">
+            <div class="item"><div class="meta">Phone</div><div><a href="tel:+917070606600">+91 7070606600</a></div></div>
+            <div class="item"><div class="meta">Email</div><div><a id="detailsEmailLink" href="mailto:champalalandsons@gmail.com">champalalandsons@gmail.com</a></div></div>
+            <div class="item"><div class="meta">Address</div><div>Beside Madhubani PO, Madhubani Bazar, Purnia, Bihar · 854301</div></div>
+            <div class="item"><div class="meta">Opening hours</div><div>Mon–Sat: 10:00–21:00 · Sun: 10:00–20:00</div></div>
+          </div>
+
+          <hr style="margin:12px 0;border:none;border-top:1px dashed rgba(17,24,39,0.04)" />
+
+          <div class="card-title">Visit the store</div>
+          <div class="muted" style="font-size:14px;margin-bottom:8px">We welcome walk-ins. For guaranteed help, call ahead to book an appointment.</div>
+
+          <div class="map" aria-hidden="false">
+            <!-- Replace src with your Google Maps embed url or other map provider as needed -->
+            <iframe title="C&S location map"
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3592.626927353988!2d87.4599079751839!3d25.782883477338583!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eff97f665e04d3%3A0x6c8935ef0b326d57!2sChampalal%20and%20Sons!5e0!3m2!1sen!2sin!4v1761312241686!5m2!1sen!2sin"
+                    allowfullscreen="" loading="lazy" aria-hidden="false"></iframe>
+          </div>
+
+          <hr style="margin:12px 0;border:none;border-top:1px dashed rgba(17,24,39,0.04)" />
+
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            <div>
+              <div style="font-weight:700">Social</div>
+              <div class="social-row" style="margin-top:8px">
+                <a class="social" href="#" aria-label="Instagram" title="Instagram">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8"></path></svg>
+                </a>
+                <a class="social" href="#" aria-label="Facebook" title="Facebook">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M18 2h-3a4 4 0 0 0-4 4v3H8v4h3v8h4v-8h3l1-4h-4V6a1 1 0 0 1 1-1h3z"></path></svg>
+                </a>
+
+                <!-- Polished X glyph (rounded strokes) -->
+                <a class="social" href="https://x.com/yourhandle" target="_blank" rel="noopener noreferrer" aria-label="X" title="X">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"stroke-width="1.4" aria-hidden="true">
+                    <path  opacity="0.8" d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"></path>
+                    </svg>
+                </a>
+              </div>
+            </div>
+
+            <div style="text-align:right">
+              <div style="font-weight:700">Customer Care</div>
+              <div class="muted" style="font-size:13px">champalalandsons@gmail.com</div>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+    </section>
+
+    <section style="margin-top:20px" class="contact-card">
+      <h3 class="card-title">What happens next?</h3>
+      <ol style="margin:8px 0 0 20px" class="muted">
+        <li>We acknowledge receipt of your message via email.</li>
+        <li>Our team reviews and replies within 24 business hours (usually sooner).</li>
+        <li>If your request is urgent we will call the number you provided.</li>
+      </ol>
+    </section>
+
+  </main>
+
+  {% include 'customer/footer.html' %}
+
+  <!-- Minimal JS: mail fallback + AJAX client submit + nice UX without changing server behaviour -->
+  <script>
+    (function(){
+      /* Helper to create/remove a small toast used for the email fallback */
+      function showMiniToast(text, actions) {
+        // actions: [{label:'Copy', onClick:fn}, ...]
+        var existing = document.getElementById('miniToast');
+        if (existing) {
+          existing.remove();
+          if (window._miniToastTimer) { clearTimeout(window._miniToastTimer); window._miniToastTimer = null; }
+        }
+        var t = document.createElement('div');
+        t.id = 'miniToast';
+        t.className = 'mini-toast';
+        var span = document.createElement('div');
+        span.textContent = text;
+        t.appendChild(span);
+        if (Array.isArray(actions)) {
+          actions.forEach(function(a){
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.textContent = a.label;
+            btn.addEventListener('click', function(ev){
+              ev.preventDefault();
+              try { a.onClick && a.onClick(); } catch(e){ /* swallow errors from handlers */ }
+              // clear auto-dismiss timer and remove toast immediately after action
+              if (window._miniToastTimer) { clearTimeout(window._miniToastTimer); window._miniToastTimer = null; }
+              t.remove();
+            });
+            t.appendChild(btn);
+          });
+        }
+        var close = document.createElement('button');
+        close.type = 'button';
+        close.textContent = '✕';
+        close.style.marginLeft = '6px';
+        close.addEventListener('click', function(){
+          if (window._miniToastTimer) { clearTimeout(window._miniToastTimer); window._miniToastTimer = null; }
+          t.remove();
+        });
+        t.appendChild(close);
+        document.body.appendChild(t);
+
+        // Auto-dismiss after 2 seconds. Store timer globally so subsequent toasts can clear it.
+        if (window._miniToastTimer) { clearTimeout(window._miniToastTimer); window._miniToastTimer = null; }
+        window._miniToastTimer = setTimeout(function(){
+          window._miniToastTimer = null;
+          var el = document.getElementById('miniToast');
+          if (el) el.remove();
+        }, 2000);
+      }
+
+      // Email link fallback (helps laptop/Chrome when no default mail client is registered)
+      var EMAIL = 'champalalandsons@gmail.com';
+      var emailBtn = document.getElementById('emailBtn');
+      var inlineEmailLink = document.getElementById('inlineEmailLink');
+      var detailsEmailLink = document.getElementById('detailsEmailLink');
+
+      // A function to copy the email to clipboard with user feedback
+      function copyEmailToClipboard(){
+        if (navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(EMAIL).then(function(){
+            showMiniToast('Email copied to clipboard', [{label:'OK', onClick:function(){document.getElementById('miniToast') && document.getElementById('miniToast').remove();}}]);
+          }).catch(function(){
+            // fallback for older browsers: select a temporary textarea
+            var ta = document.createElement('textarea'); ta.value = EMAIL; document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); showMiniToast('Email copied to clipboard'); } catch(e){ showMiniToast('Please copy: ' + EMAIL); }
+            ta.remove();
+          });
+        } else {
+          // fallback
+          var ta = document.createElement('textarea'); ta.value = EMAIL; document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); showMiniToast('Email copied to clipboard'); } catch(e){ showMiniToast('Please copy: ' + EMAIL); }
+          ta.remove();
+        }
+      }
+
+      // Attach handler to the email button(s): attempt mailto then show fallback toast that allows copy
+      function bindEmailButton(el) {
+        if (!el) return;
+        el.addEventListener('click', function(ev){
+          // If user directly clicked the mailto link, the default anchor behavior will try to open mail client.
+          // We still attempt to open via window.location for stronger effect and show fallback after a short delay.
+          ev.preventDefault();
+          // Try opening mail client
+          try {
+            window.location.href = 'mailto:' + EMAIL;
+            // also open in new tab (some browsers handle better)
+            try { window.open('mailto:' + EMAIL); } catch(e){}
+          } catch(e){ /* ignore */ }
+
+          // After a short timeout, show helpful copy option (can't reliably detect whether the client opened)
+          setTimeout(function(){
+            showMiniToast('', [
+              { label: 'Copy email', onClick: copyEmailToClipboard },
+              { label: 'Open mail', onClick: function(){ window.location.href = 'mailto:' + EMAIL; } }
+            ]);
+          }, 450);
+        });
+      }
+
+      bindEmailButton(emailBtn);
+      bindEmailButton(inlineEmailLink);
+      bindEmailButton(detailsEmailLink);
+
+      /* --- Form AJAX submission with progressive enhancement fallback --- */
+      var form = document.getElementById('contactForm');
+      var feedback = document.getElementById('contactFeedback');
+
+      function showMessage(msg, ok) {
+        feedback.textContent = msg;
+        feedback.style.color = ok ? 'green' : 'crimson';
+      }
+
+      if (form) {
+        form.addEventListener('submit', function(ev){
+          ev.preventDefault();
+
+          var name = form.name.value.trim();
+          var email = form.email.value.trim();
+          var message = form.message.value.trim();
+          var consent = form.consent.checked;
+
+          if (!name || !email || !message) {
+            showMessage('Please fill name, email and message.', false);
+            return;
+          }
+          if (!consent) {
+            showMessage('Please agree to the privacy policy to continue.', false);
+            return;
+          }
+
+          showMessage('Sending…', true);
+
+          // prepare FormData
+          var fd = new FormData(form);
+
+          // Attempt AJAX POST to the action URL. Add the X-Requested-With header so server can detect AJAX.
+          fetch(form.action, {
+            method: 'POST',
+            body: fd,
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+          }).then(function(res){
+            // If server redirected (res.redirected), allow default navigation
+            if (res.redirected) {
+              window.location.href = res.url;
+              return;
+            }
+            if (!res.ok) {
+              // not OK -> fallback to native submit (server might expect a normal POST)
+              throw new Error('Network response was not ok');
+            }
+            // Try parse JSON
+            return res.json().catch(function(){ throw new Error('Invalid JSON'); });
+          }).then(function(json){
+            if (json && (json.ok === true || json.success === true)) {
+              showMessage(json.message || 'Thanks — we received your message.', true);
+              // Clear form fields (gentle)
+              form.reset();
+            } else if (json && json.message) {
+              showMessage(json.message, false);
+            } else {
+              // Unexpected JSON shape: show message, but keep page usable
+              showMessage('Thank you — your message was submitted.', true);
+              form.reset();
+            }
+          }).catch(function(err){
+            // AJAX failed — gracefully fallback to normal form submit so server-side handling still happens.
+            console.warn('AJAX submit failed, falling back to native submit:', err);
+            // Small delay to allow user to read message
+            setTimeout(function(){
+              // remove this handler (to prevent recursion) and perform native submit
+              form.removeEventListener('submit', arguments.callee);
+              form.submit();
+            }, 250);
+          });
+        });
+      }
+
+      // smooth internal anchor scroll
+      document.querySelectorAll('a[href^="#"]').forEach(function(a){
+        a.addEventListener('click', function(e){
+          var tgt = document.querySelector(this.getAttribute('href'));
+          if (tgt){ e.preventDefault(); tgt.scrollIntoView({behavior:'smooth',block:'start'}); }
+        });
+      });
+    })();
+  </script>
+  <!-- Structured data for contact/organization (update values to real ones) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Champalal & Sons",
+    "url": "https://www.champalalandsons.in",
+    "telephone": "+91 7070606600",
+    "email": "champalalandsons@gmail.com",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Beside Madhubani PO, Madhubani Bazar",
+      "addressLocality": "Purnia",
+      "addressRegion": "Bihar",
+      "postalCode": "854301",
+      "addressCountry": "IN"
+    },
+    "openingHours": ["Mo-Sa 10:00-21:00","Su 10:00-20:00"]
+  }
+  </script>
+
+</body>
+</html>

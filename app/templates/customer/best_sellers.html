@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Best sellers — Champalal & Sons</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" >
+  <meta name="description" content="Top selling product variants at Champalal & Sons. Browse our most popular items and add to cart or wishlist." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#fffaf6;
+      --muted:#6b7280;
+      --accent:#f59e0b;
+      --accent-contrast:#111827;
+      --card:#ffffff;
+      --shadow:0 12px 40px rgba(17,24,39,0.06);
+      --max:1200px;
+      --radius:14px;
+      --focus: 3px solid rgba(245,158,11,0.12);
+      font-family:'Poppins', Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--accent-contrast);-webkit-font-smoothing:antialiased}
+    a{color:var(--accent)}
+    .container{max-width:var(--max);margin:0 auto;padding:24px}
+
+    /* header */
+    .hero {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+    .hero h1{margin:0;font-size:26px}
+    .hero p{margin:0;color:var(--muted)}
+
+    /* Desktop grid */
+    .grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+    .card {background:var(--card);border-radius:12px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+    .card img{width:100%;height:200px;object-fit:cover;display:block}
+    .card-body{padding:12px;flex:1;display:flex;flex-direction:column}
+    .title{font-weight:700;font-size:15px;margin-bottom:6px}
+    .meta{color:var(--muted);font-size:13px;margin-bottom:8px}
+    .price-row{display:flex;align-items:center;justify-content:space-between;margin-top:auto}
+    .price{font-weight:800;color:var(--accent);font-size:16px}
+    .controls{display:flex;gap:8px;align-items:center}
+    .btn {padding:8px 12px;border-radius:999px;border:none;cursor:pointer;font-weight:700}
+    .btn.ghost{background:white;border:1px solid #eee}
+    .small{font-size:13px;color:var(--muted)}
+
+    /* wishlist heart */
+    .heart {width:36px;height:36px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(17,24,39,0.03);cursor:pointer;transition:transform .25s}
+    .heart svg{display:block;transition:transform .2s}
+    .heart.wished{background:linear-gradient(90deg,var(--accent),#ff7f66);color:white}
+    .heart.wish-anim { animation: wishFill .6s ease; }
+    @keyframes wishFill { 0% { transform: scale(1); } 40% { transform: scale(1.25);} 100% { transform: scale(1);} }
+
+    /* Mobile full-screen swipe UI */
+    .mobile-swipe { display:none; position:relative; height: 100vh; max-height:100vh; background:linear-gradient(180deg,#fff,#fff5ee); border-radius:12px; overflow:hidden; }
+    .swipe-card { position:absolute; inset:0; display:flex; flex-direction:column; align-items:stretch; justify-content:flex-end; transition: transform .22s ease, opacity .22s ease; border-radius:0; overflow:hidden; touch-action: none; }
+    .swipe-card img { width:100%; height:100%; object-fit:cover; display:block; }
+    .swipe-overlay { position:absolute; left:0; right:0; bottom:0; padding:18px; background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.45) 70%); color:white; display:flex; flex-direction:column; gap:8px; }
+    .swipe-top { position:absolute; top:18px; left:18px; right:18px; display:flex; justify-content:space-between; align-items:center; z-index:5; pointer-events:none; }
+    .swipe-top .info { display:flex; gap:12px; align-items:center }
+    .swipe-top .badge { background:rgba(0,0,0,0.35); padding:6px 10px; border-radius:999px; font-weight:700}
+    .swipe-bottom { padding:10px 0 24px }
+    .swipe-title{font-weight:800;font-size:20px;margin:0}
+    .swipe-meta{font-size:14px;color:rgba(255,255,255,0.95)}
+    .swipe-actions { display:flex; gap:14px; align-items:center; margin-top:10px }
+    .action-heart, .action-cart { width:56px; height:56px; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; background:rgba(255,255,255,0.12); cursor:pointer; pointer-events:auto; }
+    .action-heart.wished { background:linear-gradient(90deg,var(--accent),#ff7f66); color:white; }
+
+    /* small mobile view button */
+    .view-btn-mobile { position:absolute; left:16px; bottom:22px; padding:8px 12px; border-radius:999px; background:rgba(0,0,0,0.45); color:white; font-weight:700; border:none; cursor:pointer; pointer-events:auto; }
+
+    /* overlay demo */
+    .demo-overlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:9999; pointer-events:none; }
+    .demo-box { background:rgba(17,24,39,0.6); color:white; padding:18px; border-radius:12px; display:flex; gap:12px; align-items:center; max-width:90%; transform:translateY(0); animation: fadeIn 0.35s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px)} to {opacity:1; transform:translateY(0)} }
+
+    /* detail modal for desktop */
+    .modal-backdrop { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:120; }
+    .modal-backdrop.show { display:flex; }
+    .modal { width: min(860px, 96%); background:var(--card); border-radius:12px; padding:18px; box-shadow:0 40px 100px rgba(2,6,23,0.4); max-height:92vh; overflow:auto; }
+    .modal img{width:100%;height:360px;object-fit:cover;border-radius:10px}
+
+    /* responsive rules */
+    @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, minmax(170px, 1fr)); } }
+    @media (max-width: 640px) {
+      .container{padding:0px}
+      .hero { display:none } /* hide desktop grid on phone; show mobile swipe UI */
+      .grid { display:none } /* hide desktop grid on phone; show mobile swipe UI */
+      .mobile-swipe { display:block;height: 84vh; }
+      .card { border-radius:10px }
+    }
+    @media (max-height:600px) { .mobile-swipe { height:100vh } .modal img{height:260px} }
+
+    /* tiny status */
+    .status {font-size:14px;color:var(--muted);margin-top:8px}
+  </style>
+</head>
+<body>
+  {% include 'customer/layout.html' %}
+
+  <main class="container">
+    <div class="hero">
+      <div>
+        <h1>Best sellers</h1>
+        <p class="small muted">Top {{ variants|length }} most-sold product variants</p>
+      </div>
+      <div class="small muted">Swipe-to-buy experience available on phones</div>
+    </div>
+
+    <!-- Desktop grid -->
+    <section class="grid" aria-label="Best sellers grid">
+      {% for v in variants %}
+      <article class="card" data-variant-id="{{ v.variant_id }}" role="article">
+        <a href="{{ url_for('main.view_prod_detail', product_id=v.product_id, variant_id=v.variant_id) }}" style="text-decoration:none;color:inherit">
+          {% if v.image %}
+            <img src="{{ url_for('static', filename=v.image) if v.image and not v.image.startswith('http') else v.image }}" alt="{{ v.title|e }}">
+          {% else %}
+            <img src="{{ url_for('static', filename='images/placeholder.png') }}" alt="No image">
+          {% endif %}
+        </a>
+        <div class="card-body">
+          <div class="title">{{ v.title }}</div>
+          <div class="meta">{{ v.category }} • {{ v.size }} {{ v.color }}</div>
+          <div class="meta small">Sold: {{ v.sold_qty }}</div>
+          <div class="price-row">
+            <div>
+              <div class="price">₹{{ '%.2f'|format(v.price) }}</div>
+              <div class="small">Rating: {{ v.rating_avg }} ({{ v.reviews_count }})</div>
+            </div>
+            <div class="controls">
+              <button class="btn ghost view-btn" data-variant='{{ v|tojson|safe }}' aria-label="View details">View</button>
+              <div class="heart" data-variant='{{ v|tojson|safe }}' title="Add to wishlist" aria-hidden="false">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20.8 6.6a5.5 5.5 0 0 0-7.78-0.02L12 7.6l-1.02-1.02a5.5 5.5 0 0 0-7.78 7.78L12 21.5l8.8-8.86a5.5 5.5 0 0 0 0-7.98z"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </section>
+
+    <!-- Mobile swipe interface -->
+    <section class="mobile-swipe" id="mobileSwipe" aria-hidden="true">
+      <!-- cards will be injected -->
+    </section>
+
+    <!-- Demo overlay (phone) -->
+    <div class="demo-overlay" id="demoOverlay" aria-hidden="true">
+      <div class="demo-box" role="status" aria-live="polite">
+        <div style="font-weight:700">Quick tips</div>
+        <div style="opacity:0.92">Swipe right → add to cart · Swipe left → wishlist · Swipe up → next · Swipe down → previous · Tap heart to toggle · Tap View to open</div>
+      </div>
+    </div>
+
+    <!-- Detail modal for desktop -->
+    <div id="detailModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="modal" role="document" aria-labelledby="detailTitle">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+          <div style="flex:1">
+            <h3 id="detailTitle">Title</h3>
+            <div id="detailMeta" class="muted"></div>
+          </div>
+          <button id="closeDetail" class="close-x" aria-label="Close" style="background:#fff;border:1px solid #eee;padding:8px;border-radius:10px">✕</button>
+        </div>
+        <img id="detailImage" src="" alt="">
+        <div id="detailDesc" class="muted" style="margin-top:12px;white-space:pre-line"></div>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:16px">
+          <button id="detailAddCart" class="btn">Add to cart</button>
+          <div id="detailHeart" class="heart" title="Wishlist">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20.8 6.6a5.5 5.5 0 0 0-7.78-0.02L12 7.6l-1.02-1.02a5.5 5.5 0 0 0-7.78 7.78L12 21.5l8.8-8.86a5.5 5.5 0 0 0 0-7.98z"></path></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+  (function(){
+    // server-provided list
+    const variants = ({{ variants|tojson|safe }} || []).slice(); // 0..n-1
+    const n = variants.length;
+
+    /* helpers */
+    function escapeHtml(s){ if(s===null||s===undefined) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    function nl2brEscape(text){ return escapeHtml(text || '').replace(/\r\n|\r|\n/g, '<br>'); }
+
+    /* desktop modal */
+    const detailModal = document.getElementById('detailModal');
+    const detailTitle = document.getElementById('detailTitle');
+    const detailMeta = document.getElementById('detailMeta');
+    const detailDesc = document.getElementById('detailDesc');
+    const detailImage = document.getElementById('detailImage');
+    document.getElementById('closeDetail').addEventListener('click', ()=>{ detailModal.classList.remove('show'); detailModal.setAttribute('aria-hidden','true'); });
+    document.querySelectorAll('.view-btn').forEach(b=>{
+      b.addEventListener('click', function(ev){
+        ev.preventDefault(); ev.stopPropagation();
+        const v = JSON.parse(this.getAttribute('data-variant'));
+        detailTitle.textContent = v.title || '';
+        detailMeta.textContent = (v.category||'') + (v.size ? ' • ' + v.size : '') + (v.color ? ' • ' + v.color : '');
+        detailImage.src = v.image ? ((v.image.startsWith('http')||v.image.startsWith('/')) ? v.image : ('/static/' + v.image)) : '/static/images/placeholder.png';
+        detailDesc.innerHTML = nl2brEscape(v.description || v.short_description || '');
+        detailModal.classList.add('show'); detailModal.setAttribute('aria-hidden','false');
+      });
+    });
+
+    /* wishlist + cart ajax */
+    async function toggleWishlist(v, el){
+      const pid = v.product_id, vid = v.variant_id;
+      try {
+        const fd = new FormData(); fd.append('product_id', String(pid)); fd.append('variant_id', String(vid));
+        const res = await fetch('/wishlist/toggle', { method:'POST', body: fd, headers:{'X-Requested-With':'XMLHttpRequest'}, credentials:'same-origin' });
+        if (res.status === 401){ const j = await res.json().catch(()=>({})); if (j && j.redirect_url) { window.location.href = j.redirect_url; return; } window.location.href = '/login'; return; }
+        const json = await res.json();
+        if (json && json.ok){
+          if (json.action === 'added'){ if (el) el.classList.add('wished'); if (el) { el.classList.add('wish-anim'); setTimeout(()=> el.classList.remove('wish-anim'),700); } }
+          else { if (el) el.classList.remove('wished'); }
+        } else { console.warn('wishlist toggle failed', json); alert(json && json.message ? json.message : 'Could not update wishlist.'); }
+      } catch (e){ console.error(e); alert('Could not update wishlist.'); }
+    }
+    async function addToCart(v, opts){
+      opts = opts || {}; const pid = v.product_id, vid = v.variant_id;
+      try {
+        const fd = new FormData(); fd.append('product_id', String(pid)); fd.append('variant_id', String(vid)); fd.append('qty', String(opts.qty || 1));
+        const res = await fetch('/cart/add', { method:'POST', body: fd, headers:{'X-Requested-With':'XMLHttpRequest'}, credentials:'same-origin' });
+        if (res.status === 401){ const j = await res.json().catch(()=>({})); if (j && j.redirect_url) window.location.href = j.redirect_url; else window.location.href = '/login'; return; }
+        const json = await res.json();
+        if (json && json.ok){
+          const t = document.createElement('div'); t.style.position='fixed'; t.style.bottom='16px'; t.style.left='16px';
+          t.style.background='white'; t.style.padding='10px 14px'; t.style.borderRadius='10px'; t.style.boxShadow='0 8px 30px rgba(2,6,23,0.12)';
+          t.textContent = json.message || 'Added to cart'; document.body.appendChild(t); setTimeout(()=> t.remove(), 1800);
+        } else { alert(json && json.message ? json.message : 'Could not add to cart.'); }
+      } catch (e){ console.error(e); alert('Could not add to cart.'); }
+    }
+
+    /* desktop hearts prefill */
+    document.querySelectorAll('.card .heart').forEach(async function(el){
+      const v = JSON.parse(el.getAttribute('data-variant'));
+      el.addEventListener('click', function(ev){ ev.stopPropagation(); toggleWishlist(v, el); });
+      try {
+        const r = await fetch('/wishlist/status?variant_id=' + encodeURIComponent(v.variant_id), { credentials:'same-origin' });
+        const js = await r.json();
+        if (js && js.ok && js.wished) el.classList.add('wished');
+      } catch(e){ /* ignore */ }
+    });
+
+    /**************************************************
+     * Mobile: index-based deck rendering (prev/current/next)
+     **************************************************/
+    const mobileRoot = document.getElementById('mobileSwipe');
+    let currentIndex = 0; // show first item initially (index 0)
+    let prevEl = null, currEl = null, nextEl = null;
+
+    function createCardForIndex(idx){
+      if (idx === null || idx === undefined || idx < 0 || idx >= n) return null;
+      const v = variants[idx];
+      const card = document.createElement('div'); card.className='swipe-card';
+      card.dataset.index = String(idx);
+
+      const img = document.createElement('img'); img.alt = v.title || 'Product';
+      img.src = v.image ? ((v.image.startsWith('http')||v.image.startsWith('/')) ? v.image : ('/static/' + v.image)) : '/static/images/placeholder.png';
+      card.appendChild(img);
+
+      // top overlay + heart
+      const top = document.createElement('div'); top.className='swipe-top'; top.style.pointerEvents='none';
+      const leftInfo = document.createElement('div'); leftInfo.className='info';
+      const badge = document.createElement('div'); badge.className='badge'; badge.textContent='Bestseller';
+      leftInfo.appendChild(badge); top.appendChild(leftInfo);
+      const topRight = document.createElement('div'); topRight.style.pointerEvents='auto';
+      const topHeart = document.createElement('div'); topHeart.className='heart'; topHeart.style.width='44px'; topHeart.style.height='44px';
+      topHeart.title='Wishlist';
+      topHeart.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20.8 6.6a5.5 5.5 0 0 0-7.78-0.02L12 7.6l-1.02-1.02a5.5 5.5 0 0 0-7.78 7.78L12 21.5l8.8-8.86a5.5 5.5 0 0 0 0-7.98z"></path></svg>';
+      topRight.appendChild(topHeart); top.appendChild(topRight); card.appendChild(top);
+
+      // bottom overlay
+      const overlay = document.createElement('div'); overlay.className='swipe-overlay';
+      const title = document.createElement('h2'); title.className='swipe-title'; title.textContent = v.title || '';
+      const meta = document.createElement('div'); meta.className='swipe-meta'; meta.textContent = (v.category||'') + (v.size ? ' • ' + v.size : '') + (v.color ? ' • ' + v.color : '');
+      overlay.appendChild(title); overlay.appendChild(meta);
+
+      const bottomRow = document.createElement('div'); bottomRow.className='swipe-actions';
+      const price = document.createElement('div'); price.style.fontWeight='800'; price.style.fontSize='18px'; price.textContent = '₹' + Number(v.price).toLocaleString('en-IN', { maximumFractionDigits:2 });
+      bottomRow.appendChild(price);
+
+      const actions = document.createElement('div'); actions.style.marginLeft='auto'; actions.style.display='flex'; actions.style.gap='10px';
+      const bottomHeart = document.createElement('div'); bottomHeart.className='action-heart'; bottomHeart.title='Wishlist';
+      bottomHeart.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20.8 6.6a5.5 5.5 0 0 0-7.78-0.02L12 7.6l-1.02-1.02a5.5 5.5 0 0 0-7.78 7.78L12 21.5l8.8-8.86a5.5 5.5 0 0 0 0-7.98z"></path></svg>';
+      const cartBtn = document.createElement('div'); cartBtn.className='action-cart'; cartBtn.title='Add to cart';
+      cartBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 6h15l-1.5 9h-12z"></path><circle cx="9" cy="20" r="1"></circle><circle cx="19" cy="20" r="1"></circle></svg>';
+      actions.appendChild(bottomHeart); actions.appendChild(cartBtn);
+      bottomRow.appendChild(actions); overlay.appendChild(bottomRow);
+
+      const vbtn = document.createElement('button'); vbtn.className='view-btn-mobile'; vbtn.textContent='View';
+      vbtn.addEventListener('click', function(ev){ ev.stopPropagation(); const url = '/prod/' + encodeURIComponent(v.product_id) + '?variant_id=' + encodeURIComponent(v.variant_id) + (v.variant_sku ? ('&variant_sku=' + encodeURIComponent(v.variant_sku)) : ''); window.location.href = url; });
+      overlay.appendChild(vbtn);
+
+      card.appendChild(overlay);
+
+      // attach data & references for actions
+      card._variant = v;
+      card._index = idx;
+      card._topHeart = topHeart;
+      card._actionHeart = bottomHeart;
+      card._actionCart = cartBtn;
+      card._viewBtn = vbtn;
+
+      // heart buttons (optimistic)
+      topHeart.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        const will = !topHeart.classList.contains('wished');
+        topHeart.classList.toggle('wished', will); bottomHeart.classList.toggle('wished', will);
+        toggleWishlist(v, topHeart);
+      });
+      bottomHeart.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        const will = !bottomHeart.classList.contains('wished');
+        bottomHeart.classList.toggle('wished', will); topHeart.classList.toggle('wished', will);
+        toggleWishlist(v, topHeart);
+      });
+      cartBtn.addEventListener('click', function(ev){ ev.stopPropagation(); addToCart(v); });
+
+      card.addEventListener('click', function(ev){
+        const url = '/prod/' + encodeURIComponent(v.product_id) + '?variant_id=' + encodeURIComponent(v.variant_id) + (v.variant_sku ? ('&variant_sku=' + encodeURIComponent(v.variant_sku)) : '');
+        window.location.href = url;
+      });
+
+      return card;
+    }
+
+    // render prev/curr/next into DOM in order so current is topmost and
+    // next is directly under current (important: next z-index > prev z-index)
+    function renderThree(){
+      mobileRoot.innerHTML = '';
+      prevEl = createCardForIndex(currentIndex - 1);
+      nextEl = createCardForIndex(currentIndex + 1);
+      currEl = createCardForIndex(currentIndex);
+
+      // append prev (if exists), then next (if exists), then current last so it's top
+      if (prevEl) {
+        // prev should be lowest (farthest back)
+        prevEl.style.zIndex = '8';
+        prevEl.style.transform = 'scale(0.98) translateY(8px)';
+        mobileRoot.appendChild(prevEl);
+      }
+      if (nextEl) {
+        // next must be directly under current so it reveals when current moves up
+        nextEl.style.zIndex = '12';
+        nextEl.style.transform = 'scale(0.98) translateY(8px)';
+        mobileRoot.appendChild(nextEl);
+      }
+      if (currEl) {
+        // current always on top
+        currEl.style.zIndex = '20';
+        currEl.style.transform = '';
+        mobileRoot.appendChild(currEl);
+      }
+
+      // update wishlist state for current only
+      setTimeout(updateTopWishlistStatus, 90);
+    }
+
+    // update wishlist status only for current card
+    async function updateTopWishlistStatus(){
+      if (!currEl) return;
+      const v = currEl._variant;
+      try {
+        const r = await fetch('/wishlist/status?variant_id=' + encodeURIComponent(v.variant_id), { credentials:'same-origin' });
+        const js = await r.json();
+        const wished = js && js.ok && js.wished;
+        if (wished) { currEl._topHeart.classList.add('wished'); currEl._actionHeart.classList.add('wished'); }
+        else { currEl._topHeart.classList.remove('wished'); currEl._actionHeart.classList.remove('wished'); }
+      } catch(e){ /* ignore */ }
+    }
+
+    /* initial render */
+    renderThree();
+
+    /***************
+     * Gesture handling (index-based)
+     ***************/
+    let active = null; // currently dragged element (currEl)
+    let startX = 0, startY = 0, curX = 0, curY = 0;
+    let isDragging = false, dragMode = null;
+    const axisDetectPx = 8, horizThreshold = 90, vertThreshold = 70, rotationMax = 18;
+
+    function getCurrentElement(){ return currEl; }
+
+    function pointerDown(ev){
+      const p = ev.touches ? ev.touches[0] : ev;
+      active = getCurrentElement();
+      if (!active) return;
+      // don't start drag when clicking controls
+      if (ev.target.closest('.action-cart') || ev.target.closest('.action-heart') || ev.target.closest('.view-btn-mobile') || ev.target.closest('.heart')) {
+        active = null; return;
+      }
+      startX = p.clientX; startY = p.clientY; curX = startX; curY = startY;
+      isDragging = true; dragMode = null;
+      active.style.transition = 'none';
+      active.style.willChange = 'transform, opacity';
+    }
+
+    function pointerMove(ev){
+      if (!isDragging || !active) return;
+      const p = ev.touches ? ev.touches[0] : ev;
+      curX = p.clientX; curY = p.clientY;
+      const dx = curX - startX, dy = curY - startY;
+
+      if (!dragMode){
+        if (Math.abs(dx) > axisDetectPx || Math.abs(dy) > axisDetectPx){
+          dragMode = (Math.abs(dx) > Math.abs(dy)) ? 'horizontal' : 'vertical';
+        }
+      }
+
+      if (dragMode === 'horizontal'){
+        if (ev.cancelable) ev.preventDefault();
+        const rot = Math.max(-rotationMax, Math.min(rotationMax, dx / 12));
+        active.style.transform = `translate(${dx}px, ${0}px) rotate(${rot}deg)`;
+        active.style.opacity = (1 - Math.min(0.5, Math.abs(dx)/900));
+        const actionHeart = active._actionHeart, actionCart = active._actionCart;
+        if (dx > 30) { actionCart.classList.add('wished'); actionHeart.classList.remove('wished'); }
+        else if (dx < -30) { actionHeart.classList.add('wished'); actionCart.classList.remove('wished'); }
+        else { actionHeart.classList.remove('wished'); actionCart.classList.remove('wished'); }
+      } else if (dragMode === 'vertical'){
+        // vertical drag: reveal underlying prev/next depending on direction
+        // at edges apply resistance
+        if (dy > 0 && currentIndex === 0) {
+          // at first item, resist downward movement
+          const resisted = dy * 0.22;
+          active.style.transform = `translate(0px, ${resisted}px)`;
+          active.style.opacity = (1 - Math.min(0.6, Math.abs(resisted)/1200));
+        } else if (dy < 0 && currentIndex === n - 1) {
+          // at last item, resist upward movement
+          const resisted = dy * 0.22;
+          active.style.transform = `translate(0px, ${resisted}px)`;
+          active.style.opacity = (1 - Math.min(0.6, Math.abs(resisted)/1200));
+        } else {
+          if (ev.cancelable) ev.preventDefault();
+          active.style.transform = `translate(0px, ${dy}px)`;
+          active.style.opacity = (1 - Math.min(0.6, Math.abs(dy)/1200));
+        }
+
+        // small parallax: nudge the revealed card slightly toward the current motion
+        if (dy < 0 && nextEl) {
+          // dragging up — reveal next: move next slightly up
+          const factor = Math.min(1, Math.abs(dy) / 400);
+          nextEl.style.transform = `scale(${1 - 0.02 * factor}) translateY(${8 - (factor * 8)}px)`;
+        } else if (dy > 0 && prevEl) {
+          // dragging down — reveal previous: move prev slightly down
+          const factor = Math.min(1, Math.abs(dy) / 400);
+          prevEl.style.transform = `scale(${1 - 0.02 * factor}) translateY(${8 + (factor * 8)}px)`;
+        }
+      }
+    }
+
+    function completeHorizontalAction(toRight){
+      if (!currEl) return;
+      const el = currEl;
+      const offX = (toRight ? window.innerWidth : -window.innerWidth) * 1.2;
+      el.style.transition = 'transform .28s cubic-bezier(.2,.9,.2,1), opacity .28s ease';
+      el.style.transform = `translate(${offX}px, 0px) rotate(${toRight ? 24 : -24}deg)`;
+      el.style.opacity = '0';
+      el._actionHeart && el._actionHeart.classList.remove('wished');
+      el._actionCart && el._actionCart.classList.remove('wished');
+
+      if (toRight) addToCart(el._variant);
+      else {
+        const will = !el._topHeart.classList.contains('wished');
+        el._topHeart.classList.toggle('wished', will); el._actionHeart.classList.toggle('wished', will);
+        toggleWishlist(el._variant, el._topHeart);
+      }
+
+      setTimeout(()=> {
+        if (currentIndex < n - 1) currentIndex++;
+        renderThree();
+      }, 260);
+    }
+
+    function pointerUp(ev){
+      if (!isDragging || !active) return;
+      isDragging = false;
+      const dx = curX - startX, dy = curY - startY;
+      const absdx = Math.abs(dx), absdy = Math.abs(dy);
+
+      active.style.transition = 'transform .28s cubic-bezier(.2,.9,.2,1), opacity .28s ease';
+
+      if (dragMode === 'horizontal' && absdx > horizThreshold){
+        const toRight = dx > 0;
+        completeHorizontalAction(toRight);
+      }
+      else if (dragMode === 'vertical' && absdy > vertThreshold){
+        if (dy < 0){
+          // swipe UP -> NEXT
+          if (currentIndex < n - 1){
+            active.style.transform = `translate(0px, ${-window.innerHeight * 1.2}px)`;
+            active.style.opacity = '0';
+            setTimeout(()=> {
+              currentIndex++;
+              renderThree();
+            }, 220);
+          } else {
+            active.style.transform = '';
+            active.style.opacity = '';
+          }
+        } else {
+          // swipe DOWN -> PREVIOUS
+          if (currentIndex > 0){
+            active.style.transform = `translate(0px, ${window.innerHeight * 1.2}px)`;
+            active.style.opacity = '0';
+            setTimeout(()=> {
+              currentIndex--;
+              renderThree();
+            }, 220);
+          } else {
+            active.style.transform = '';
+            active.style.opacity = '';
+          }
+        }
+      } else {
+        // snap back
+        active.style.transform = '';
+        active.style.opacity = '';
+        if (active._actionHeart) active._actionHeart.classList.remove('wished');
+        if (active._actionCart) active._actionCart.classList.remove('wished');
+        // reset buried card transforms (in case parallax nudged them)
+        if (nextEl) nextEl.style.transform = 'scale(0.98) translateY(8px)';
+        if (prevEl) prevEl.style.transform = 'scale(0.98) translateY(8px)';
+      }
+
+      // clean parallax transforms after a short delay to let animation settle
+      setTimeout(()=> {
+        if (nextEl) nextEl.style.transform = 'scale(0.98) translateY(8px)';
+        if (prevEl) prevEl.style.transform = 'scale(0.98) translateY(8px)';
+      }, 300);
+
+      active = null; dragMode = null;
+      setTimeout(updateTopWishlistStatus, 200);
+    }
+
+    // attach listeners
+    mobileRoot.addEventListener('touchstart', function(e){ pointerDown(e); }, {passive:false});
+    mobileRoot.addEventListener('touchmove', function(e){ pointerMove(e); }, {passive:false});
+    mobileRoot.addEventListener('touchend', function(e){ pointerUp(e); });
+    mobileRoot.addEventListener('touchcancel', function(){ if (isDragging) { isDragging=false; if (active) { active.style.transform=''; active.style.opacity=''; active=null; } } });
+
+    mobileRoot.addEventListener('mousedown', function(e){
+      pointerDown(e);
+      function onMove(ev){ pointerMove(ev); }
+      function onUp(ev){ pointerUp(ev); window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); }
+      window.addEventListener('mousemove', onMove);
+      window.addEventListener('mouseup', onUp);
+    });
+
+    /* demo overlay */
+    const demoOverlay = document.getElementById('demoOverlay');
+    if (window.matchMedia && window.matchMedia('(max-width:640px)').matches && variants.length > 0){
+      demoOverlay.style.display = 'flex';
+      setTimeout(()=> demoOverlay.style.opacity = '1', 50);
+      setTimeout(()=> demoOverlay.style.display = 'none', 2100);
+    }
+
+    /* keyboard helpers for dev */
+    document.addEventListener('keydown', function(e){
+      if (!window.matchMedia('(max-width:640px)').matches) return;
+      if (e.key === 'ArrowUp' || e.key === 'w'){ if (currentIndex < n-1) { currentIndex++; renderThree(); } }
+      else if (e.key === 'ArrowDown' || e.key === 's'){ if (currentIndex > 0) { currentIndex--; renderThree(); } }
+      else if (e.key === 'ArrowRight' || e.key === 'd'){ if (currEl) { completeHorizontalAction(true); } }
+      else if (e.key === 'ArrowLeft' || e.key === 'a'){ if (currEl) { completeHorizontalAction(false); } }
+    });
+
+    window.__swipeState = { getCurrentIndex: ()=> currentIndex, variantsCount: n };
+
+  })();
+  </script>
+</body>
+</html>

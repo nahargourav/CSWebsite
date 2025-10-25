@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Shipping & Delivery — Champalal & Sons</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" >
+  <meta name="description" content="Shipping options and delivery details for Champalal & Sons — local delivery within Purnia (Bihar) only." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#fbfaf8;
+      --muted:#6b7280;
+      --accent:#0f1724;
+      --gold:#c89b32;
+      --card:#ffffff;
+      --shadow:0 12px 40px rgba(15,23,36,0.08);
+      --max:1200px;
+      --radius:14px;
+      --focus: 3px solid rgba(200,155,50,0.12);
+      font-family:'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--accent);-webkit-font-smoothing:antialiased}
+    a{color:var(--gold);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .container{max-width:var(--max);margin:0 auto;padding:36px}
+
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+    /* Hero */
+    .hero{display:flex;gap:28px;align-items:center;justify-content:space-between;margin-bottom:28px}
+    .hero-left{flex:0 0 460px}
+    .eyebrow{display:inline-block;padding:8px 12px;border-radius:999px;background:linear-gradient(90deg,#fff,#fff);border:1px solid rgba(15,23,36,0.03);font-weight:700;color:var(--muted);font-size:13px}
+    .title{font-size:48px;line-height:1.02;margin:18px 0 12px;font-weight:800}
+    .subtitle{color:var(--muted);font-size:16px;max-width:560px}
+
+    .hero-right{flex:1;display:flex;justify-content:flex-end}
+    .hero-card{background:linear-gradient(180deg,#fff,#fff);border-radius:12px;padding:18px 22px;box-shadow:var(--shadow);min-width:320px;max-width:520px}
+    .hero-card h3{margin:0 0 8px;font-size:16px}
+    .ship-list{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .ship-pill{display:flex;flex-direction:column;padding:10px;border-radius:10px;background:#fbf8f3;border:1px solid rgba(15,23,36,0.03)}
+    .ship-pill strong{font-size:15px}
+    .ship-pill .muted{font-size:13px;color:var(--muted)}
+
+    /* Main */
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:22px;align-items:start}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+    .section-title{font-size:18px;margin:0 0 8px}
+    .muted{color:var(--muted)}
+
+    .table{width:100%;border-collapse:collapse;margin-top:12px}
+    .table th,.table td{padding:12px 10px;text-align:left;border-bottom:1px solid rgba(15,23,36,0.04)}
+    .badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#fff6e0;color:var(--gold);font-weight:700}
+
+    .contact-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    .btn{padding:10px 14px;border-radius:999px;border:none;cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:8px}
+    .btn.primary{background:var(--accent);color:white}
+    .btn.ghost{background:white;border:1px solid rgba(15,23,36,0.06);color:var(--accent)}
+
+    /* Pincode checker */
+    .pincode-check{display:flex;gap:10px;align-items:center;margin-top:12px}
+    .input{padding:10px 12px;border-radius:10px;border:1px solid rgba(15,23,36,0.06);font-size:14px;width:160px}
+    .result{margin-top:10px;font-weight:700}
+
+    .faq-item{border-top:1px solid rgba(15,23,36,0.04);padding:12px 0}
+    .faq-item button{width:100%;text-align:left;background:none;border:none;padding:0;margin:0;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer}
+    .faq-answer{margin-top:10px;color:var(--muted);display:none;line-height:1.6}
+    .faq-answer.show{display:block}
+
+    .note{font-size:13px;color:var(--muted);margin-top:12px}
+
+    .copy-toast{position:fixed;left:12px;right:12px;bottom:18px;max-width:420px;margin:0 auto;background:var(--card);border-radius:10px;padding:12px 14px;box-shadow:0 12px 40px rgba(15,23,36,0.12);z-index:9999;font-size:13px;display:flex;align-items:center;justify-content:center}
+
+    @media (max-width:980px){
+      .hero{flex-direction:column;align-items:stretch}
+      .hero-left{flex:auto}
+      .hero-right{justify-content:flex-start}
+      .grid{grid-template-columns:1fr}
+    }
+    @media (max-width:640px){
+      .container{padding:20px}
+      .title{font-size:34px}
+      .hero-card{padding:14px}
+    }
+  </style>
+</head>
+<body>
+
+  {% include 'customer/layout.html' %}
+
+  <main class="container" role="main">
+    <a class="sr-only" href="#shipping-heading">Skip to shipping details</a>
+
+    <section class="hero" aria-labelledby="shipping-heading">
+      <div class="hero-left">
+        <div class="eyebrow">Fast and Reliable</div>
+        <h1 class="title">Shipping & Delivery</h1>
+        <p class="subtitle">
+          We operate exclusively from and deliver only within <strong>Purnia, Bihar</strong>.Orders are processed quickly and can be tracked from your account's order page.
+        </p>
+      </div>
+
+      <div class="hero-right" aria-hidden="true">
+        <div class="hero-card">
+          <h3>Quick facts</h3>
+          <div class="ship-list">
+            <div class="ship-pill">
+              <strong>Local delivery</strong>
+              <span class="muted">Purnia city & district</span>
+            </div>
+            <div class="ship-pill">
+              <strong>Tracking</strong>
+              <span class="muted">Track order status from your account orders page</span>
+            </div>
+            <div class="ship-pill">
+              <strong>Delivery fee</strong>
+              <span class="muted">Calculated at checkout</span>
+            </div>
+            <div class="ship-pill">
+              <strong>Cutoffs</strong>
+              <span class="muted">Orders before 2:30 PM IST processed same day (where possible)</span>
+            </div>
+          </div>
+          <div style="margin-top:12px" class="note">We only accept orders to pincodes inside Purnia district. Use the checker on this page to confirm deliverability.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid" aria-labelledby="shipping-heading">
+      <div>
+        <article class="card" id="shipping-heading">
+          <h2 class="section-title">Order processing & cutoffs</h2>
+          <p class="muted">Most orders are processed within 6–12 hours on business days. Orders placed before <strong>2:30 PM IST</strong> are eligible for same-day dispatch where available — orders placed after the cutoff will be processed the next business day.</p>
+
+          <h3 style="margin-top:16px;">Delivery options</h3>
+          <table class="table" aria-label="Delivery options table">
+            <thead>
+              <tr><th>Service</th><th>Estimated delivery</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Standard</strong></td><td>1–3 business days</td><td class="muted">Local delivery within Purnia district.</td></tr>
+              <tr><td><strong>Express</strong></td><td>Same day / next day</td><td class="muted">Available in selected areas for an additional fee.</td></tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top:16px;">Shipping costs</h3>
+          <p class="muted">Shipping charges are calculated at checkout. There are no blanket free-shipping thresholds; shipping fees depend on service selected and exact delivery location within Purnia.</p>
+
+          <h3 style="margin-top:16px;">Tracking & order status</h3>
+          <p class="muted">You can view the live order stage and status from your account's order page — this is the authoritative place to see dispatch and delivery updates.</p>
+
+          <div style="margin-top:12px" class="contact-row">
+            <a id="emailShipping" class="btn primary" href="mailto:champalalandsons@gmail.com">Contact Shipping Support</a>
+            <a class="btn ghost" href="tel:+917070606600">Call +91 70706 06600</a>
+          </div>
+
+          <p class="note">If your order shows delivered in your account but you haven't received it, check with household members/neighbors and then contact us with order details.</p>
+        </article>
+
+        <article class="card" style="margin-top:16px">
+          <h2 class="section-title">Sustainable packaging & delivery partners</h2>
+          <p class="muted">We use minimal, recyclable packaging where possible and work with reliable local carriers to ensure careful delivery across Purnia.</p>
+
+          <h3 style="margin-top:12px">Packaging care</h3>
+          <p class="muted">Please keep packaging until you inspect items. If packaging is disposed of by the courier, try to get a photo or note as proof.</p>
+        </article>
+
+        <article class="card" style="margin-top:16px">
+          <h2 class="section-title">FAQ</h2>
+          <div class="faq">
+            <div class="faq-item">
+              <button type="button" aria-expanded="false" aria-controls="f1">How long before my order ships?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+              <div id="f1" class="faq-answer">Orders placed on business days usually ship within 6–12 hours. Orders after the cutoff will be processed the next business day.</div>
+            </div>
+            <div class="faq-item">
+              <button type="button" aria-expanded="false" aria-controls="f2">Do you ship outside Purnia?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+              <div id="f2" class="faq-answer">No — we only accept and deliver orders within Purnia district in Bihar. For deliverability, use the pincode checker on this page.</div>
+            </div>
+            <div class="faq-item">
+              <button type="button" aria-expanded="false" aria-controls="f3">Can I change delivery address after ordering?<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+              <div id="f3" class="faq-answer">You can change address only before dispatch. Contact support immediately with your order number. After dispatch, changes depend on our local carrier.</div>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <!-- Sidebar -->
+      <aside>
+        <div class="card" aria-labelledby="quick-heading">
+          <h3 id="quick-heading" class="section-title">Deliverability</h3>
+
+          <div class="muted" style="margin-top:8px">
+            Enter a pincode to check whether we deliver there. We only deliver within Purnia district (PINs begin with <strong>854</strong>).
+          </div>
+
+          <!-- Pincode checker -->
+          <div style="margin-top:12px">
+            <div class="pincode-check" role="group" aria-label="Pincode checker">
+              <input id="pincodeInput" class="input" placeholder="Enter 6-digit pincode" inputmode="numeric" maxlength="6" />
+              <button id="checkBtn" class="btn primary">Check</button>
+            </div>
+            <div id="pincodeResult" class="result" aria-live="polite" style="color:var(--accent);"></div>
+          </div>
+
+          <div style="margin-top:14px">
+            <strong>Need help?</strong>
+            <div class="muted" style="margin-top:6px">Email shipping support or call our logistics team.</div>
+          </div>
+
+          <div class="contact-row" style="margin-top:12px">
+            <a id="sidebarEmail" class="btn primary" href="mailto:champalalandsons@gmail.com">Email</a>
+            <a class="btn ghost" href="tel:+917070606600">Call</a>
+          </div>
+
+          <div class="note">Orders placed on holidays/weekends are processed the next business day.</div>
+        </div>
+      </aside>
+    </section>
+
+    <div style="height:28px"></div>
+  </main>
+
+  {% include 'customer/footer.html' %}
+
+  <script>
+  (function(){
+    // EMAIL behavior: copy & toast then mailto
+    var EMAIL = 'champalalandsons@gmail.com';
+    function showToast(message){
+      var old = document.querySelector('.copy-toast'); if(old) old.remove();
+      var t = document.createElement('div'); t.className='copy-toast'; t.setAttribute('role','status'); t.textContent = message;
+      document.body.appendChild(t);
+      setTimeout(function(){ t.remove(); }, 2400);
+    }
+    function copyText(text){
+      if(navigator && navigator.clipboard && navigator.clipboard.writeText){
+        return navigator.clipboard.writeText(text).then(function(){ return true; }).catch(function(){ return fallbackCopy(text); });
+      } else return Promise.resolve(fallbackCopy(text));
+    }
+    function fallbackCopy(text){
+      try{ var ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); return true; } catch(e){ return false; }
+    }
+    function setupEmailButton(id){
+      var el = document.getElementById(id); if(!el) return;
+      el.addEventListener('click', function(ev){
+        ev.preventDefault();
+        copyText(EMAIL).then(function(success){
+          if(success) showToast('Copied email to clipboard — ' + EMAIL);
+          else showToast('Opening mail client (copy failed)');
+          setTimeout(function(){ window.location.href = 'mailto:' + EMAIL; }, 140);
+        });
+      });
+    }
+    setupEmailButton('emailShipping');
+    setupEmailButton('sidebarEmail');
+
+    // FAQ toggle with icon rotation
+    document.querySelectorAll('.faq-item button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var ans = document.getElementById(btn.getAttribute('aria-controls'));
+        var expanded = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!expanded));
+        if(ans) ans.classList.toggle('show');
+        var svg = btn.querySelector('svg'); if(svg) svg.style.transform = expanded ? 'rotate(0deg)' : 'rotate(180deg)';
+      });
+    });
+
+    // Pincode checker logic
+    // We treat PINs starting with '854' as Purnia district and therefore deliverable.
+    // Additionally include an explicit set of known Purnia pincodes for stricter checking (optional).
+    var knownPurniaPins = [
+      '854201','854202','854203','854204','854205','854301','854302','854303','854304','854305',
+      '854315','854316','854317','854325','854326','854327','854330','854333','854335','854337'
+    ];
+
+    function isDeliverable(pin){
+      if(!/^[0-9]{6}$/.test(pin)) return {ok:false, reason:'invalid'};
+      // Strict check: either in known set OR starts with 854 (Purnia district).
+      if(knownPurniaPins.indexOf(pin) !== -1) return {ok:true, reason:'known'};
+      if(pin.startsWith('854')) return {ok:true, reason:'prefix'};
+      return {ok:false, reason:'not_in_purnia'};
+    }
+
+    var input = document.getElementById('pincodeInput');
+    var btn = document.getElementById('checkBtn');
+    var out = document.getElementById('pincodeResult');
+
+    function displayPincodeResult(){
+      var pin = (input.value || '').trim();
+      var res = isDeliverable(pin);
+      if(res.reason === 'invalid'){
+        out.style.color = '#b91c1c';
+        out.textContent = 'Please enter a valid 6-digit pincode.';
+        return;
+      }
+      if(res.ok){
+        out.style.color = 'green';
+        if(res.reason === 'known') out.textContent = pin + ' — Deliverable (Purnia).' ;
+        else out.textContent = pin + ' — Likely deliverable (Purnia district).';
+      } else {
+        out.style.color = '#b91c1c';
+        out.textContent = pin + ' — Not deliverable (outside Purnia).';
+      }
+    }
+
+    if(btn){
+      btn.addEventListener('click', function(e){ e.preventDefault(); displayPincodeResult(); });
+    }
+    // allow enter key inside input
+    if(input){
+      input.addEventListener('keypress', function(e){ if(e.key === 'Enter'){ e.preventDefault(); displayPincodeResult(); } });
+    }
+
+  })();
+  </script>
+</body>
+</html>

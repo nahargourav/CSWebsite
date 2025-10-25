@@ -13,6 +13,7 @@ import urllib.parse
 # Environment helpers
 from dotenv import load_dotenv
 import razorpay as rz_module
+from ipaddress import ip_address
 # Third-party / Flask
 from flask import (
     Blueprint, render_template, request, redirect, url_for, flash,
@@ -503,6 +504,457 @@ def register():
             conn.close()
 
     return render_template('customer/register.html')
+
+
+
+@main.route('/collections/bestsellers')
+def best_sellers():
+    """
+    Display top 50 most sold product variants (by order_items.quantity).
+    """
+    conn = None
+    cur = None
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        # Aggregate sold quantities from order_items, join product / variant details.
+        # Use scalar subquery to pick a variant image if available, else product image.
+        sql = """
+        SELECT
+          oi.variant_id,
+          oi.product_id,
+          COALESCE(p.name, '') AS product_name,
+          p.category,
+          COALESCE(p.short_description, '') AS short_description,
+          COALESCE(p.description, '') AS description,
+          COALESCE(p.rating_avg, 0.0) AS rating_avg,
+          COALESCE(p.reviews_count, 0) AS reviews_count,
+          COALESCE(pv.price, 0.00) AS price,
+          pv.size,
+          pv.color,
+          pv.sku AS variant_sku,
+          -- pick variant image if present; else pick a product-level image
+          (
+            SELECT path FROM product_images
+            WHERE variant_id = oi.variant_id
+            ORDER BY is_primary DESC, position ASC
+            LIMIT 1
+          ) AS variant_image,
+          (
+            SELECT path FROM product_images
+            WHERE product_id = oi.product_id AND (variant_id IS NULL OR variant_id = 0)
+            ORDER BY is_primary DESC, position ASC
+            LIMIT 1
+          ) AS product_image,
+          SUM(oi.quantity)::bigint AS sold_qty
+        FROM order_items oi
+        LEFT JOIN product_variants pv ON pv.variant_id = oi.variant_id
+        LEFT JOIN products p ON p.product_id = oi.product_id
+        GROUP BY oi.variant_id, oi.product_id, p.name, p.category, p.short_description, p.description, p.rating_avg, p.reviews_count, pv.price, pv.size, pv.color, pv.sku, pv.variant_id, pv.sku, pv.size, pv.color, pv.price
+        ORDER BY sold_qty DESC
+        LIMIT 50
+        """
+        cur.execute(sql)
+        rows = cur.fetchall()
+        variants = []
+        for r in rows:
+            # Convert to plain dict and coerce values to safe JSON types
+            idx = dict(r)
+            # choose the image: variant_image prefer, else product_image, else None
+            img = idx.get('variant_image') or idx.get('product_image') or None
+            variants.append({
+                'variant_id': int(idx.get('variant_id')) if idx.get('variant_id') is not None else None,
+                'product_id': int(idx.get('product_id')) if idx.get('product_id') is not None else None,
+                'title': idx.get('product_name') or '',
+                'category': idx.get('category') or '',
+                'short_description': idx.get('short_description') or '',
+                'description': idx.get('description') or '',
+                'rating_avg': float(idx.get('rating_avg') or 0.0),
+                'reviews_count': int(idx.get('reviews_count') or 0),
+                'price': float(idx.get('price') or 0.0),
+                'size': idx.get('size') or '',
+                'color': idx.get('color') or '',
+                'variant_sku': idx.get('variant_sku') or '',
+                'image': img,
+            })
+
+        # pass the list to the template
+        return render_template('customer/best_sellers.html', variants=variants)
+    except Exception as e:
+        current_app.logger.exception("Failed to load best-sellers: %s", e)
+        # render page with empty list rather than crash
+        return render_template('customer/best_sellers.html', variants=[])
+    finally:
+        try:
+            if cur:
+                cur.close()
+        except Exception:
+            pass
+        try:
+            if conn:
+                conn.close()
+        except Exception:
+            pass
+
+
+@main.route('/help/shipping')
+def shipping():
+    return render_template("customer/shipping.html")
+
+@main.route('/help/returns')
+def returns():
+    return render_template("customer/returns.html")
+
+@main.route('/help/faq')
+def faq():
+    return render_template("customer/faq.html")
+
+@main.route('/contact')
+def contact():
+    return render_template("customer/contact.html")
+
+
+EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+@main.route('/contact/submit', methods=['POST'])
+def contact_submit():
+    """
+    Accepts both JSON (AJAX) and form-encoded POSTs.
+    Returns JSON when X-Requested-With == XMLHttpRequest or when Accept prefers JSON.
+    Inserts a row into contact_messages using psycopg2 (parameterized).
+    """
+
+    # Accept JSON OR fallback to form-encoded submission
+    data = {}
+    json_payload = request.get_json(silent=True)
+    if json_payload:
+        data = json_payload
+    else:
+        # request.form is ImmutableMultiDict; convert to dict
+        data = request.form.to_dict()
+
+    # Normalize and trim
+    name = (data.get('name') or '').strip()
+    email = (data.get('email') or '').strip()
+    phone = (data.get('phone') or '').strip()
+    subject = (data.get('subject') or '').strip()
+    message = (data.get('message') or '').strip()
+    consent_raw = data.get('consent')
+    source = (data.get('source') or '').strip()
+
+    # Parse consent (strings like 'on','true','1' or boolean)
+    def parse_bool(v):
+        if isinstance(v, bool):
+            return v
+        if v is None:
+            return False
+        if isinstance(v, str):
+            return v.lower() in ('1', 'true', 'on', 'yes')
+        return False
+
+    consent = parse_bool(consent_raw)
+
+    # Basic validation
+    errors = []
+    if not name:
+        errors.append("Name is required.")
+    if not email:
+        errors.append("Email is required.")
+    elif not EMAIL_RE.match(email):
+        errors.append("Email appears invalid.")
+    if not message:
+        errors.append("Message is required.")
+    if not consent:
+        errors.append("Consent is required to process personal data.")
+
+    # length caps
+    if len(name) > 256:
+        errors.append("Name is too long.")
+    if len(email) > 512:
+        errors.append("Email is too long.")
+    if len(subject) > 120:
+        errors.append("Subject is too long.")
+    if len(message) > 20000:
+        errors.append("Message is too long.")
+
+    # Decide whether to return JSON (AJAX) or not
+    wants_json = (
+        request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        or request.accept_mimetypes.best == 'application/json'
+        or request.is_json
+    )
+
+    if errors:
+        if wants_json:
+            return jsonify(ok=False, errors=errors), 400
+        else:
+            for err in errors:
+                flash(err, 'danger')
+            return redirect(url_for('main.contact'))
+
+    # Collect metadata
+    ip = None
+    try:
+        xff = request.headers.get('X-Forwarded-For')
+        if xff:
+            ip = xff.split(',')[0].strip()
+        else:
+            ip = request.remote_addr
+        # validate IP (if invalid, null it)
+        if ip:
+            _ = ip_address(ip)
+    except Exception:
+        ip = None
+
+    user_agent = request.headers.get('User-Agent')
+    referer = request.headers.get('Referer')
+
+    # Insert into DB using psycopg2
+    insert_sql = """
+        INSERT INTO contact_messages
+          (name, email, phone, subject, message, consent, source, ip, user_agent, referer, status, created_at)
+        VALUES
+          (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        RETURNING id, created_at;
+    """
+
+    created_at = datetime.utcnow()
+
+    conn = None
+    cur = None
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+        cur.execute(
+            insert_sql,
+            (
+                name,
+                email,
+                phone or None,
+                subject or None,
+                message,
+                bool(consent),
+                source or None,
+                ip,
+                user_agent,
+                referer,
+                'new',
+                created_at,
+            )
+        )
+        row = cur.fetchone()
+        conn.commit()
+    except Exception as exc:
+        # Log server-side
+        current_app.logger.exception("Failed to save contact message (psycopg2)")
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+        # return appropriate response
+        if wants_json:
+            return jsonify(ok=False, message="Failed to save message. Please try again later."), 500
+        else:
+            flash("We couldn't save your message right now. Please try again later.", 'danger')
+            return redirect(url_for('main.contact'))
+    finally:
+        if cur:
+            try:
+                cur.close()
+            except Exception:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
+
+    # success
+    inserted_id = row.get('id') if isinstance(row, dict) else (row[0] if row else None)
+
+    # Optionally: queue email, etc. (deferred recommended).
+    if wants_json:
+        response = {
+            "ok": True,
+            "message": "Thanks — we received your message.",
+            "id": inserted_id
+        }
+        return jsonify(response), 201
+
+    flash("Thanks — we received your message. We'll be in touch.", "success")
+
+
+@main.route('/careers')
+def careers():
+    """
+    Fetch active roles from the DB and render careers page with roles list.
+    """
+    conn = None
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        # select relevant fields
+        cur.execute("""
+            SELECT id, title, dept, location, type, salary, summary, description, is_active, created_at
+            FROM roles
+            WHERE is_active = TRUE
+            ORDER BY created_at DESC
+        """)
+        roles = cur.fetchall()
+        cur.close()
+    except Exception as exc:
+        current_app.logger.exception("Failed to load roles: %s", exc)
+        # In case of DB error, show empty list or an error page; we pass empty list for graceful degrade.
+        roles = []
+    finally:
+        if conn:
+            conn.close()
+
+    # Render template and pass roles (list of dicts)
+    return render_template("customer/careers.html", roles=roles)
+
+ALLOWED_EXTENSIONS = {'pdf', 'doc', 'docx'}
+MAX_RESUME_SIZE = 2 * 1024 * 1024  # 2MB
+
+@main.route('/careers/apply', methods=['POST'])
+def careers_apply():
+    """
+    Accept application POSTs (AJAX or native form).
+    Stores application in DB (psycopg2), uploads resume to R2 using upload_to_r2(),
+    stores the R2 key into applications.resume_key.
+    Returns JSON when request is XHR (AJAX), otherwise redirects back with a flash.
+    """
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json
+
+    # Basic fields
+    role_id = request.form.get('role_id') or None
+    name = (request.form.get('name') or "").strip()
+    email = (request.form.get('email') or "").strip()
+    phone = (request.form.get('phone') or "").strip()
+    location = (request.form.get('location') or "").strip()
+    message = (request.form.get('message') or "").strip()
+
+    # validation
+    if not name or not email:
+        msg = "Name and email are required."
+        if is_ajax:
+            return jsonify(success=False, message=msg), 400
+        flash(msg, 'error')
+        return redirect(url_for('main.careers'))
+
+    resume = request.files.get('resume')
+
+    # If file present, validate extension & size
+    resume_key_to_store = None
+    resume_filename = None
+
+    try:
+        conn = get_db()
+        cur = conn.cursor()
+
+        # Insert application first (without resume_key), so we get application id
+        cur.execute("""
+            INSERT INTO applications (role_id, name, email, phone, location, message, ip_address, user_agent, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, now())
+            RETURNING id
+        """, (
+            role_id,
+            name,
+            email,
+            phone,
+            location,
+            message,
+            request.remote_addr,
+            request.headers.get('User-Agent')
+        ))
+        row = cur.fetchone()
+        app_id = row[0]
+
+        # If resume uploaded, validate then upload to R2 and update record with key
+        if resume and resume.filename:
+            filename = secure_filename(resume.filename)
+            resume_filename = filename
+
+            # check size if possible
+            resume.stream.seek(0, os.SEEK_END)
+            size = resume.stream.tell()
+            resume.stream.seek(0)
+
+            if size > MAX_RESUME_SIZE:
+                conn.rollback()
+                msg = "Resume exceeds maximum allowed size of 5MB."
+                if is_ajax:
+                    return jsonify(success=False, message=msg), 400
+                flash(msg, 'error')
+                return redirect(url_for('main.careers'))
+
+            ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else ''
+            if ext not in ALLOWED_EXTENSIONS:
+                conn.rollback()
+                msg = "Resume must be one of: pdf, doc, docx."
+                if is_ajax:
+                    return jsonify(success=False, message=msg), 400
+                flash(msg, 'error')
+                return redirect(url_for('main.careers'))
+
+            # Build a deterministic, unique key that includes application id
+            unique = uuid.uuid4().hex
+            key = f"applications/{app_id}/{unique}_{filename}"
+
+            # Upload to R2 using the helper; it may return public URL, but we will store the key only
+            try:
+                # Important: upload_to_r2 expects a FileStorage-like object (werkzeug FileStorage)
+                upload_to_r2(resume, key)
+            except Exception as e:
+                current_app.logger.exception("R2 upload failed for application %s: %s", app_id, e)
+                conn.rollback()
+                msg = "Resume upload failed. Please try again later."
+                if is_ajax:
+                    return jsonify(success=False, message=msg), 500
+                flash(msg, 'error')
+                return redirect(url_for('main.careers'))
+
+            resume_key_to_store = key
+
+            # update the application row with resume_key
+            cur.execute("""
+                UPDATE applications SET resume_key = %s WHERE id = %s
+            """, (resume_key_to_store, app_id))
+
+        # commit transaction
+        conn.commit()
+
+    except Exception as e:
+        current_app.logger.exception("Failed to store application: %s", e)
+        try:
+            conn.rollback()
+        except Exception:
+            pass
+        msg = "Unable to submit application right now. Please try again later."
+        if is_ajax:
+            return jsonify(success=False, message=msg), 500
+        flash(msg, 'error')
+        return redirect(url_for('main.careers'))
+
+    finally:
+        try:
+            cur.close()
+            conn.close()
+        except Exception:
+            pass
+
+    # Success
+    if is_ajax:
+        return jsonify(success=True, message="Application received. We'll be in touch shortly.")
+    else:
+        flash("Thanks — your application was received. We'll be in touch.", "success")
+
+@main.route('/privacy')
+def privacy():
+    return render_template("customer/privacy.html")
+
+
 
 # ---------------------------profile section--------------------------------------------
 
@@ -1527,7 +1979,6 @@ def cart_add():
         if clamped:
             flash(f"Quantity reduced to available stock ({max_avail}).", "info")
         flash("Added to cart", "success")
-        return redirect(url_for('main.view_prod_detail', product_id=product_id, variant_id=variant_id))
 
 
 # NEW endpoint: update cart item quantity (AJAX)

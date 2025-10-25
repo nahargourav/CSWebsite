@@ -40,6 +40,9 @@ DROP TABLE IF EXISTS public.owners CASCADE;
 DROP TABLE IF EXISTS public.customers CASCADE;
 DROP TABLE IF EXISTS public.registration_otps CASCADE;
 DROP TABLE IF EXISTS public.wishlist CASCADE;
+DROP TABLE IF EXISTS public.contact_messages CASCADE;
+DROP TABLE IF EXISTS public.applications CASCADE;
+DROP TABLE IF EXISTS public.roles CASCADE;
 
 -- Re-create tables (timestamps store India local wall-clock time via DEFAULT (now() AT TIME ZONE 'Asia/Kolkata'))
 -- Note: foreign keys will be added later via idempotent ALTER / DO blocks to avoid ordering issues.
@@ -75,7 +78,7 @@ CREATE TABLE public.products (
   brand varchar(100),
   sku varchar(64),
   category varchar(150),
-  short_description varchar(255),
+  short_description text,
   description text,
   image_path varchar(255),
   currency varchar(10) NOT NULL DEFAULT 'INR',
@@ -222,6 +225,139 @@ CREATE TABLE public.registration_otps (
   expires_at timestamp NOT NULL,
   created_at timestamp NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Kolkata')
 );
+
+-- contact_messages
+CREATE TABLE IF NOT EXISTS contact_messages (
+    id BIGSERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone VARCHAR(32),
+    subject VARCHAR(120),
+    message TEXT NOT NULL,
+    consent BOOLEAN NOT NULL DEFAULT FALSE,
+    source VARCHAR(80),
+    ip INET,
+    user_agent TEXT,
+    referer TEXT,
+    status VARCHAR(32) NOT NULL DEFAULT 'new',
+    created_at timestamp NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Kolkata'),
+    processed_at timestamp NULL
+);
+
+
+-- Roles table
+CREATE TABLE IF NOT EXISTS roles (
+  id SERIAL PRIMARY KEY,
+  title TEXT NOT NULL,
+  dept VARCHAR(120),
+  location VARCHAR(120),
+  type VARCHAR(60),
+  salary NUMERIC(12,2),
+  summary TEXT,
+  description TEXT,
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT (now() AT TIME ZONE 'Asia/Kolkata')
+);
+
+-- Applications table
+CREATE TABLE IF NOT EXISTS applications (
+  id SERIAL PRIMARY KEY,
+  role_id INTEGER REFERENCES roles(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone VARCHAR(40),
+  location VARCHAR(120),
+  message TEXT,
+  resume_key TEXT,          -- store the R2 key/path (NOT the public URL)
+  ip_address INET,
+  user_agent TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT (now() AT TIME ZONE 'Asia/Kolkata')
+);
+
+
+
+-- 1) Store Sales Executive
+INSERT INTO roles (title, dept, location, type, salary, summary, description, is_active, created_at)
+SELECT
+  'Store Sales Executive',
+  'Retail',
+  'Purnia',
+  'Full-time',
+  12000.00,
+  'Customer-facing sales role: assist shoppers with fabric selection, measure yardage, operate POS and ensure a friendly store experience.',
+  E'Role overview:\nA Store Sales Executive is the primary face of the shop for walk-in customers. You will greet customers, understand their needs, recommend fabrics and yardage, explain weave and care characteristics, and complete sales via the POS. You will also keep displays tidy, help with simple packaging and ensure customer follow-up where required.\n\nKey responsibilities:\n- Greet customers and provide friendly, knowledgeable support about fabrics, sari types, suiting, linens, and yardage.\n- Take accurate measurements and cut/prepare yardage per customer requirements (or hand off to the cutter where applicable).\n- Operate point-of-sale (cash / card), issue paper receipts, and handle small daily reconciliation tasks.\n- Maintain attractive merchandise displays, label stock and rotate seasonal items.\n- Track popular items and report low stock to management; assist with simple stock counts.\n- Answer basic product queries by phone or in-person and escalate complex queries to the manager.\n\nSkills & requirements:\n- Minimum: secondary education. 1+ year retail/fabric sales experience preferred.\n- Good conversational skills in local language; basic Hindi/English useful for messages and online orders.\n- Numeracy and comfort with handling cash and small accounting tasks.\n- Honest, punctual, presentable and able to stand for store shifts.\n- Willingness to learn fabric names, weaving terms and care instructions.\n\nWork conditions & benefits:\n- Full-time, retail hours (incl. occasional weekends). Employee discount on store fabric. On-the-job training provided.',
+  TRUE,
+  (now() AT TIME ZONE 'Asia/Kolkata')
+WHERE NOT EXISTS (
+  SELECT 1 FROM roles WHERE title = 'Store Sales Executive' AND location = 'Purnia'
+);
+
+-- 2) Operations Assistant
+INSERT INTO roles (title, dept, location, type, salary, summary, description, is_active, created_at)
+SELECT
+  'Operations Assistant',
+  'Operations',
+  'Purnia',
+  'Full-time',
+  10000.00,
+  'Support operational flow: deliveries, inventory, dispatch coordination and vendor follow-ups for the shop.',
+  E'Role overview:\nThe Operations Assistant keeps the shop running smoothly behind the scenes. You will be responsible for receiving shipments, checking incoming goods against invoices, organising storage, arranging local deliveries, and coordinating with suppliers and couriers.\n\nKey responsibilities:\n- Receive and inspect incoming fabric consignments; verify quantities and note any damages.\n- Update inventory records (simple stock ledger / spreadsheet) and notify manager of replenishment needs.\n- Coordinate local dispatches and deliveries (packaging, labeling, creating dispatch notes) and liaise with delivery personnel.\n- Maintain purchase invoices, petty bills and assist with vendor communications and follow-ups.\n- Help prepare daily/weekly stock reports and support end-of-day reconciliation when required.\n- Keep stockroom organized and ensure safety (stacking, storing rolls properly).\n\nSkills & requirements:\n- Minimum: basic literacy and numeracy. Retail operations or warehouse experience preferred.\n- Comfortable using simple computer tools (Excel / Google Sheets) or willing to learn.\n- Good organisational skills, attention to detail and ability to lift moderate weight (fabric rolls).\n- Reliable, timely and able to work with suppliers and delivery services.\n\nWork conditions & benefits:\n- Full-time, primarily on-site in Purnia. Close coordination with shop manager. Employee discount and small travel reimbursements where appropriate.',
+  TRUE,
+  (now() AT TIME ZONE 'Asia/Kolkata')
+WHERE NOT EXISTS (
+  SELECT 1 FROM roles WHERE title = 'Operations Assistant' AND location = 'Purnia'
+);
+
+-- Corrected INSERT using dollar-quoting so embedded quotes/newlines don't break the statement
+INSERT INTO roles (title, dept, location, type, salary, summary, description, is_active, created_at)
+SELECT
+  'E-commerce Coordinator',
+  'Digital',
+  'Remote / Hybrid',
+  'Part-time',
+  9000.00,
+  $$Part-time role to manage online listings, order support and local fulfilment coordination for the shop's web and marketplace presence.$$,
+  $$Role overview:
+This role helps the shop maintain an online presence and process digital orders. The E-commerce Coordinator will create product listings, keep stock levels synced, respond to customer messages for online orders and coordinate with the store for packing and dispatch.
+
+Key responsibilities:
+- Create clear product listings with accurate descriptions, measurements and simple images provided by the store; maintain consistent naming and categories.
+- Update stock data and mark items as available/unavailable in the online store or marketplaces.
+- Process incoming online orders, collect order details and coordinate with the store for packing and dispatch.
+- Respond to customer queries (order status, product details) via email/WhatsApp/marketplace messages with a fast, courteous tone.
+- Assist with simple content tasks: short product copy, tagging, and occasionally scheduling social posts.
+
+Skills & requirements:
+- Comfortable using a CMS or marketplace dashboards (basic experience with Shopify, WooCommerce, or common marketplace interfaces is a plus).
+- Basic photography sense (ability to crop/resize images) or coordinate with an on-site helper for photos.
+- Good written communication; ability to work independently and manage part-time hours.
+- Reliable internet connection (if remote) and willingness to occasionally visit the store for coordination.
+
+Work conditions & benefits:
+- Part-time/hybrid. Remote work is possible for certain tasks; occasional on-site coordination required. Training provided for shop systems.$$,
+  TRUE,
+  (now() AT TIME ZONE 'Asia/Kolkata')
+WHERE NOT EXISTS (
+  SELECT 1 FROM roles WHERE title = 'E-commerce Coordinator' AND location = 'Remote / Hybrid'
+);
+
+
+-- 4) Store Manager
+INSERT INTO roles (title, dept, location, type, salary, summary, description, is_active, created_at)
+SELECT
+  'Store Manager',
+  'Retail',
+  'Purnia',
+  'Full-time',
+  25000.00,
+  'Lead store operations: supervise staff, manage inventory & procurement, ensure customer satisfaction and financial reconciliation.',
+  E'Role overview:\nThe Store Manager is responsible for overall store performance, people management and customer experience. You will lead daily operations, manage staff schedules, maintain stock levels and be the primary decision-maker in the store.\n\nKey responsibilities:\n- Supervise and coach sales team; schedule rotas and ensure adequate coverage for peak hours.\n- Maintain inventory accuracy: approve purchase orders, manage vendor relationships and ensure timely restocking.\n- Oversee cash handling, POS reconciliation, and daily sales reporting; liaise with accounting/bookkeeping as required.\n- Ensure high standards of customer service, handle escalations and build strong local customer relationships.\n- Plan simple in-store promotions, merchandising and seasonal displays to boost sales.\n- Enforce store policies, safety and loss-prevention measures.\n\nSkills & requirements:\n- Proven retail experience (3+ years) with at least 1 year in a supervisory role preferred.\n- Strong people skills: coaching, conflict resolution and a customer-first mindset.\n- Comfortable with basic accounting and reconciliations; good numeracy and record-keeping.\n- Local market knowledge and ability to work flexible hours including weekends.\n\nWork conditions & benefits:\n- Full-time. Competitive salary for local market, plus performance discussions and staff discount. Leadership opportunity in a family-run traditional shop.',
+  TRUE,
+  (now() AT TIME ZONE 'Asia/Kolkata')
+WHERE NOT EXISTS (
+  SELECT 1 FROM roles WHERE title = 'Store Manager' AND location = 'Purnia'
+);
+
 
 -- === NOW add constraints & indexes (idempotent) ===
 
@@ -389,6 +525,13 @@ CREATE INDEX idx_wishlist_customer_created ON public.wishlist (customer_id, crea
 
 -- Index to support queries by variant
 CREATE INDEX idx_wishlist_variant ON public.wishlist (variant_id);
+-- Indexes for contact_messages
+CREATE INDEX IF NOT EXISTS idx_contact_messages_email ON contact_messages (LOWER(email));
+-- Index to support queries by created_at
+CREATE INDEX IF NOT EXISTS idx_contact_messages_created_at ON contact_messages (created_at);
+
+CREATE INDEX IF NOT EXISTS idx_applications_role_id ON applications(role_id);
+CREATE INDEX IF NOT EXISTS idx_roles_is_active ON roles(is_active);
 
 
 

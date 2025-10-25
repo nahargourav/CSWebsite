@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Champalal &amp; Sons — Returns &amp; Refunds</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" >
+  <meta name="description" content="Returns, exchanges and refunds information for Champalal &amp; Sons. Steps for inspecting deliveries, reporting damage/missing items and timelines for refunds and exchanges." />
+
+  <!-- Fonts & shared variables (matches your site) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#fff5ee;
+      --muted:#6b7280;
+      --accent:#f59e0b;
+      --accent-contrast:#111827;
+      --card:#ffffff;
+      --shadow:0 10px 30px rgba(17,24,39,0.06);
+      --max:1200px;
+      --radius:12px;
+      --focus: 3px solid rgba(245,158,11,0.12);
+      font-family:'Poppins', Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--accent-contrast);-webkit-font-smoothing:antialiased}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .container{max-width:var(--max);margin:0 auto;padding:28px}
+
+    /* Visually hidden (for screen readers) */
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+    /* Header / hero - tightened and constrained so it doesn't become a huge stacked block */
+    .hero {
+      display:flex;
+      gap:20px;
+      align-items:flex-start;            /* top-align to avoid vertical stretching */
+      justify-content:space-between;
+      margin-bottom:18px;
+    }
+    .h1{font-size:40px; line-height:1.04; margin:0 0 10px; font-weight:800}
+    .lead{margin:0;color:var(--muted);font-size:15px;max-width:820px}
+
+    /* Layout */
+    .grid {display:grid;grid-template-columns:1fr 360px; gap:22px; align-items:start}
+    .card {background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px}
+    .muted{color:var(--muted)}
+    .section-title{font-size:18px;margin:0 0 8px}
+    .kicker{font-weight:700;color:var(--accent);font-size:13px}
+    .pill {display:inline-block;padding:6px 10px;border-radius:999px;background:#fff7ed;color:var(--accent);font-weight:700}
+
+    /* Steps */
+    .steps {display:flex;flex-direction:column;gap:12px}
+    .step {display:flex;gap:14px;align-items:flex-start}
+    .step .num {width:44px;height:44px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#ff7f66);color:white;display:flex;align-items:center;justify-content:center;font-weight:800}
+    .step .desc {flex:1}
+    .small {font-size:13px}
+
+    /* Policy table */
+    .policy-grid {display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+    .policy-item {background:#fff; border-radius:10px; padding:12px; border:1px solid rgba(17,24,39,0.04)}
+    .policy-item strong{display:block;margin-bottom:6px}
+
+    /* FAQ / accordion */
+    .faq {margin-top:8px}
+    .faq-item {border-top:1px solid rgba(17,24,39,0.04);padding:12px 0}
+    .faq-item button {width:100%;text-align:left;background:none;border:none;padding:0;margin:0;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer}
+    .faq-answer {margin-top:10px;color:var(--muted);display:none;line-height:1.6}
+    .faq-answer.show{display:block}
+
+    /* Contact row */
+    .contact-row {display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .btn {padding:10px 14px;border-radius:999px;border:none;cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:8px}
+    .btn.primary{background:var(--accent);color:white}
+    .btn.ghost{background:white;border:1px solid #e6e7ea;color:var(--accent-contrast)}
+
+    /* Fine print */
+    .small-print {margin-top:12px;font-size:13px;color:var(--muted);line-height:1.5}
+
+    /* Toast */
+    .copy-toast {
+      position:fixed;
+      left:12px;
+      right:12px;
+      bottom:18px;
+      max-width:420px;
+      margin:0 auto;
+      background:black;
+      border-radius:10px;
+      padding:10px 14px;
+      box-shadow:0 8px 30px rgba(2,6,23,0.12);
+      z-index:9999;
+      font-size:13px;
+      color:white;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+    }
+
+    /* Accessibility focus */
+    a:focus, button:focus, input:focus, textarea:focus {outline:none;box-shadow:var(--focus);border-color:var(--accent)}
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+      .hero{flex-direction:column;align-items:stretch;gap:12px}
+      .hero .intro{flex:1;max-width:none}
+    }
+    @media (max-width: 640px){
+      .container{padding:16px}
+      .h1{font-size:28px}
+      .policy-grid{grid-template-columns:1fr}
+      .card{padding:16px}
+      .step {gap:10px}
+      .step .num {width:40px;height:40px}
+    }
+    @media (max-width: 360px){
+      .h1{font-size:22px}
+      .lead{font-size:14px}
+    }
+  </style>
+</head>
+<body>
+
+  {% include 'customer/layout.html' %}
+
+  <main class="container" role="main">
+    <a class="sr-only" href="#returns-heading">Skip to returns content</a>
+
+    <section class="hero" aria-labelledby="page-heading">
+      <div class="intro">
+        <h1 id="page-heading" class="h1">Returns &amp; Refunds</h1>
+        <p class="lead">Clear, fair and practical: how to inspect deliveries, report damaged or missing items, and request an exchange or refund. Read the steps below so we can help quickly.</p>
+        <div style="margin-top:12px" class="muted small">Last updated: <strong>{{ last_updated or "2025-10-01" }}</strong></div>
+      </div>
+    </section>
+
+    <section class="grid" aria-labelledby="returns-heading">
+      <div>
+        <!-- Main content -->
+        <article class="card" id="returns-heading" aria-labelledby="heading-1">
+          <h2 class="section-title" id="heading-1">What you must do at delivery</h2>
+          <div class="steps" role="list">
+            <div class="step" role="listitem">
+              <div class="num" aria-hidden="true">1</div>
+              <div class="desc">
+                <div style="font-weight:700">Open &amp; inspect the package in the presence of the delivery agent.</div>
+                <div class="small muted">Do not sign for the delivery until you have checked the items. Inspect for damage, defects, missing items and verify they match your order. If you notice any issues, ask the agent to record them on the receipt.</div>
+              </div>
+            </div>
+
+            <div class="step" role="listitem">
+              <div class="num" aria-hidden="true">2</div>
+              <div class="desc">
+                <div style="font-weight:700">Report problems and get them recorded.</div>
+                <div class="small muted">If an item is damaged, defective or missing, ask the delivery agent to write the issue on the delivery receipt or carrier device. We will prioritize cases with a delivery note recorded at handover.</div>
+              </div>
+            </div>
+
+            <div class="step" role="listitem">
+              <div class="num" aria-hidden="true">3</div>
+              <div class="desc">
+                <div style="font-weight:700">Take photos and keep evidence.</div>
+                <div class="small muted">Photograph the packaging, item and damage clearly. Keep any packaging and delivery paperwork — you may be asked to provide these when submitting a claim.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="small-print">
+            <strong>Important:</strong> If you accept the package without reporting problems to the delivery agent and sign that the delivery was OK, we may not be able to accept a later return or refund request except in exceptional cases (e.g., confirmed courier error or successful investigation).
+          </div>
+        </article>
+
+        <article class="card" style="margin-top:16px">
+          <h2 class="section-title">How returns, exchanges &amp; refunds work</h2>
+
+          <div class="policy-grid">
+            <div class="policy-item">
+              <strong>Eligibility</strong>
+              <div class="muted small">Items reported at the time of delivery as damaged, defective or missing are eligible for return, exchange or refund. Items that are worn, altered or returned without supporting proof may be declined.</div>
+            </div>
+
+            <div class="policy-item">
+              <strong>Timeframe</strong>
+              <div class="muted small">Report issues to the delivery agent at handover. After confirming the agent recorded the issue, submit your request via email within 48 hours for the fastest processing.</div>
+            </div>
+
+            <div class="policy-item">
+              <strong>Exchange</strong>
+              <div class="muted small">Where possible we will replace the item with the same SKU. If unavailable we will offer an alternative or a refund.</div>
+            </div>
+
+            <div class="policy-item">
+              <strong>Refund method</strong>
+              <div class="muted small">Refunds are issued to the original payment method where possible. For cash/other offline payments we will coordinate a bank transfer or store credit per your preference.</div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px" class="muted small">
+            <strong>Processing time:</strong> Once we receive all required evidence and confirm the delivery note, refunds or exchanges are processed within 5–10 business days depending on the payment provider and bank.
+          </div>
+        </article>
+
+        <article class="card" style="margin-top:16px">
+          <h2 class="section-title">How to submit a return or refund request</h2>
+
+          <ol class="muted small" style="margin-left:18px">
+            <li>Ensure the issue is recorded on the delivery receipt by the agent at handover.</li>
+            <li>Take clear photos of the damaged packaging, product and delivery receipt (if available).</li>
+            <li>Email <a href="mailto:champalalandsons@gmail.com">champalalandsons@gmail.com</a> with subject <strong>Return request — Order #YOUR_ORDER_ID</strong> and attach photos and a short description.</li>
+            <li>We will reply within 1–2 business days with instructions and (if required) a return shipping label or a courier pick-up time.</li>
+            <li>Keep all packaging and the damaged item until the case is closed.</li>
+          </ol>
+
+          <div class="contact-row">
+            <a class="btn primary" href="mailto:champalalandsons@gmail.com" id="emailSupportBtn" aria-label="Email returns support">Email returns support</a>
+            <a class="btn ghost" href="tel:+917070606600" aria-label="Call customer care">Call +91 70706 06600</a>
+          </div>
+
+          <div class="small-print">
+            <strong>Note:</strong> If you cannot get the delivery agent to record the problem, take photos and contact us immediately. We'll investigate with the courier but acceptance is not guaranteed if there is no delivery note.
+          </div>
+        </article>
+
+        <article class="card" style="margin-top:16px">
+          <h2 class="section-title">Exceptions &amp; what we cannot accept</h2>
+          <ul class="muted small" style="margin-left:18px;line-height:1.6">
+            <li>Returns for change of mind after you accepted delivery without noting any issue.</li>
+            <li>Items returned without original packaging or that are clearly used/worn (unless delivered damaged).</li>
+            <li>Products with a hygiene seal that has been opened (where the seal is required) unless faulty on arrival.</li>
+          </ul>
+
+          <div class="small-print">
+            Some product categories (e.g., made-to-order fabrics or specially cut yardage) may be non-returnable — such restrictions will be shown on the product page before purchase.
+          </div>
+        </article>
+
+        <article class="card" style="margin-top:16px">
+          <h2 class="section-title">FAQ</h2>
+          <div class="faq" id="faq">
+            <div class="faq-item">
+              <button type="button" aria-expanded="false" aria-controls="faq1">
+                <span>What if I discover a defect after I accepted the delivery?</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+              </button>
+              <div id="faq1" class="faq-answer">If you accepted the parcel without recording the issue with the delivery agent we may be limited in what we can do. Contact us immediately with photos and we will investigate — acceptance is not guaranteed unless the agent logged the fault at delivery.</div>
+            </div>
+
+            <div class="faq-item">
+              <button type="button" aria-expanded="false" aria-controls="faq2">
+                <span>How long will it take to receive a refund?</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+              </button>
+              <div id="faq2" class="faq-answer">After we approve a refund, it typically takes 5–10 business days to reach your account depending on the payment provider and bank. We'll email you an update when the refund has been issued.</div>
+            </div>
+
+            <div class="faq-item">
+              <button type="button" aria-expanded="false" aria-controls="faq3">
+                <span>Do I need to return the item before I get a refund?</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+              </button>
+              <div id="faq3" class="faq-answer">In most cases we ask for the item to be returned so we can inspect and process the refund. If the item is low-value or unsafe to ship we may issue a refund without a return at our discretion.</div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card" style="margin-top:16px">
+          <h2 class="section-title">Policy summary</h2>
+          <div class="muted small">
+            Report problems to the delivery agent at handover and have them note it on the delivery receipt. Take photos and email <a href="mailto:champalalandsons@gmail.com">champalalandsons@gmail.com</a> with your order number. We will process eligible returns, exchanges or refunds within 5–10 business days after receiving all required evidence.
+          </div>
+        </article>
+      </div>
+
+      <!-- Sidebar -->
+      <aside>
+        <div class="card" aria-labelledby="sidebar-heading">
+          <h3 id="sidebar-heading" class="kicker">Need help?</h3>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:6px">
+            <div>
+              <div style="font-weight:700">Contact Customer Care</div>
+              <div class="muted small" style="margin-top:6px">We're here to help you with returns &amp; refunds.</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-weight:800;color:var(--accent)">+91 70706 06600</div>
+              <div class="muted small" style="margin-top:6px">Mon–Sat: 10:00–21:00</div>
+            </div>
+          </div>
+
+          <div class="contact-row" style="margin-top:12px">
+            <a class="btn primary" href="tel:+917070606600">Call us</a>
+            <a class="btn ghost" href="mailto:champalalandsons@gmail.com" id="sidebarEmail">Email</a>
+          </div>
+
+          <div style="margin-top:12px">
+            <strong>What to include in your email</strong>
+            <ul class="muted small" style="margin-left:18px">
+              <li>Order number</li>
+              <li>Photo(s) of the damaged item &amp; packaging</li>
+              <li>Photo of delivery receipt showing the issue (if available)</li>
+              <li>Your preferred resolution (refund / exchange)</li>
+            </ul>
+          </div>
+        </div>
+
+      </aside>
+    </section>
+  </main>
+
+  {% include 'customer/footer.html' %}
+
+  <script>
+  (function(){
+    var EMAIL = 'champalalandsons@gmail.com';
+
+    // Minimal accessible FAQ toggle with icon rotation
+    document.querySelectorAll('.faq-item button').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var ans = document.getElementById(btn.getAttribute('aria-controls'));
+        var expanded = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!expanded));
+        if (ans) ans.classList.toggle('show');
+        var svg = btn.querySelector('svg');
+        if (svg) svg.style.transform = expanded ? 'rotate(0deg)' : 'rotate(180deg)';
+      });
+    });
+
+    // Toast helper
+    function showToast(message){
+      // remove existing
+      var existing = document.querySelector('.copy-toast');
+      if(existing) existing.remove();
+
+      var t = document.createElement('div');
+      t.className = 'copy-toast';
+      t.setAttribute('role','status');
+      t.textContent = message;
+      document.body.appendChild(t);
+      setTimeout(function(){ t.remove(); }, 2500);
+    }
+
+    // Copy text fallback
+    function copyText(text){
+      if (navigator && navigator.clipboard && navigator.clipboard.writeText){
+        return navigator.clipboard.writeText(text).then(function(){ return true; }).catch(function(){ return fallbackCopy(text); });
+      } else {
+        return Promise.resolve(fallbackCopy(text));
+      }
+    }
+    function fallbackCopy(text){
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    // Wire up email buttons: copy -> toast -> open mailto
+    function setupEmailButton(id){
+      var el = document.getElementById(id);
+      if(!el) return;
+      el.addEventListener('click', function(e){
+        e.preventDefault();
+        copyText(EMAIL).then(function(success){
+          if(success) showToast('Copied email to clipboard — champalalandsons@gmail.com');
+          else showToast('Opening mail client (copy unavailable)');
+
+          // small delay to allow toast to appear before mail client opens
+          setTimeout(function(){
+            window.location.href = 'mailto:' + EMAIL;
+          }, 150);
+        });
+      });
+    }
+    setupEmailButton('sidebarEmail');
+    setupEmailButton('emailSupportBtn');
+  })();
+  </script>
+
+</body>
+</html>

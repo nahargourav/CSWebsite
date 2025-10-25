@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Help & FAQs — Champalal & Sons</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" >
+  <meta name="description" content="Frequently asked questions for Champalal & Sons — ordering, shipping, returns, sizing, payments and local delivery information for Purnia customers." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#fffaf8;
+      --muted:#6b7280;
+      --ink:#0f1724;
+      --accent:#d97706; /* warm amber */
+      --card:#ffffff;
+      --shadow:0 18px 50px rgba(15,23,36,0.08);
+      --glass:rgba(255,255,255,0.6);
+      --radius:14px;
+      --max:1200px;
+      font-family:'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased}
+    a{color:var(--accent);text-decoration:none}
+    .container{max-width:var(--max);margin:0 auto;padding:40px}
+
+    /* Hero */
+    .hero{display:flex;gap:28px;align-items:center;justify-content:space-between;margin-bottom:28px}
+    .hero-left{flex:0 0 520px}
+    .kicker{display:inline-block;padding:6px 12px;border-radius:999px;background:linear-gradient(90deg,#fff,#fff);border:1px solid rgba(15,23,36,0.03);font-weight:700;color:var(--muted);font-size:13px}
+    .title{font-size:48px;line-height:1.03;margin:18px 0 12px;font-weight:800}
+    .subtitle{color:var(--muted);font-size:16px;max-width:560px}
+
+    .hero-right{flex:1;display:flex;justify-content:flex-end}
+    .help-card{background:linear-gradient(180deg, rgba(255,255,255,0.85), var(--card));border-radius:16px;padding:20px 22px;box-shadow:var(--shadow);min-width:320px;max-width:520px}
+    .help-card h3{margin:0 0 10px;font-size:16px}
+
+    /* Search */
+    .search {display:flex;gap:12px;align-items:center;margin-top:8px}
+    .search input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid rgba(15,23,36,0.06);font-size:15px}
+    .search .btn{padding:10px 12px;border-radius:10px;background:var(--accent);color:white;border:none;font-weight:700;cursor:pointer}
+
+    /* Grid */
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:22px;align-items:start}
+    .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px}
+    .section-title{font-size:18px;margin:0 0 12px}
+    .muted{color:var(--muted)}
+
+    /* FAQ list */
+    .faq-list{display:grid;gap:12px}
+    .faq-item{border-radius:12px;padding:14px;border:1px solid rgba(15,23,36,0.04);background:linear-gradient(180deg,#fff,#fff);transition:transform .18s ease,box-shadow .18s ease}
+    .faq-item:hover{transform:translateY(-4px);box-shadow:0 24px 60px rgba(15,23,36,0.08)}
+    .faq-q{display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;font-weight:700}
+    .faq-q small{color:var(--muted);font-weight:600}
+    .faq-a{margin-top:10px;color:var(--muted);display:none;line-height:1.6}
+    .faq-a.show{display:block}
+
+    /* Tag pills */
+    .tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+    .tag{padding:6px 10px;border-radius:999px;background:#fff7ed;color:var(--accent);font-weight:700;font-size:13px;cursor:pointer}
+
+    /* Sidebar */
+    .support{display:flex;flex-direction:column;gap:12px}
+    .contact-row{display:flex;gap:10px;flex-wrap:wrap}
+    .btn.alt{background:white;border:1px solid rgba(15,23,36,0.06);padding:10px 12px;border-radius:10px;cursor:pointer}
+
+    /* Quick links */
+    .quick-links{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+    .quick-links a{padding:10px;border-radius:10px;background:linear-gradient(90deg,#fff,#fff);border:1px solid rgba(15,23,36,0.03);display:block}
+
+    /* Toast */
+    .copy-toast{position:fixed;left:12px;right:12px;bottom:18px;max-width:420px;margin:0 auto;background:var(--card);border-radius:10px;padding:12px 14px;box-shadow:0 12px 40px rgba(15,23,36,0.12);z-index:9999;font-size:13px;display:flex;align-items:center;justify-content:center}
+
+    @media (max-width:980px){
+      .hero{flex-direction:column;align-items:stretch}
+      .hero-left{flex:auto}
+      .hero-right{justify-content:flex-start}
+      .grid{grid-template-columns:1fr}
+    }
+
+    @media (max-width:640px){
+      .container{padding:20px}
+      .title{font-size:34px}
+    }
+  </style>
+</head>
+<body>
+  {% include 'customer/layout.html' %}
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-left">
+        <div class="kicker">Help Center</div>
+        <h1 class="title">Answers & guidance — fast</h1>
+        <p class="subtitle">Everything customers need to know — ordering, local delivery, sizing, care, returns and how we handle payments. Still stuck? Contact our support team below.</p>
+        <div class="search" role="search" aria-label="Search FAQs">
+          <input id="faqSearch" placeholder="Search questions (e.g. returns, sizes, delivery)" aria-label="Search FAQs" />
+          <button id="searchBtn" class="btn">Search</button>
+        </div>
+      </div>
+
+      <div class="hero-right" aria-hidden="true">
+        <div class="help-card">
+          <h3>Need live help?</h3>
+          <div class="muted">Our team is available Mon–Sat: 10:00–21:00.</div>
+          <div style="margin-top:12px" class="contact-row">
+            <a id="emailSupport" class="btn" href="mailto:champalalandsons@gmail.com" style="background:var(--accent);color:white;border-radius:10px;padding:10px 12px">Email support</a>
+            <a class="btn alt" href="tel:+917070606600">Call +91 70706 06600</a>
+          </div>
+
+          <div style="margin-top:12px">
+            <strong>Quick links</strong>
+            <div class="quick-links">
+              <a href="/help/shipping">Shipping & Delivery</a>
+              <a href="/help/returns">Returns & Refunds</a>
+              <a href="/orders">Your Orders</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            <div>
+              <h2 class="section-title">Frequently asked questions</h2>
+              <div class="muted">Browse by topic or search above — the most common questions are listed below.</div>
+            </div>
+            <div class="tags" role="list">
+              <button class="tag" data-filter="all">All</button>
+              <button class="tag" data-filter="orders">Orders</button>
+              <button class="tag" data-filter="delivery">Delivery</button>
+              <button class="tag" data-filter="returns">Returns</button>
+              <button class="tag" data-filter="sizes">Sizes</button>
+              <button class="tag" data-filter="payments">Payments</button>
+              <button class="tag" data-filter="account">Account</button>
+            </div>
+          </div>
+
+          <div style="margin-top:14px" class="faq-list" id="faqList">
+
+            <!-- Orders & Checkout -->
+            <div class="faq-item" data-tags="orders">
+              <div class="faq-q" tabindex="0">
+                <span>How do I place an order?</span>
+                <small>Ordering</small>
+              </div>
+              <div class="faq-a">Select the product, choose size/quantity, add to cart and proceed to checkout. Provide a local Purnia delivery address and complete payment. We'll send confirmation via email and show order status in your account orders page.</div>
+            </div>
+
+            <div class="faq-item" data-tags="orders">
+              <div class="faq-q" tabindex="0">
+                <span>Can I cancel or change my order?</span>
+                <small>Orders</small>
+              </div>
+              <div class="faq-a">You can request cancellations or address changes before the order is dispatched. Contact support immediately with your order number. Once dispatched, changes depend on the local courier and may not be possible.</div>
+            </div>
+
+            <!-- Delivery -->
+            <div class="faq-item" data-tags="delivery">
+              <div class="faq-q" tabindex="0">
+                <span>Where do you deliver?</span>
+                <small>Delivery</small>
+              </div>
+              <div class="faq-a">We deliver only within Purnia district (Bihar). Use the pincode checker on the Shipping page to confirm if your area is covered.</div>
+            </div>
+
+            <div class="faq-item" data-tags="delivery">
+              <div class="faq-q" tabindex="0">
+                <span>Do you provide tracking links?</span>
+                <small>Delivery</small>
+              </div>
+              <div class="faq-a">No — we do not publish carrier tracking links. Order stage and delivery updates are available from your account orders page. We'll also email you when the order is dispatched.</div>
+            </div>
+
+            <!-- Returns -->
+            <div class="faq-item" data-tags="returns">
+              <div class="faq-q" tabindex="0">
+                <span>How do returns and refunds work?</span>
+                <small>Returns</small>
+              </div>
+              <div class="faq-a">If an item arrives damaged or missing, report it to the delivery agent at handover and ask them to note it on the receipt. Photograph the damage and email champalalandsons@gmail.com with your order number. We’ll investigate and process refunds/exchanges per our Returns policy.</div>
+            </div>
+
+            <div class="faq-item" data-tags="returns">
+              <div class="faq-q" tabindex="0">
+                <span>Can I return an item for change of mind?</span>
+                <small>Returns</small>
+              </div>
+              <div class="faq-a">We generally do not accept returns for change of mind unless specified on the product page. Items must be unworn, unused and in original packaging. See our Returns page for exceptions.</div>
+            </div>
+
+            <!-- Sizes & Product Care -->
+            <div class="faq-item" data-tags="sizes">
+              <div class="faq-q" tabindex="0">
+                <span>How do I choose the right size?</span>
+                <small>Sizes</small>
+              </div>
+              <div class="faq-a">Each product page contains a size guide with measurements. If you're between sizes, consider the fit description (slim/regular/relaxed). For help, send us your measurements and the product SKU and we’ll advise.</div>
+            </div>
+
+            <div class="faq-item" data-tags="sizes">
+              <div class="faq-q" tabindex="0">
+                <span>How should I care for my clothes?</span>
+                <small>Care</small>
+              </div>
+              <div class="faq-a">Follow the care label on each garment. As a general rule: gentle machine wash cold, line dry, and avoid harsh bleaching. For delicate fabrics (silk, linen blends) hand wash or dry-clean.</div>
+            </div>
+
+            <!-- Payments -->
+            <div class="faq-item" data-tags="payments">
+              <div class="faq-q" tabindex="0">
+                <span>Which payment methods do you accept?</span>
+                <small>Payments</small>
+              </div>
+              <div class="faq-a">We accept UPI, debit/credit cards, net banking and Cash on Delivery (COD) for local deliveries within Purnia. Payment options appear at checkout.</div>
+            </div>
+
+            <div class="faq-item" data-tags="payments">
+              <div class="faq-q" tabindex="0">
+                <span>When will I be charged?</span>
+                <small>Payments</small>
+              </div>
+              <div class="faq-a">Card/UPI payments are charged immediately on successful checkout. For COD, payment is collected by the delivery agent at handover.</div>
+            </div>
+
+            <!-- Account -->
+            <div class="faq-item" data-tags="account">
+              <div class="faq-q" tabindex="0">
+                <span>How do I view my order status?</span>
+                <small>Account</small>
+              </div>
+              <div class="faq-a">Sign in and go to <strong>Account → Orders</strong> to see the live stage for each order (processing, dispatched, out for delivery, delivered). We also email updates for important stage changes.</div>
+            </div>
+
+            <div class="faq-item" data-tags="account">
+              <div class="faq-q" tabindex="0">
+                <span>I didn't receive my order confirmation email — what do I do?</span>
+                <small>Account</small>
+              </div>
+              <div class="faq-a">Check your spam/junk folder first. If missing, sign in to your account to confirm the order or contact support with your order number and email used to place the order.</div>
+            </div>
+
+            <!-- Policies -->
+            <div class="faq-item" data-tags="policies">
+              <div class="faq-q" tabindex="0">
+                <span>Where can I find your policies (privacy, returns)?</span>
+                <small>Policies</small>
+              </div>
+              <div class="faq-a">Our Returns & Refunds and Shipping & Delivery pages are linked in the footer and in Quick Links in the Help card. For privacy and data handling, see our Privacy Policy page.</div>
+            </div>
+
+            <!-- Contact -->
+            <div class="faq-item" data-tags="support">
+              <div class="faq-q" tabindex="0">
+                <span>How do I contact support?</span>
+                <small>Support</small>
+              </div>
+              <div class="faq-a">Email: champalalandsons@gmail.com (use the Email support button to copy & compose) or call +91 70706 06600. Support hours: Mon–Sat, 10:00–21:00 Purnia time.</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <aside>
+        <div class="card support" aria-labelledby="support-heading">
+          <h3 id="support-heading" class="section-title">Need help?</h3>
+          <p class="muted">Can't find an answer? Ask us — we'll respond within 1–2 business days.</p>
+
+          
+
+          <div style="margin-top:12px">
+            <a href="/contact" class="btn alt" style="padding:8px 10px;border-radius:10px">Ask a question</a>
+          </div>
+
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  {% include 'customer/footer.html' %}
+
+  <script>
+  (function(){
+    // Simple accordion + search + tag filter + email copy+mailto with toast
+    function toggleAnswer(el){
+      var a = el.parentNode.querySelector('.faq-a');
+      var is = a.classList.contains('show');
+      document.querySelectorAll('.faq-a').forEach(function(x){ x.classList.remove('show'); });
+      if(!is) a.classList.add('show');
+    }
+
+    document.querySelectorAll('.faq-q').forEach(function(q){
+      q.addEventListener('click', function(){ toggleAnswer(this); });
+      q.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleAnswer(this); } });
+    });
+
+    // Search
+    var searchInput = document.getElementById('faqSearch');
+    var searchBtn = document.getElementById('searchBtn');
+    function doSearch(){
+      var q = (searchInput.value || '').trim().toLowerCase();
+      document.querySelectorAll('.faq-item').forEach(function(item){
+        var text = (item.textContent || '').toLowerCase();
+        item.style.display = q === '' || text.indexOf(q) !== -1 ? '' : 'none';
+      });
+    }
+    searchBtn.addEventListener('click', doSearch);
+    searchInput.addEventListener('keypress', function(e){ if(e.key === 'Enter'){ e.preventDefault(); doSearch(); } });
+
+    // Tag filtering
+    document.querySelectorAll('.tag').forEach(function(tag){
+      tag.addEventListener('click', function(){
+        var f = this.getAttribute('data-filter');
+        document.querySelectorAll('.tag').forEach(function(t){ t.style.opacity = '0.6'; });
+        this.style.opacity = '1';
+        if(f === 'all'){ document.querySelectorAll('.faq-item').forEach(function(i){ i.style.display = ''; }); return; }
+        document.querySelectorAll('.faq-item').forEach(function(i){
+          var tags = i.getAttribute('data-tags') || '';
+          i.style.display = tags.indexOf(f) !== -1 ? '' : 'none';
+        });
+      });
+    });
+
+    // Email behavior: copy to clipboard + mailto
+    var EMAIL = 'champalalandsons@gmail.com';
+    function showToast(msg){ var ex = document.querySelector('.copy-toast'); if(ex) ex.remove(); var t = document.createElement('div'); t.className='copy-toast'; t.setAttribute('role','status'); t.textContent = msg; document.body.appendChild(t); setTimeout(function(){ t.remove(); }, 2400); }
+    function copyText(text){ if(navigator && navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text).then(function(){ return true; }).catch(function(){ return fallback(text); }); else return Promise.resolve(fallback(text)); }
+    function fallback(text){ try{ var ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.left='-9999px'; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); return true; }catch(e){ return false; } }
+
+    function wireEmail(id){ var el = document.getElementById(id); if(!el) return; el.addEventListener('click', function(e){ e.preventDefault(); copyText(EMAIL).then(function(success){ if(success) showToast('Copied email to clipboard — ' + EMAIL); else showToast('Opening mail client'); setTimeout(function(){ window.location.href = 'mailto:' + EMAIL; }, 140); }); }); }
+    wireEmail('emailSupport');
+    wireEmail('sidebarEmailBtn');
+
+  })();
+  </script>
+</body>
+</html>

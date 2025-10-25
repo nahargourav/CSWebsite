@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Careers — Champalal &amp; Sons</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" >
+  <meta name="description" content="Work with Champalal & Sons — view current openings, learn about our culture & benefits, and apply online. Opportunities in retail, operations, sales, and design." />
+
+  <!-- Fonts & core variables -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --bg:#fff5ee;
+      --muted:#6b7280;
+      --accent:#f59e0b;
+      --accent-contrast:#111827;
+      --card:#ffffff;
+      --shadow:0 8px 30px rgba(17,24,39,0.06);
+      --max:1200px;
+      --radius:12px;
+      --focus: 3px solid rgba(245,158,11,0.12);
+      font-family: 'Poppins', Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--accent-contrast);-webkit-font-smoothing:antialiased}
+    .container{max-width:var(--max);margin:0 auto;padding:28px}
+
+    /* Page header hero */
+    .hero {
+      display:flex;
+      gap:20px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:18px;
+    }
+    .hero .intro { flex:1; max-width:760px }
+    .hero h1 { margin:0;font-size:28px;line-height:1.05 }
+    .hero p.lead { margin:8px 0 0;color:var(--muted);max-width:720px }
+
+    /* Page layout */
+    .jobs-layout { display:grid; grid-template-columns: 1fr 320px; gap:22px; align-items:start; }
+    .list-panel { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
+    .filter-row { display:flex; gap:12px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+    .select, .input { padding:10px;border-radius:8px;border:1px solid #e6e7ea; font-size:14px; background:white; }
+
+    /* Jobs list */
+    .jobs-list { display:grid; gap:12px; }
+    .job-card { display:flex; gap:12px; align-items:flex-start; padding:14px; border-radius:12px; background:#fff; border:1px solid rgba(15,23,42,0.03); transition:transform .18s,box-shadow .18s; cursor:pointer; }
+    .job-card:hover { transform:translateY(-4px); box-shadow:0 12px 30px rgba(15,23,42,0.06); }
+    .job-left { flex:1; min-width:0 }
+    .job-title { margin:0;font-size:16px;font-weight:700 }
+    .job-meta { color:var(--muted); font-size:13px; margin-top:6px }
+    .job-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap }
+    .btn { padding:10px 14px; border-radius:999px; border:none; cursor:pointer; font-weight:700; background:var(--accent); color:#fff; display:inline-flex; align-items:center; gap:8px; }
+    .btn.ghost { background:white; color:var(--accent-contrast); border:1px solid #e6e7ea; }
+    .badge { display:inline-block; padding:6px 10px; border-radius:999px; background:#fff7ed; color:var(--accent); font-weight:600; font-size:13px }
+
+    /* Sidebar */
+    .sidebar { display:flex; flex-direction:column; gap:12px; position:relative; }
+    .quick { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; }
+    .benefits { display:grid; gap:10px; }
+    .benefit { display:flex; gap:10px; align-items:flex-start; }
+
+    /* Job detail / expanded panel */
+    .job-detail { margin-top:12px; background:#fff; border-radius:10px; padding:14px; border:1px solid rgba(15,23,42,0.04); }
+    .job-detail h4 { margin:0 0 8px }
+
+    /* Detail modal */
+    .modal-backdrop { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:120; }
+    .modal-backdrop.show { display:flex; }
+    .modal { width: min(760px, 96%); background:var(--card); border-radius:12px; padding:18px; box-shadow:0 40px 100px rgba(2,6,23,0.4); max-height:92vh; overflow:auto; }
+    .modal .row { display:flex; gap:12px; }
+    .close-x { border-radius:8px; width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; background:white; border:1px solid rgba(15,23,42,0.06); cursor:pointer; }
+    .visually-hidden{ position:absolute !important; height:1px; width:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap; }
+
+    /* small helpers */
+    .muted{ color:var(--muted) }
+    .job-count { font-weight:700; color:var(--muted); font-size:14px }
+    .empty { text-align:center; color:var(--muted); padding:24px }
+
+    /* focus states */
+    a:focus, button:focus, input:focus, textarea:focus, select:focus { outline:none; box-shadow:var(--focus); border-color:var(--accent) }
+
+    /* Desktop -> tablet */
+    @media (max-width: 980px) {
+      .jobs-layout { grid-template-columns: 1fr; }
+      .sidebar { order: 2; position:static; }
+      .list-panel { order:1; }
+      .hero { flex-direction:column; align-items:stretch; gap:10px }
+    }
+
+    /* Mobile-specific overrides */
+    @media (max-width: 640px) {
+      .container { padding:16px; }
+      .hero h1 { font-size:20px; }
+      .job-card { flex-direction:column; }
+      .job-actions { justify-content:space-between; width:100%; }
+      .btn { width:100%; justify-content:center; padding:12px 14px; }
+      .job-meta { font-size:13px }
+      .modal { padding:14px; width: 96%; }
+      .close-x { width:40px; height:40px }
+      .sidebar { position:static }
+      .benefit { gap:8px }
+    }
+
+    /* very small screens */
+    @media (max-width: 360px) {
+      .job-title { font-size:15px }
+      .hero p.lead { font-size:14px }
+    }
+
+    /* tiny status */
+    .status { font-size:14px; color:var(--muted); margin-top:8px }
+
+    /* small utility for salary badge */
+    .salary { font-weight:700; color:var(--accent); margin-left:6px; }
+  </style>
+</head>
+<body>
+
+  {% include 'customer/layout.html' %}
+
+  <main class="container" role="main">
+    <section class="hero">
+      <div class="intro">
+        <h1>Careers at Champalal &amp; Sons</h1>
+        <p class="lead">Join a multi-generation textile business focused on craftsmanship, honest pricing, and community. Browse openings below — we hire for both store roles and central functions.</p>
+        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+          <a class="btn" href="/about">About us</a>
+          <a class="btn ghost" href="/contact">Contact</a>
+        </div>
+      </div>
+
+      <div class="job-count" aria-live="polite"><span id="openCount">0</span> open roles</div>
+    </section>
+
+    <section class="jobs-layout" aria-label="Open roles and application sidebar">
+      <div class="list-panel" aria-labelledby="openings">
+        <div class="filter-row">
+          <select id="filterDept" class="select" aria-label="Filter by department">
+            <option value="all">All departments</option>
+          </select>
+
+          <select id="filterLoc" class="select" aria-label="Filter by location">
+            <option value="all">All locations</option>
+          </select>
+
+          <input id="searchJobs" class="input" type="search" placeholder="Search roles, e.g. 'sales' or 'tailor'">
+        </div>
+
+        <div id="jobsList" class="jobs-list" aria-live="polite" aria-busy="false">
+          <!-- job cards rendered by JS -->
+        </div>
+
+        <div id="noJobs" class="empty" style="display:none">No roles match your filters. Try clearing filters or check back soon.</div>
+      </div>
+
+      <aside class="sidebar">
+        <div class="quick">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-weight:800">Why work with us</div>
+              <div class="muted" style="font-size:13px">A family business with modern values</div>
+            </div>
+            <div class="badge">Hiring</div>
+          </div>
+
+          <div class="benefits" style="margin-top:12px">
+            <div class="benefit"><strong>Competitive pay</strong><div class="muted" style="margin-left:8px">Market-aligned salaries</div></div>
+            <div class="benefit"><strong>Employee discounts</strong><div class="muted" style="margin-left:8px">Store discounts on fabrics</div></div>
+            <div class="benefit"><strong>Learning</strong><div class="muted" style="margin-left:8px">On-the-job training & mentoring</div></div>
+            <div class="benefit"><strong>Culture</strong><div class="muted" style="margin-left:8px">Respectful, honest, long-term</div></div>
+          </div>
+
+          <div style="margin-top:12px">
+            <div style="font-weight:700">Equal Opportunity</div>
+            <div class="muted" style="font-size:13px;margin-top:6px">We celebrate diversity and are committed to creating an inclusive environment for all employees.</div>
+          </div>
+        </div>
+
+        <div class="quick" style="margin-top:12px">
+          <div style="font-weight:700">How to apply</div>
+          <ol style="margin:8px 0 0 18px;color:var(--muted)">
+            <li>Pick a role and click <em>Apply</em> or <em>View</em>.</li>
+            <li>Complete the short form and upload your CV (PDF/DOC).</li>
+            <li>We’ll review and reach out if your profile is a fit.</li>
+          </ol>
+          <div class="status">Typical response time: 3–7 business days</div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- Detail modal (shows full role description) -->
+    <div id="detailModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="modal" role="document" aria-labelledby="detailTitle">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+          <div style="flex:1">
+            <h3 id="detailTitle" style="margin:0;font-size:18px">Role title</h3>
+            <div class="muted" id="detailMeta" style="margin-top:6px;font-size:13px">Dept • Location • Type</div>
+            <div id="detailSalary" style="margin-top:8px"></div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-start">
+            <button id="closeDetail" class="close-x" aria-label="Close role detail" title="Close">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="6" y1="18" x2="18" y2="6"></line></svg>
+            </button>
+          </div>
+        </div>
+
+        <div id="detailDescription" style="margin-top:12px;color:var(--muted)"></div>
+
+        <div style="display:flex;gap:10px;align-items:center;margin-top:16px">
+          <button id="detailApplyBtn" class="btn">Apply for this role</button>
+          <div id="detailPosted" class="muted" style="margin-left:auto">Posted recently</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Application modal (unchanged) -->
+    <div id="applyModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="modal" role="document" aria-labelledby="applyTitle">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div>
+            <h3 id="applyTitle" style="margin:0;font-size:18px">Apply for role</h3>
+            <div class="muted" id="applyRoleName" style="margin-top:6px;font-size:13px">Role • Location</div>
+          </div>
+          <button id="closeApply" class="close-x" aria-label="Close application form" title="Close">
+            <!-- simple accessible X -->
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="6" y1="18" x2="18" y2="6"></line></svg>
+          </button>
+        </div>
+
+        <form id="applyForm" method="post" action="/careers/apply" enctype="multipart/form-data" style="margin-top:12px">
+          <input type="hidden" name="role_id" id="role_id" value="">
+          <div class="row" style="margin-bottom:12px">
+            <div style="flex:1">
+              <label for="app_name" class="muted">Full name</label>
+              <input id="app_name" name="name" type="text" class="input" required>
+            </div>
+            <div style="width:180px">
+              <label for="app_phone" class="muted">Phone</label>
+              <input id="app_phone" name="phone" type="tel" class="input" inputmode="tel" placeholder="+91">
+            </div>
+          </div>
+
+          <div class="row" style="margin-bottom:12px">
+            <div style="flex:1">
+              <label for="app_email" class="muted">Email</label>
+              <input id="app_email" name="email" type="email" class="input" required>
+            </div>
+            <div style="width:180px">
+              <label for="app_location" class="muted">Location</label>
+              <select id="app_location" name="location" class="select">
+                <option value="">Preferred location</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-bottom:12px">
+            <label for="app_message" class="muted">Short note / cover (optional)</label>
+            <textarea id="app_message" name="message" class="input" style="min-height:100px"></textarea>
+          </div>
+
+          <div style="margin-bottom:12px">
+            <label class="muted">Resume (PDF, DOC, DOCX) — max 2MB</label>
+            <input id="resume" name="resume" type="file" accept=".pdf,.doc,.docx" style="margin-top:6px">
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button type="submit" class="btn">Submit application</button>
+            <button type="button" class="btn ghost" id="saveDraft">Save draft</button>
+            <div id="applyFeedback" class="muted" aria-live="polite" style="margin-left:6px"></div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- FAQ about hiring -->
+    <section style="margin-top:20px" class="list-panel">
+      <h3 style="margin:0 0 8px">Hiring FAQ</h3>
+      <div style="display:grid;gap:8px;color:var(--muted)">
+        <div><strong>What happens after I apply?</strong> — We review applications and contact candidates we’d like to interview. Response typically within 3–7 days.</div>
+        <div><strong>Are roles full-time?</strong> — Most store roles are full-time. We may also advertise part-time and contract roles.</div>
+        <div><strong>Do you accept walk-ins?</strong> — Yes — but applying online helps us track and respond faster.</div>
+      </div>
+    </section>
+
+  </main>
+
+  {% include 'customer/footer.html' %}
+
+  <!-- Client JS: list rendering + modal + AJAX (progressive fallback) -->
+  <script>
+    (function(){
+      // Server-provided roles rendered into the template
+      // Expect roles to be an array of objects with keys:
+      // id, title, dept, location, type, summary, description, salary (optional)
+      const roles = {{ roles|tojson|safe }};
+
+      // Build sets for filters
+      const deptSet = new Set();
+      const locSet = new Set();
+      roles.forEach(r => { if(r.dept) deptSet.add(r.dept); if(r.location) locSet.add(r.location); });
+
+      const filterDept = document.getElementById('filterDept');
+      const filterLoc = document.getElementById('filterLoc');
+      const searchJobs = document.getElementById('searchJobs');
+      const jobsList = document.getElementById('jobsList');
+      const openCount = document.getElementById('openCount');
+      const noJobs = document.getElementById('noJobs');
+
+      // Escape helper (keeps rendered HTML safe)
+      function escapeHtml(str){
+        if (str === null || str === undefined) return '';
+        return String(str)
+          .replace(/&/g,'&amp;')
+          .replace(/</g,'&lt;')
+          .replace(/>/g,'&gt;')
+          .replace(/"/g,'&quot;')
+          .replace(/'/g,"&#39;");
+      }
+
+      // Convert newline text into HTML:
+      //  - double newlines (blank line) -> paragraph separation
+      //  - single newline -> <br>
+      function nl2html(raw){
+        if (!raw && raw !== 0) return '';
+        const s = String(raw);
+        // escape first
+        const esc = escapeHtml(s);
+        // split on two-or-more newlines for paragraphs
+        const paras = esc.split(/\n{2,}/g).map(p => {
+          // within a paragraph, convert single newlines to <br>
+          const inner = p.replace(/\n/g, '<br>');
+          return '<p style="margin:0 0 0.75em;line-height:1.6;">' + inner + '</p>';
+        });
+        return paras.join('');
+      }
+
+      // Create a short preview (preserves line breaks)
+      function previewText(raw, maxLen){
+        if (!raw) return '';
+        const t = String(raw).trim();
+        if (t.length <= maxLen) return nl2html(t);
+        // truncate preserving words
+        let truncated = t.slice(0, maxLen);
+        // step back to last space if possible
+        const lastSpace = truncated.lastIndexOf(' ');
+        if (lastSpace > Math.floor(maxLen * 0.6)) truncated = truncated.slice(0, lastSpace);
+        truncated += '…';
+        return nl2html(truncated);
+      }
+
+      // Populate filter dropdowns
+      function populateFilters(){
+        Array.from(deptSet).sort().forEach(d=>{
+          const o = document.createElement('option'); o.value = d; o.textContent = d; filterDept.appendChild(o);
+        });
+        Array.from(locSet).sort().forEach(l=>{
+          const o = document.createElement('option'); o.value = l; o.textContent = l; filterLoc.appendChild(o);
+        });
+      }
+
+      // Render the job cards (with View and Apply actions)
+      function renderList(list){
+        jobsList.innerHTML = '';
+        if (!list || list.length === 0) {
+          noJobs.style.display = ''; openCount.textContent = 0; return;
+        }
+        noJobs.style.display = 'none';
+        openCount.textContent = list.length;
+
+        list.forEach(job => {
+          const card = document.createElement('article');
+          card.className = 'job-card';
+          // set dataset to help handlers
+          card.dataset.jobId = job.id;
+
+          const salaryText = job.salary ? ('₹' + Number(job.salary).toLocaleString('en-IN')) : '';
+          // prefer summary; fallback to description
+          const previewSource = job.summary ? job.summary : (job.description || '');
+          // create a small preview using nl2html with truncation
+          const previewHTML = previewText(previewSource, 180);
+
+          // build inner HTML safely (we escape title/dept etc.)
+          card.innerHTML = `
+            <div class="job-left" aria-hidden="false">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+                <div style="min-width:0">
+                  <h3 class="job-title">${escapeHtml(job.title || '')}</h3>
+                  <div class="job-meta">
+                    ${escapeHtml(job.dept || '')} &bull; ${escapeHtml(job.location || '')} &bull;
+                    <span style="font-weight:700">${escapeHtml(job.type || '')}</span>
+                    ${salaryText ? '<span class="salary"> • ' + escapeHtml(salaryText) + '</span>' : ''}
+                  </div>
+                </div>
+                <div style="text-align:right">
+                  <div class="muted" style="font-size:13px">#${escapeHtml(job.id)}</div>
+                </div>
+              </div>
+
+              <div class="job-detail" style="margin-top:10px">${previewHTML}</div>
+
+              <div class="job-actions">
+                <button class="btn apply-btn" data-id="${escapeHtml(job.id)}" data-title="${escapeHtml(job.title || '')}" data-location="${escapeHtml(job.location || '')}" aria-label="Apply for ${escapeHtml(job.title || '')}">Apply</button>
+                <button class="btn ghost view-btn" data-id="${escapeHtml(job.id)}" aria-label="View ${escapeHtml(job.title || '')}">View</button>
+                <div style="margin-left:auto" class="muted" aria-hidden="true">Posted recently</div>
+              </div>
+            </div>
+          `;
+
+          // clicking the card (except the action buttons) opens the detail modal
+          card.addEventListener('click', function(e){
+            if (e.target.closest('.apply-btn') || e.target.closest('.view-btn')) {
+              // click handled by respective handlers
+              return;
+            }
+            const jobId = this.dataset.jobId;
+            const jobObj = roles.find(r => String(r.id) === String(jobId));
+            if (jobObj) openDetailModal(jobObj);
+          });
+
+          jobsList.appendChild(card);
+        });
+      }
+
+      populateFilters();
+      renderList(roles);
+
+      // Filtering / search
+      function applyFilters(){
+        const d = filterDept.value;
+        const l = filterLoc.value;
+        const q = (searchJobs.value || '').trim().toLowerCase();
+        let filtered = roles.filter(r=>{
+          if (d !== 'all' && r.dept !== d) return false;
+          if (l !== 'all' && r.location !== l) return false;
+          if (q){
+            return (r.title && r.title.toLowerCase().includes(q)) ||
+                   (r.summary && r.summary.toLowerCase().includes(q)) ||
+                   (r.dept && r.dept.toLowerCase().includes(q)) ||
+                   (r.description && r.description.toLowerCase().includes(q));
+          }
+          return true;
+        });
+        renderList(filtered);
+      }
+
+      filterDept.addEventListener('change', applyFilters);
+      filterLoc.addEventListener('change', applyFilters);
+      searchJobs.addEventListener('input', function(){ setTimeout(applyFilters, 150); });
+
+      /* ------------------------------
+         Detail modal (role full details)
+         ------------------------------ */
+      const detailModal = document.getElementById('detailModal');
+      const closeDetail = document.getElementById('closeDetail');
+      const detailTitle = document.getElementById('detailTitle');
+      const detailMeta = document.getElementById('detailMeta');
+      const detailDescription = document.getElementById('detailDescription');
+      const detailApplyBtn = document.getElementById('detailApplyBtn');
+      const detailSalaryEl = document.getElementById('detailSalary');
+
+      function openDetailModal(job){
+        detailTitle.textContent = job.title || 'Role';
+        const metaParts = [];
+        if (job.dept) metaParts.push(job.dept);
+        if (job.location) metaParts.push(job.location);
+        if (job.type) metaParts.push(job.type);
+        detailMeta.textContent = metaParts.join(' • ');
+
+        // Use nl2html to convert newlines into paragraphs/line-breaks
+        if (job.description) {
+          detailDescription.innerHTML = nl2html(job.description);
+        } else if (job.summary) {
+          detailDescription.innerHTML = nl2html(job.summary);
+        } else {
+          detailDescription.innerHTML = '';
+        }
+
+        if (job.salary) {
+          try {
+            const s = Number(job.salary);
+            detailSalaryEl.innerHTML = '<div style="margin-top:8px"><strong>Salary</strong>: <span class="salary">₹' + s.toLocaleString('en-IN') + '</span></div>';
+          } catch(e){ detailSalaryEl.textContent = ''; }
+        } else {
+          detailSalaryEl.textContent = '';
+        }
+
+        detailApplyBtn.dataset.jobId = job.id;
+        detailApplyBtn.dataset.jobTitle = job.title || '';
+        detailApplyBtn.dataset.jobLocation = job.location || '';
+        // show modal
+        detailModal.classList.add('show');
+        detailModal.setAttribute('aria-hidden','false');
+        // focus for accessibility
+        setTimeout(function(){ detailApplyBtn.focus(); }, 160);
+      }
+
+      function closeDetailModal(){
+        detailModal.classList.remove('show');
+        detailModal.setAttribute('aria-hidden','true');
+        detailDescription.innerHTML = '';
+      }
+
+      closeDetail.addEventListener('click', closeDetailModal);
+      detailModal.addEventListener('click', function(ev){
+        if (ev.target === detailModal) closeDetailModal();
+      });
+      document.addEventListener('keydown', function(ev){
+        if (ev.key === 'Escape' && detailModal.classList.contains('show')) closeDetailModal();
+      });
+
+      // View button handler (delegated)
+      document.addEventListener('click', function(e){
+        const viewBtn = e.target.closest('.view-btn');
+        if (!viewBtn) return;
+        e.stopPropagation();
+        const id = viewBtn.dataset.id;
+        const jobObj = roles.find(r => String(r.id) === String(id));
+        if (jobObj) openDetailModal(jobObj);
+      });
+
+      // When clicking "Apply" in detail modal: open apply modal and prefill
+      detailApplyBtn.addEventListener('click', function(){
+        const id = this.dataset.jobId;
+        const title = this.dataset.jobTitle || '';
+        const location = this.dataset.jobLocation || '';
+        openApplyModalForRole(id, title, location);
+        closeDetailModal();
+      });
+
+      /* ------------------------------
+         Apply modal behavior (existing)
+         ------------------------------ */
+      const applyModal = document.getElementById('applyModal');
+      const closeApply = document.getElementById('closeApply');
+      const applyForm = document.getElementById('applyForm');
+      const applyRoleName = document.getElementById('applyRoleName');
+      const roleIdInput = document.getElementById('role_id');
+      const appLocationSelect = document.getElementById('app_location');
+      const applyFeedback = document.getElementById('applyFeedback');
+
+      // populate location options
+      function populateLocationSelect(){
+        const existing = new Set();
+        Array.from(appLocationSelect.options).forEach(o=>existing.add(o.value));
+        Array.from(locSet).sort().forEach(loc=>{
+          if (!existing.has(loc)){
+            const opt = document.createElement('option'); opt.value = loc; opt.textContent = loc; appLocationSelect.appendChild(opt);
+          }
+        });
+      }
+      populateLocationSelect();
+
+      function openApplyModalForRole(id, title, location){
+        roleIdInput.value = id || '';
+        applyRoleName.textContent = (title || 'Role') + (location ? (' • ' + location) : '');
+        // preselect location if available
+        if (location) {
+          const opt = Array.from(appLocationSelect.options).find(o=>o.value===location);
+          if (opt) opt.selected = true;
+        }
+        applyModal.classList.add('show');
+        applyModal.setAttribute('aria-hidden','false');
+        setTimeout(function(){ document.getElementById('app_name').focus(); }, 160);
+      }
+
+      function hideApplyModal(){
+        applyModal.classList.remove('show');
+        applyModal.setAttribute('aria-hidden','true');
+        applyForm.reset();
+        applyFeedback.textContent = '';
+      }
+
+      closeApply.addEventListener('click', hideApplyModal);
+      applyModal.addEventListener('click', function(ev){
+        if (ev.target === applyModal) hideApplyModal();
+      });
+      document.addEventListener('keydown', function(ev){
+        if (ev.key === 'Escape' && applyModal.classList.contains('show')) hideApplyModal();
+      });
+
+      // Open apply modal when user clicks the small apply button in the card
+      document.addEventListener('click', function(e){
+        const btn = e.target.closest('.apply-btn');
+        if (!btn) return;
+        // stop propagating so card click doesn't open detail
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const title = btn.dataset.title;
+        const location = btn.dataset.location;
+        openApplyModalForRole(id, title, location);
+      });
+
+      // Save draft functionality (localStorage)
+      document.getElementById('saveDraft').addEventListener('click', function(){
+        try {
+          const draft = {
+            name: document.getElementById('app_name').value,
+            email: document.getElementById('app_email').value,
+            phone: document.getElementById('app_phone').value,
+            message: document.getElementById('app_message').value,
+            location: document.getElementById('app_location').value,
+            role_id: document.getElementById('role_id').value
+          };
+          localStorage.setItem('careerDraft', JSON.stringify(draft));
+          applyFeedback.textContent = 'Saved locally';
+          setTimeout(()=> applyFeedback.textContent = '', 2200);
+        } catch(err){
+          console.warn(err); applyFeedback.textContent = 'Could not save draft';
+        }
+      });
+
+      // Pre-fill from draft if present
+      (function loadDraft(){
+        try {
+          const d = localStorage.getItem('careerDraft');
+          if (!d) return;
+          const obj = JSON.parse(d);
+          if (obj.name) document.getElementById('app_name').value = obj.name;
+          if (obj.email) document.getElementById('app_email').value = obj.email;
+          if (obj.phone) document.getElementById('app_phone').value = obj.phone;
+          if (obj.message) document.getElementById('app_message').value = obj.message;
+          if (obj.location) {
+            const opt = Array.from(appLocationSelect.options).find(o=>o.value===obj.location);
+            if (opt) opt.selected = true;
+          }
+        } catch(e){ /* ignore */ }
+      })();
+
+      /* Application Submit (AJAX with progressive enhancement fallback) */
+      applyForm.addEventListener('submit', function(ev){
+        ev.preventDefault();
+
+        const name = applyForm.name.value.trim();
+        const email = applyForm.email.value.trim();
+
+        if (!name || !email) {
+          applyFeedback.textContent = 'Please enter name and email';
+          return;
+        }
+
+        applyFeedback.textContent = 'Submitting…';
+
+        const fd = new FormData(applyForm);
+
+        fetch(applyForm.action, {
+          method: 'POST',
+          body: fd,
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          credentials: 'same-origin'
+        }).then(function(res){
+          if (res.redirected) { window.location.href = res.url; return; }
+          if (!res.ok) throw new Error('Network error');
+          return res.json().catch(function(){ throw new Error('Invalid JSON'); });
+        }).then(function(json){
+          if (json && (json.success === true || json.ok === true)) {
+            applyFeedback.textContent = json.message || 'Application received — thank you.';
+            setTimeout(function(){ hideApplyModal(); }, 1200);
+          } else if (json && json.message) {
+            applyFeedback.textContent = json.message;
+          } else {
+            applyFeedback.textContent = 'Application submitted — we will contact you.';
+            setTimeout(function(){ hideApplyModal(); }, 1200);
+          }
+        }).catch(function(err){
+          console.warn('AJAX failed, falling back to native submit', err);
+          // fallback: unbind and submit normally (let server handle multipart)
+          applyForm.removeEventListener('submit', arguments.callee);
+          applyForm.submit();
+        });
+
+      });
+
+    })();
+  </script>
+
+  <!-- Optional structured data for Careers page -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"JobPosting",
+    "title":"Multiple roles at Champalal & Sons",
+    "description":"Multiple openings across retail, operations and digital. Join a heritage textile store focused on quality and service.",
+    "hiringOrganization":{"@type":"Organization","name":"Champalal & Sons","sameAs":"https://www.champalalandsons.in"},
+    "jobLocation":[{"@type":"Place","address":{"@type":"PostalAddress","addressLocality":"Purnia","addressRegion":"Bihar","postalCode":"854301","addressCountry":"IN"}}]
+  }
+  </script>
+
+</body>
+</html>

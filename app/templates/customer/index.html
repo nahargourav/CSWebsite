@@ -44,7 +44,7 @@
 
     /* Hero */
     .hero{display:grid;grid-template-columns:1fr;
-      max-width:var(--max);margin:0 auto;margin-top:22px;align-items:start;gap:16px}
+      max-width:var(--max);margin:0 auto;margin-top:0px;align-items:start;gap:16px}
     @media(min-width:992px){.hero{grid-template-columns:1.2fr .8fr;align-items:start}}
 
     /* Make hero-card span the full width of the hero grid on all breakpoints */
@@ -66,7 +66,7 @@
       width:100%;
       height:auto;
       min-height:76vh;
-      aspect-ratio:16/7; /* wide banner feel */
+      aspect-ratio:16/8.5; /* wide banner feel */
       background-size:cover;
       background-position:center;
       background-repeat:no-repeat;
@@ -86,6 +86,7 @@
     }
     @media(max-width:640px){
       .hero-overlay{left:16px;right:16px;top:auto;bottom:18px;transform:none;background:linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.65));padding:12px;border-radius:12px}
+      .hero-media{aspect-ratio:16/10.5}
     }
 
     .hero h2{font-size:28px;margin:0 0 8px}
@@ -173,7 +174,6 @@
           <p class="lead">Curated yardage for tailors, families and homes — since 1930. We sell fabric yardage only, not ready-made garments.</p>
           <div class="cta">
             <button class="btn primary" id="exploreBtn">Explore Collections</button>
-            <button class="btn ghost" id="openEnquire">Enquire</button>
           </div>
         </div>
         <div style="position:absolute;right:18px;top:18px;display:flex;gap:8px">
@@ -186,25 +186,7 @@
 
     <!-- REFINE & CATEGORIES -->
     <section class="toolbar">
-      <div style="display:flex;gap:12px;align-items:center ; overflow: scroll;">
-        <div class="dropdown">
-          <button id="dropdownBtn" class="btn" style="border:1px solid #e6e7ea">Refine by Section ▾</button>
-          <div id="dropdownMenu" class="dropdown-menu" role="menu" aria-hidden="true">
-            <button data-val="all">All</button>
-            <button data-val="saree">Sarees</button>
-            <button data-val="suiting">Suiting</button>
-            <button data-val="kurta">Kurta Cloths</button>
-            <button data-val="shawals">Shawals</button>
-            <button data-val="bedsheet">Bedsheets</button>
-          </div>
-        </div>
-
-        <div style="display:flex;align-items:center;gap:8px">
-          <input id="searchInput" placeholder="Search fabrics, e.g. silk" style="padding:8px;border-radius:8px;border:1px solid #e6e7ea;width:220px" />
-          <button id="searchBtn" class="btn primary">Search</button>
-        </div>
-      </div>
-
+      <div style="display:flex;gap:12px;align-items:center ;">
       <div class="muted">Showing <strong id="sectionsCount">5</strong> sections</div>
     </section>
 
@@ -216,7 +198,6 @@
     <section class="featured">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <h3 style="margin:0">Featured Fabrics</h3>
-        <a href="#" style="color:var(--accent);font-weight:600">Browse all</a>
       </div>
 
       <div class="f-grid" id="featuredGrid">
@@ -259,41 +240,19 @@
         <div class="muted" style="margin-top:8px;font-size:12px">We respect your privacy. Unsubscribe anytime.</div>
       </div>
     </section>
-    {% include 'customer/footer.html' %}
     <footer>
       <div style="display:flex;flex-direction:column;gap:10px;align-items:center;justify-content:space-between; display:none !important">
         <div>© <span id="year"></span> Champalal & Sons — Cloth merchants since 1930</div>
-        <div style="display:flex;gap:12px"><a href="#">Privacy</a><a href="#">Terms</a></div>
       </div>
-
+      
     </footer>
   </main>
+  {% include 'customer/footer.html' %}
 
 
   <!-- Mobile call CTA -->
 
-  <!-- Modal -->
-  <div id="modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="modal">
-      <div style="display:flex;justify-content:space-between;align-items:start">
-        <div>
-          <h3>Enquire — Champalal & Sons</h3>
-          <p class="muted">Provide details and our team will respond. (Demo)</p>
-        </div>
-        <button id="closeModal" class="icon-btn">✕</button>
-      </div>
-
-      <form id="modalForm" style="margin-top:12px;display:grid;gap:8px">
-        <input required placeholder="Name" />
-        <input required placeholder="Email or phone" />
-        <textarea rows="4" placeholder="Details: fabric type, meter, preferred delivery"></textarea>
-        <div style="display:flex;gap:8px">
-          <button class="btn primary">Send Enquiry</button>
-          <button type="button" id="cancelModal" class="btn">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
+  
 
   <script>
     // Data (mirrors React version)
@@ -368,8 +327,6 @@
             <div class="actions">
               <button class="btn view-btn">View</button>
               <div style="display:flex;gap:8px">
-                <button class="btn primary enquire-btn">Enquire</button>
-                <button class="btn" title="Favourite">♡</button>
               </div>
             </div>
           </div>
@@ -388,8 +345,6 @@
       });
       document.getElementById('sectionsCount').textContent = list.length;
 
-      // attach enquire handlers
-      document.querySelectorAll('.enquire-btn').forEach(b=>b.addEventListener('click',()=>openModal()));
 
       // attach view handlers (navigate to /place-order?q=<type>&sort=newest)
       document.querySelectorAll('.view-btn').forEach(b=>{
@@ -449,37 +404,6 @@
       dropdownMenu.classList.remove('show');
     }));
 
-    // Search
-    document.getElementById('searchBtn').addEventListener('click',()=>{
-      const q = document.getElementById('searchInput').value.trim().toLowerCase();
-      if(!q){renderCategories(categories);return}
-      renderCategories(categories.filter(c=>c.name.toLowerCase().includes(q) || c.subtitle.toLowerCase().includes(q)));
-    });
-
-    // Modal
-    const modal = document.getElementById('modal');
-    const openEnquire = document.getElementById('openEnquire');
-    const openEnquire2 = document.getElementById('openEnquire2');
-    const closeModal = document.getElementById('closeModal');
-    const cancelModal = document.getElementById('cancelModal');
-
-    function openModal(){modal.classList.add('show');modal.setAttribute('aria-hidden','false')}
-    function closeModalFn(){modal.classList.remove('show');modal.setAttribute('aria-hidden','true')}
-    openEnquire.addEventListener('click',openModal);
-    openEnquire2.addEventListener('click',openModal);
-    closeModal.addEventListener('click',closeModalFn);
-    cancelModal.addEventListener('click',closeModalFn);
-    document.getElementById('modal').addEventListener('click',(e)=>{if(e.target===modal) closeModalFn();});
-
-    // quick enquire submit (demo)
-    document.getElementById('quickForm').addEventListener('submit',(e)=>{e.preventDefault();alert('Demo: enquiry received.');});
-    document.getElementById('modalForm').addEventListener('submit',(e)=>{e.preventDefault();alert('Demo: enquiry sent.');closeModalFn();});
-
-    // Enquire buttons on cards
-    // handled after renderCategories attachments above
-
-    // small accessibility nicety: close dropdown when clicking outside
-    document.addEventListener('click',(e)=>{if(!dropdownBtn.contains(e.target) && !dropdownMenu.contains(e.target)){dropdownMenu.classList.remove('show');dropdownMenu.setAttribute('aria-hidden','true')}});
 
   </script>
 </body>

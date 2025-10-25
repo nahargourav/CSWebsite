@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Privacy Policy — Champalal &amp; Sons</title>
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" >
+  <meta name="description" content="Privacy policy for Champalal & Sons — how we collect and use personal data." />
+
+  <!-- Fonts & shared CSS: keep identical to other main templates -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+    rel="stylesheet">
+
+  <style>
+    /* minimal theme variables and a few layout helpers so this page matches site style */
+    :root{ --bg:#fff5ee; --muted:#6b7280; --accent:#f59e0b; --accent-contrast:#111827; --card:#fff; --max:1200px; --focus:3px solid rgba(245,158,11,0.18); font-family:'Poppins', Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial; }
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--accent-contrast);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+    .container{max-width:var(--max);margin:0 auto;padding:28px}
+    h1{font-size:28px;margin:0 0 8px}
+    h2{font-size:20px;margin:18px 0 8px}
+    p{margin:0 0 12px;color:var(--muted);line-height:1.5}
+    .lead{color:var(--muted);max-width:820px}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#fff7ed;color:var(--accent);font-weight:600;margin-bottom:12px}
+    .card{background:var(--card);border-radius:12px;padding:20px;box-shadow:0 6px 20px rgba(17,24,39,0.04)}
+    ul{margin:8px 0 16px 20px;color:var(--muted)}
+    a{color:var(--accent)}
+    .toc{display:flex;flex-direction:column;gap:6px;margin:12px 0 18px}
+    .toc a{font-size:14px}
+    .meta{font-size:13px;color:var(--muted);margin-bottom:14px}
+    /* small responsive */
+    @media(min-width:900px){ .two-col{display:grid;grid-template-columns:1fr 340px;gap:20px} }
+    .box-muted{background:#fff;border:1px solid #f1f5f9;padding:12px;border-radius:10px;color:var(--muted)}
+    /* reuse existing .faq styles if present to keep look consistent */
+    .faq button{width:100%;text-align:left;padding:12px;background:transparent;border:0;cursor:pointer;font-weight:700}
+  </style>
+</head>
+<body>
+
+  {# include the site's header (keeps behaviour + nav identical) #}
+  {% include 'customer/layout.html' %}
+
+  <main class="container">
+    <section class="card">
+      <div class="pill">Privacy • Policies</div>
+      <h1>Privacy Policy</h1>
+      <p class="lead">Last updated: <strong>October 24, 2025</strong>. This Privacy Policy explains how <strong>Champalal &amp; Sons</strong>  collects, uses, discloses, and protects your personal information when you visit or make a purchase from our website.</p>
+
+      <div class="two-col">
+        <div>
+          <p class="meta">If you have questions or requests about your personal data, contact us at <a href="mailto:privacy@champsons.example">privacy@champsons.example</a> or use the contact form under <a href="/contact">Contact</a>.</p>
+
+          <h2 id="scope">1. Scope</h2>
+          <p>This policy applies to information collected on our website and through services we operate, including ordering, customer accounts, marketing, and support. It does not apply to information collected offline or by third parties that link to or from our site.</p>
+
+          <h2 id="what-we-collect">2. Information We Collect</h2>
+          <p>We collect information necessary to operate the store and provide our services. Categories of information include:</p>
+          <ul>
+            <li><strong>Account &amp; profile data:</strong> name, email, phone, shipping and billing addresses, password (hashed).</li>
+            <li><strong>Transaction data:</strong> order history, invoice details, payment confirmations (we do not store full card numbers on our servers — see Payments).</li>
+            <li><strong>Communications:</strong> messages you send us (support, enquiries), and our replies.</li>
+            <li><strong>Device &amp; usage:</strong> IP address, browser type, device identifiers, pages visited, referral source, and analytics events.</li>
+            <li><strong>Marketing preferences:</strong> whether you opted in to email/SMS marketing.</li>
+            <li><strong>Third-party data:</strong> information we obtain from service providers (shipping carriers, payment processors, analytics vendors) to complete transactions.</li>
+          </ul>
+
+          <h2 id="how-we-collect">3. How We Collect Information</h2>
+          <p>We collect data in three ways:</p>
+          <ul>
+            <li><strong>Directly from you</strong> — when you create an account, place an order, subscribe to newsletters, or contact support.</li>
+            <li><strong>Automatically</strong> — via cookies, pixels and server logs when you browse our site.</li>
+            <li><strong>From third parties</strong> — providers that assist with payments, shipping, fraud checks, and analytics.</li>
+          </ul>
+
+          <h2 id="use-of-data">4. How We Use Your Information</h2>
+          <p>We use personal information to:</p>
+          <ul>
+            <li>Process and fulfil orders, manage returns and refunds.</li>
+            <li>Communicate about orders, account activity, and support requests.</li>
+            <li>Provide, improve and personalise our services (product recommendations, saved preferences).</li>
+            <li>Prevent fraud and abuse and comply with legal obligations.</li>
+            <li>Send marketing communications with your consent and respect your marketing choices.</li>
+          </ul>
+
+          <h2 id="sharing">5. Sharing &amp; Disclosure</h2>
+          <p>We may share personal data with:</p>
+          <ul>
+            <li><strong>Service providers</strong> (payment processors, shipping carriers, cloud hosting, email providers) who act on our behalf.</li>
+            <li><strong>Professional advisers</strong> (legal, audit) when required to comply with laws or protect our rights.</li>
+            <li><strong>Authorities</strong> when required by law (e.g. tax, court orders) or to respond to lawful requests.</li>
+            <li><strong>Business transfers</strong> — in case of a merger, sale, or acquisition, personal data may be transferred as part of corporate assets; we will notify you where required by law.</li>
+          </ul>
+
+          <h2 id="cookies">6. Cookies &amp; Tracking</h2>
+          <p>We use cookies and similar technologies to operate the site, remember preferences, and deliver analytics and advertising.</p>
+          <ul>
+            <li><strong>Essential cookies</strong> — required for cart, login, security and checkout.</li>
+            <li><strong>Performance &amp; analytics</strong> — help us understand site usage (e.g. Google Analytics or similar).</li>
+            <li><strong>Marketing &amp; advertising</strong> — used to show relevant ads and measure campaigns.</li>
+          </ul>
+          <p>You can manage cookie preferences through your browser settings. Disabling certain cookies may affect site functionality (for example, staying logged in or completing checkout).</p>
+
+          <h2 id="payments">7. Payments &amp; Security</h2>
+          <p>We use reputable third-party payment processors (e.g. Stripe, Razorpay, PayU — depending on the region) to process card payments. We do not store full payment card data on our servers. When you enter card details, those details are sent directly to the payment provider under their secure, PCI compliant systems.</p>
+          <p>We use TLS (HTTPS) to encrypt data in transit. Access to production data is restricted and logged; administrative access is protected by strong passwords and MFA where available.</p>
+
+          <h2 id="retention">8. Data Retention</h2>
+          <p>We retain personal data as long as necessary to provide services, comply with legal obligations (e.g. tax and accounting), resolve disputes, and enforce our agreements. When data is no longer needed, we will securely delete or anonymise it.</p>
+
+          <h2 id="international">9. International Transfers</h2>
+          <p>Your information may be processed or stored in countries other than your residence where our service providers operate. When transferring data across borders we use appropriate safeguards (standard contractual clauses, approved frameworks) to protect your information.</p>
+
+          <h2 id="your-rights">10. Your Rights</h2>
+          <p>Depending on your jurisdiction, you may have rights including:</p>
+          <ul>
+            <li><strong>Access</strong> — request a copy of personal data we hold about you.</li>
+            <li><strong>Correction</strong> — request correction of inaccurate or incomplete data.</li>
+            <li><strong>Deletion</strong> — request erasure of personal data, subject to legal obligations.</li>
+            <li><strong>Portability</strong> — request a machine-readable copy of your data.</li>
+            <li><strong>Restriction / Objection</strong> — restrict or object to certain processing, including direct marketing.</li>
+          </ul>
+          <p>To exercise these rights, contact us at <a href="mailto:privacy@champsons.example">privacy@champsons.example</a>. We may need to verify your identity before fulfilling requests. Where required by law we will respond within applicable statutory timeframes.</p>
+
+          <h2 id="children">11. Children</h2>
+          <p>Our services are not intended for children under 13 (or a higher local age where applicable). We do not knowingly collect personal information from children. If you believe we have collected data from a child, contact us to remove it.</p>
+
+          <h2 id="third-party-links">12. Links to Other Sites</h2>
+          <p>Our site contains links to third-party sites and services. This Privacy Policy does not apply to those sites — review their privacy notices before submitting data.</p>
+
+        </div>
+
+        <aside>
+          <div class="box-muted">
+            <strong>Contents</strong>
+            <nav class="toc">
+              <a href="#scope">Scope</a>
+              <a href="#what-we-collect">Information we collect</a>
+              <a href="#how-we-collect">How we collect</a>
+              <a href="#use-of-data">How we use your data</a>
+              <a href="#sharing">Sharing &amp; disclosure</a>
+              <a href="#cookies">Cookies</a>
+              <a href="#payments">Payments &amp; security</a>
+              <a href="#retention">Data retention</a>
+              <a href="#your-rights">Your rights</a>
+              <a href="#contact">Contact</a>
+            </nav>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <div class="box-muted">
+            <strong>Opt-out (Marketing)</strong>
+            <p style="margin-top:8px">You can unsubscribe from our marketing emails by clicking the "unsubscribe" link in any marketing message or by contacting <a href="mailto:privacy@champsons.example">privacy@champsons.example</a>.</p>
+          </div>
+        </aside>
+      </div>
+
+      <h2 id="security">13. Security Measures</h2>
+      <p>We use a combination of technical, administrative, and physical controls designed to protect personal data. These measures include encrypted connections (TLS), limited access controls, regular backups, and vendor assessments for third parties that process personal data on our behalf. Although we strive to protect personal data, no system can be guaranteed 100% secure.</p>
+
+      
+      <h2 id="changes">14. Changes to This Policy</h2>
+      <p>We may update this Privacy Policy from time to time. When we do, we will post the revised policy with an updated "Last updated" date. For material changes, we will notify account holders by email or a prominent notice on the site.</p>
+
+      <h2 id="contact">15. Contact &amp; Complaints</h2>
+      <p>Questions, requests, or complaints about this policy can be sent to:</p>
+      <p><strong>Email:</strong> <a href="mailto:privacy@champsons.example">privacy@champsons.example</a><br>
+      <strong>Postal:</strong> Champalal &amp; Sons, Beside Madhubani PO, Madhubani Bazar, Purnia, Bihar, 854301, India</p>
+
+      <p class="meta">Effective date: <strong>October 24, 2025</strong></p>
+    </section>
+  </main>
+
+  {# include site's footer partial so visual consistency remains #}
+  {% include 'customer/footer.html' %}
+
+  <script>
+    // small helpers used across pages (kept defensive so partials work on other pages)
+    try { document.getElementById('year').textContent = new Date().getFullYear(); } catch (e) { }
+
+    // Smooth scroll for internal TOC links
+    document.querySelectorAll('.toc a').forEach(function(a){
+      a.addEventListener('click', function(e){
+        e.preventDefault();
+        var target = document.querySelector(this.getAttribute('href'));
+        if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+      });
+    });
+  </script>
+
+</body>
+</html>
