@@ -43,6 +43,7 @@ DROP TABLE IF EXISTS public.wishlist CASCADE;
 DROP TABLE IF EXISTS public.contact_messages CASCADE;
 DROP TABLE IF EXISTS public.applications CASCADE;
 DROP TABLE IF EXISTS public.roles CASCADE;
+DROP TABLE IF EXISTS public.bestsellers CASCADE;
 
 -- Re-create tables (timestamps store India local wall-clock time via DEFAULT (now() AT TIME ZONE 'Asia/Kolkata'))
 -- Note: foreign keys will be added later via idempotent ALTER / DO blocks to avoid ordering issues.
@@ -274,7 +275,20 @@ CREATE TABLE IF NOT EXISTS applications (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT (now() AT TIME ZONE 'Asia/Kolkata')
 );
 
-
+CREATE TABLE IF NOT EXISTS public.bestsellers (
+  variant_id    bigint      NOT NULL PRIMARY KEY,
+  product_id    bigint      NOT NULL,
+  title         text        NOT NULL,
+  category      text,
+  rating_avg    numeric(4,2) DEFAULT 0.00,
+  reviews_count integer     DEFAULT 0,
+  price         numeric(12,2) DEFAULT 0.00,
+  size          text,
+  color         text,
+  variant_sku   text,
+  image    text,
+  refreshed_at  timestamptz DEFAULT (now() AT TIME ZONE 'Asia/Kolkata')
+);
 
 -- 1) Store Sales Executive
 INSERT INTO roles (title, dept, location, type, salary, summary, description, is_active, created_at)
@@ -520,6 +534,80 @@ CREATE TABLE public.wishlist (
   CONSTRAINT uq_wishlist_customer_variant UNIQUE (customer_id, variant_id)
 );
 
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'fk_bestsellers_variant'
+  ) THEN
+    ALTER TABLE public.bestsellers
+      ADD CONSTRAINT fk_bestsellers_variant
+      FOREIGN KEY (variant_id)
+      REFERENCES public.product_variants (variant_id)
+      ON DELETE CASCADE;
+  END IF;
+END
+$$;
+
+-- 2) Foreign key: product_id -> products.product_id
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'fk_bestsellers_product'
+  ) THEN
+    ALTER TABLE public.bestsellers
+      ADD CONSTRAINT fk_bestsellers_product
+      FOREIGN KEY (product_id)
+      REFERENCES public.products (product_id)
+      ON DELETE CASCADE;
+  END IF;
+END
+$$;
+
+-- 3) Add check constraint: rating_avg between 0 and 5
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'ck_bestsellers_rating_range'
+  ) THEN
+    ALTER TABLE public.bestsellers
+      ADD CONSTRAINT ck_bestsellers_rating_range
+      CHECK (rating_avg >= 0 AND rating_avg <= 5);
+  END IF;
+END
+$$;
+
+-- 4) Add check constraint: reviews_count non-negative integer
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'ck_bestsellers_reviews_nonneg'
+  ) THEN
+    ALTER TABLE public.bestsellers
+      ADD CONSTRAINT ck_bestsellers_reviews_nonneg
+      CHECK (reviews_count >= 0);
+  END IF;
+END
+$$;
+
+-- 5) Add check constraint: price non-negative
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'ck_bestsellers_price_nonneg'
+  ) THEN
+    ALTER TABLE public.bestsellers
+      ADD CONSTRAINT ck_bestsellers_price_nonneg
+      CHECK (price >= 0);
+  END IF;
+END
+$$;
+
 -- Index to look up a customer's wishlist quickly
 CREATE INDEX idx_wishlist_customer_created ON public.wishlist (customer_id, created_at DESC);
 
@@ -533,6 +621,10 @@ CREATE INDEX IF NOT EXISTS idx_contact_messages_created_at ON contact_messages (
 CREATE INDEX IF NOT EXISTS idx_applications_role_id ON applications(role_id);
 CREATE INDEX IF NOT EXISTS idx_roles_is_active ON roles(is_active);
 
+CREATE INDEX IF NOT EXISTS idx_best_sellers_price ON public.bestsellers (price);
+CREATE INDEX IF NOT EXISTS idx_bestsellers_product_id ON public.bestsellers (product_id);
+CREATE INDEX IF NOT EXISTS idx_bestsellers_refreshed_at ON public.bestsellers (refreshed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_bestsellers_rating ON public.bestsellers (rating_avg DESC);
 
 
 """

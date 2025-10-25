@@ -507,10 +507,12 @@ def register():
 
 
 
-@main.route('/collections/bestsellers')
-def best_sellers():
+@main.route('/collections/bestsellers/generation')
+def best_sellers_generation():
     """
-    Display top 50 most sold product variants (by order_items.quantity).
+    Recompute top 50 most-sold variants (from order_items), clear the
+    existing public.bestsellers rows, insert the freshly computed 50 rows,
+    and render the best_sellers template with the computed list.
     """
     conn = None
     cur = None
@@ -518,16 +520,13 @@ def best_sellers():
         conn = get_db()
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
-        # Aggregate sold quantities from order_items, join product / variant details.
-        # Use scalar subquery to pick a variant image if available, else product image.
-        sql = """
+        # 1) Aggregate top 50 sold variants and pick an image.
+        agg_sql = """
         SELECT
           oi.variant_id,
           oi.product_id,
           COALESCE(p.name, '') AS product_name,
           p.category,
-          COALESCE(p.short_description, '') AS short_description,
-          COALESCE(p.description, '') AS description,
           COALESCE(p.rating_avg, 0.0) AS rating_avg,
           COALESCE(p.reviews_count, 0) AS reviews_count,
           COALESCE(pv.price, 0.00) AS price,
@@ -551,39 +550,80 @@ def best_sellers():
         FROM order_items oi
         LEFT JOIN product_variants pv ON pv.variant_id = oi.variant_id
         LEFT JOIN products p ON p.product_id = oi.product_id
-        GROUP BY oi.variant_id, oi.product_id, p.name, p.category, p.short_description, p.description, p.rating_avg, p.reviews_count, pv.price, pv.size, pv.color, pv.sku, pv.variant_id, pv.sku, pv.size, pv.color, pv.price
+        GROUP BY oi.variant_id, oi.product_id, p.name, p.category, p.rating_avg, p.reviews_count,
+                 pv.price, pv.size, pv.color, pv.sku, pv.variant_id
         ORDER BY sold_qty DESC
         LIMIT 50
         """
-        cur.execute(sql)
+        cur.execute(agg_sql)
         rows = cur.fetchall()
-        variants = []
+
+        # prepare list for rendering and insert
+        insert_values = []
+        variants_for_render = []
         for r in rows:
-            # Convert to plain dict and coerce values to safe JSON types
             idx = dict(r)
-            # choose the image: variant_image prefer, else product_image, else None
             img = idx.get('variant_image') or idx.get('product_image') or None
-            variants.append({
+
+            variant_obj = {
                 'variant_id': int(idx.get('variant_id')) if idx.get('variant_id') is not None else None,
                 'product_id': int(idx.get('product_id')) if idx.get('product_id') is not None else None,
                 'title': idx.get('product_name') or '',
                 'category': idx.get('category') or '',
-                'short_description': idx.get('short_description') or '',
-                'description': idx.get('description') or '',
                 'rating_avg': float(idx.get('rating_avg') or 0.0),
                 'reviews_count': int(idx.get('reviews_count') or 0),
                 'price': float(idx.get('price') or 0.0),
                 'size': idx.get('size') or '',
                 'color': idx.get('color') or '',
                 'variant_sku': idx.get('variant_sku') or '',
-                'image': img,
-            })
+                'image': img
+            }
 
-        # pass the list to the template
-        return render_template('customer/best_sellers.html', variants=variants)
+            variants_for_render.append(variant_obj)
+
+            insert_values.append((
+                variant_obj['variant_id'],
+                variant_obj['product_id'],
+                variant_obj['title'],
+                variant_obj['category'],
+                variant_obj['rating_avg'],
+                variant_obj['reviews_count'],
+                variant_obj['price'],
+                variant_obj['size'],
+                variant_obj['color'],
+                variant_obj['variant_sku'],
+                variant_obj['image']
+            ))
+
+        # 2) Clear existing bestsellers table before inserting fresh rows
+        # using TRUNCATE to dump all rows quickly
+        cur.execute("TRUNCATE TABLE public.bestsellers")
+        # commit truncate immediately to avoid long transaction holding locks
+        conn.commit()
+
+        # 3) Insert new rows (refreshed_at set in SQL)
+        if insert_values:
+            insert_sql = """
+            INSERT INTO public.bestsellers
+              (variant_id, product_id, title, category, rating_avg, reviews_count, price,
+               size, color, variant_sku, image, refreshed_at)
+            VALUES
+              (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, (now() AT TIME ZONE 'Asia/Kolkata'))
+            """
+            cur.executemany(insert_sql, insert_values)
+            conn.commit()
+
+        # 4) Render the template with the freshly computed rows
+        return render_template('customer/best_sellers.html', variants=variants_for_render)
+
     except Exception as e:
-        current_app.logger.exception("Failed to load best-sellers: %s", e)
-        # render page with empty list rather than crash
+        # rollback on error and log
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+        current_app.logger.exception("Failed to generate and store best-sellers: %s", e)
         return render_template('customer/best_sellers.html', variants=[])
     finally:
         try:
@@ -598,6 +638,84 @@ def best_sellers():
             pass
 
 
+
+@main.route('/collections/bestsellers')
+def best_sellers():
+    """
+    Load best-seller rows directly from public.bestsellers and pass to the template.
+    This replaces the previous on-the-fly aggregation over order_items.
+    Note: per request we do not perform any extra image path normalization or checks here —
+    the `image` value from the table is passed through as-is.
+    """
+    conn = None
+    cur = None
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+
+        sql = """
+        SELECT
+          variant_id,
+          product_id,
+          title,
+          category,
+          rating_avg,
+          reviews_count,
+          price,
+          size,
+          color,
+          variant_sku,
+          image
+        FROM public.bestsellers
+        LIMIT 50
+        """
+        cur.execute(sql)
+        rows = cur.fetchall()
+
+        variants = []
+        for r in rows:
+            idx = dict(r)
+            variants.append({
+                'variant_id': int(idx.get('variant_id')) if idx.get('variant_id') is not None else None,
+                'product_id': int(idx.get('product_id')) if idx.get('product_id') is not None else None,
+                'title': idx.get('title') or '',
+                'category': idx.get('category') or '',
+                'rating_avg': float(idx.get('rating_avg') or 0.0),
+                'reviews_count': int(idx.get('reviews_count') or 0),
+                'price': float(idx.get('price') or 0.0),
+                'size': idx.get('size') or '',
+                'color': idx.get('color') or '',
+                'variant_sku': idx.get('variant_sku') or '',
+                'image': idx.get('image')  # pass-through exactly as stored in DB
+            })
+
+        return render_template('customer/best_sellers.html', variants=variants)
+    except Exception as e:
+        current_app.logger.exception("Failed to load best-sellers from table: %s", e)
+        return render_template('customer/best_sellers.html', variants=[])
+    finally:
+        try:
+            if cur:
+                cur.close()
+        except Exception:
+            pass
+        try:
+            if conn:
+                conn.close()
+        except Exception:
+            pass
+
+
+
+@main.route('/collections/ethnic-wear')
+def ethnicwear():
+    return render_template("customer/ethnic_wear.html")
+
+@main.route('/collections/accessories')
+def accessories():
+    return render_template("customer/accessories.html")
+
+
 @main.route('/help/shipping')
 def shipping():
     return render_template("customer/shipping.html")
@@ -610,6 +728,9 @@ def returns():
 def faq():
     return render_template("customer/faq.html")
 
+@main.route('/about')
+def about():
+    return render_template("customer/about.html")
 @main.route('/contact')
 def contact():
     return render_template("customer/contact.html")
