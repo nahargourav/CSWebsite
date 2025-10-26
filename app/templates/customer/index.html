@@ -158,9 +158,341 @@
     .muted{color:var(--muted)}
     .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:#fff7ed;color:var(--accent);font-weight:600}
     button:focus, input:focus, select:focus, textarea:focus{outline:none;box-shadow:var(--focus)}
+
+    /* NEW STYLES FOR BESTSELLERS AND TAG SECTIONS */
+    
+    /* Bestsellers Section */
+    .bestsellers-section {
+      margin-top: 40px;
+      position: relative;
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .section-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0;
+      position: relative;
+      display: inline-block;
+    }
+    
+    .section-title::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 0;
+      width: 60px;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+    
+    .carousel-container {
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      background: linear-gradient(145deg, #fff9f0, #fff5e6);
+      padding: 20px 0;
+    }
+    
+    .carousel-track {
+      display: flex;
+      transition: transform 0.5s ease;
+      padding: 0 10px;
+    }
+    
+    .carousel-item {
+      flex: 0 0 calc(25% - 20px);
+      margin: 0 10px;
+      background: white;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+    }
+    
+    .carousel-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .royal-frame {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      border: 2px solid #d4af37;
+      border-radius: 16px;
+      box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.3);
+    }
+    
+    .carousel-item .media {
+      height: 200px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    
+    .carousel-item .body {
+      padding: 16px;
+    }
+    
+    .carousel-item h4 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .carousel-item .price {
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 18px;
+      margin: 8px 0;
+    }
+    
+    .carousel-item .details {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: white;
+      border: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      font-size: 18px;
+      color: var(--accent);
+    }
+    
+    .carousel-nav.prev {
+      left: 10px;
+    }
+    
+    .carousel-nav.next {
+      right: 10px;
+    }
+    
+    .carousel-nav:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    /* Tag Sections */
+    .tag-section {
+      margin-top: 40px;
+    }
+    
+    .tag-carousel {
+      position: relative;
+      overflow: hidden;
+      border-radius: 16px;
+      background: white;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+      padding: 20px 0;
+    }
+    
+    .tag-carousel-track {
+      display: flex;
+      transition: transform 0.5s ease;
+      padding: 0 10px;
+    }
+    
+    .tag-carousel-item {
+      flex: 0 0 calc(20% - 20px);
+      margin: 0 10px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      transition: transform 0.3s ease;
+    }
+    
+    .tag-carousel-item:hover {
+      transform: translateY(-3px);
+    }
+    
+    .tag-carousel-item .media {
+      height: 160px;
+      background-size: cover;
+      background-position: center;
+      position: relative;
+    }
+    
+    .tag-carousel-item .body {
+      padding: 12px;
+    }
+    
+    .tag-carousel-item h4 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    .tag-carousel-item .price {
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 16px;
+      margin: 6px 0;
+    }
+    
+    .tag-carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: white;
+      border: none;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 10;
+      font-size: 16px;
+      color: var(--accent);
+    }
+    
+    .tag-carousel-nav.prev {
+      left: 10px;
+    }
+    
+    .tag-carousel-nav.next {
+      right: 10px;
+    }
+    
+    .tag-carousel-nav:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    
+    /* Loading Placeholders */
+    .loading-placeholder {
+      display: flex;
+      gap: 20px;
+      padding: 0 10px;
+    }
+    
+    .placeholder-card {
+      flex: 0 0 calc(20% - 20px);
+      margin: 0 10px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      animation: pulse 1.5s infinite;
+    }
+    
+    .placeholder-media {
+      height: 160px;
+      background: #f0f0f0;
+    }
+    
+    .placeholder-body {
+      padding: 12px;
+    }
+    
+    .placeholder-line {
+      height: 12px;
+      background: #f0f0f0;
+      border-radius: 6px;
+      margin-bottom: 8px;
+    }
+    
+    .placeholder-line.short {
+      width: 60%;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+    
+    /* Updated Categories Section */
+    .categories-section {
+      margin-top: 40px;
+    }
+    
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    
+    @media (min-width: 768px) {
+      .categories-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+    
+    @media (min-width: 1024px) {
+      .categories-grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+    }
+    
+    .category-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .category-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+    
+    .category-media {
+      height: 120px;
+      background-size: cover;
+      background-position: center;
+    }
+    
+    .category-body {
+      padding: 16px 12px;
+    }
+    
+    .category-body h4 {
+      margin: 0 0 6px;
+      font-size: 16px;
+      font-weight: 600;
+    }
+    
+    .category-body p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
   </style>
 </head>
-<body style="  background: #fff5ee;">
+<body style="background: #fff5ee;">
     {% include 'customer/layout.html' %}
 
   <main class="container">
@@ -180,19 +512,94 @@
           <div id="heroDots"></div>
         </div>
       </div>
-
-
     </section>
 
-    <!-- REFINE & CATEGORIES -->
-    <section class="toolbar">
-      <div style="display:flex;gap:12px;align-items:center ;">
-      <div class="muted">Showing <strong id="sectionsCount">5</strong> sections</div>
+    <!-- BESTSELLERS SECTION -->
+    <section class="bestsellers-section">
+      <div class="section-header">
+        <h2 class="section-title">Bestsellers</h2>
+      </div>
+      
+      <div class="carousel-container">
+        <button class="carousel-nav prev" id="bestsellersPrev">‹</button>
+        <div class="carousel-track" id="bestsellersTrack">
+          {% if bestsellers %}
+            {% for item in bestsellers %}
+            <div class="carousel-item">
+              <div class="royal-frame"></div>
+              <div class="media" style="background-image:url('{{ item.image or '/static/images/placeholder-420x280.png' }}')"></div>
+              <div class="body">
+                <h4>{{ item.title }}</h4>
+                <div class="price">₹{{ "%.2f"|format(item.price) }}</div>
+                <div class="details">
+                  <span>{{ item.category }}</span>
+                  <span>{{ item.size or 'One Size' }}</span>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div style="padding: 40px; text-align: center; color: var(--muted);">
+              No bestsellers available at the moment.
+            </div>
+          {% endif %}
+        </div>
+        <button class="carousel-nav next" id="bestsellersNext">›</button>
+      </div>
     </section>
 
-    <section class="grid" id="categories">
-      <!-- cards inserted by JS -->
+    <!-- CATEGORIES SECTION -->
+    <section class="categories-section">
+      <div class="section-header">
+        <h2 class="section-title">Categories</h2>
+      </div>
+      
+      <div class="categories-grid" id="categories">
+        <!-- categories will be populated by JS -->
+      </div>
     </section>
+
+    <!-- TAG SECTIONS (Loaded via AJAX) -->
+    <div id="tagSectionsContainer">
+      <!-- Tag sections will be loaded here via AJAX -->
+      <div class="loading-placeholder" id="tagSectionsLoading">
+        <div class="placeholder-card">
+          <div class="placeholder-media"></div>
+          <div class="placeholder-body">
+            <div class="placeholder-line"></div>
+            <div class="placeholder-line short"></div>
+          </div>
+        </div>
+        <div class="placeholder-card">
+          <div class="placeholder-media"></div>
+          <div class="placeholder-body">
+            <div class="placeholder-line"></div>
+            <div class="placeholder-line short"></div>
+          </div>
+        </div>
+        <div class="placeholder-card">
+          <div class="placeholder-media"></div>
+          <div class="placeholder-body">
+            <div class="placeholder-line"></div>
+            <div class="placeholder-line short"></div>
+          </div>
+        </div>
+        <div class="placeholder-card">
+          <div class="placeholder-media"></div>
+          <div class="placeholder-body">
+            <div class="placeholder-line"></div>
+            <div class="placeholder-line short"></div>
+          </div>
+        </div>
+        <div class="placeholder-card">
+          <div class="placeholder-media"></div>
+          <div class="placeholder-body">
+            <div class="placeholder-line"></div>
+            <div class="placeholder-line short"></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Featured fabrics -->
     <section class="featured">
@@ -212,7 +619,7 @@
         <div class="muted">Trusted over generations</div>
       </div>
       <div style="margin-top:12px;position:relative">
-        <blockquote id="testiText">“They helped me choose the perfect silk for my wedding saree — the texture was unmatched.”</blockquote>
+        <blockquote id="testiText">"They helped me choose the perfect silk for my wedding saree — the texture was unmatched."</blockquote>
         <footer class="muted" id="testiBy">— Asha</footer>
         <div style="position:absolute;right:8px;top:30%;display:flex;gap:8px">
           <button id="prevTesti" class="btn">‹</button>
@@ -248,11 +655,6 @@
     </footer>
   </main>
   {% include 'customer/footer.html' %}
-
-
-  <!-- Mobile call CTA -->
-
-  
 
   <script>
     // Data (mirrors React version)
@@ -313,48 +715,69 @@
     renderHero();
     setInterval(()=>{slide=(slide+1)%heroSlides.length;renderHero();},6000);
 
-    // Categories render
+    // Categories render - updated to match the third image
     const categoriesEl = document.getElementById('categories');
     function renderCategories(list){
       categoriesEl.innerHTML='';
       list.forEach(c=>{
-        const art = document.createElement('article'); art.className='card';
+        const art = document.createElement('div'); 
+        art.className='category-card';
         art.innerHTML = `
-          <div class="media" style="background-image:url('${c.image}')"></div>
-          <div class="body">
+          <div class="category-media" style="background-image:url('${c.image}')"></div>
+          <div class="category-body">
             <h4>${c.name}</h4>
             <p>${c.subtitle}</p>
-            <div class="actions">
-              <button class="btn view-btn">View</button>
-              <div style="display:flex;gap:8px">
-              </div>
-            </div>
           </div>
         `;
-        const media = art.querySelector('.media');
-        media.style.backgroundSize='cover';
-        media.style.height='180px';
-        const sw = document.createElement('div'); sw.className='swatch'; sw.style.background = c.swatch;
-        media.appendChild(sw);
-
-        // attach dataset to view button so we know which q to use
-        const viewBtn = art.querySelector('.view-btn');
-        viewBtn.dataset.q = c.id;
-
-        categoriesEl.appendChild(art);
-      });
-      document.getElementById('sectionsCount').textContent = list.length;
-
-
-      // attach view handlers (navigate to /place-order?q=<type>&sort=newest)
-      document.querySelectorAll('.view-btn').forEach(b=>{
-        b.addEventListener('click',()=>{
-          const q = b.dataset.q || '';
-          gotoPlaceOrder(q);
+        
+        // attach click handler to navigate to place-order
+        art.addEventListener('click',()=>{
+          gotoPlaceOrder(c.id);
         });
+        
+        categoriesEl.appendChild(art);
       });
     }
     renderCategories(categories);
+
+    // Bestsellers Carousel
+    const bestsellersTrack = document.getElementById('bestsellersTrack');
+    const bestsellersPrev = document.getElementById('bestsellersPrev');
+    const bestsellersNext = document.getElementById('bestsellersNext');
+    
+    let bestsellerIndex = 0;
+    const itemsPerBestsellerView = 4;
+    
+    function updateBestsellerCarousel() {
+      const itemWidth = bestsellersTrack.children[0]?.offsetWidth + 20; // width + margin
+      const translateX = -bestsellerIndex * itemWidth * itemsPerBestsellerView;
+      bestsellersTrack.style.transform = `translateX(${translateX}px)`;
+      
+      // Update button states
+      bestsellersPrev.disabled = bestsellerIndex === 0;
+      const maxIndex = Math.ceil(bestsellersTrack.children.length / itemsPerBestsellerView) - 1;
+      bestsellersNext.disabled = bestsellerIndex >= maxIndex;
+    }
+    
+    bestsellersPrev.addEventListener('click', () => {
+      if (bestsellerIndex > 0) {
+        bestsellerIndex--;
+        updateBestsellerCarousel();
+      }
+    });
+    
+    bestsellersNext.addEventListener('click', () => {
+      const maxIndex = Math.ceil(bestsellersTrack.children.length / itemsPerBestsellerView) - 1;
+      if (bestsellerIndex < maxIndex) {
+        bestsellerIndex++;
+        updateBestsellerCarousel();
+      }
+    });
+    
+    // Initialize bestsellers carousel
+    if (bestsellersTrack.children.length > 0) {
+      updateBestsellerCarousel();
+    }
 
     // Featured fabrics
     const featuredGrid = document.getElementById('featuredGrid');
@@ -376,7 +799,7 @@
     const testiText = document.getElementById('testiText');
     const testiBy = document.getElementById('testiBy');
     function renderTesti(){
-      testiText.textContent = '“'+testimonials[testiIndex].text+'”';
+      testiText.textContent = '"'+testimonials[testiIndex].text+'"';
       testiBy.textContent = '— '+testimonials[testiIndex].name;
     }
     document.getElementById('prevTesti').addEventListener('click',()=>{testiIndex=(testiIndex-1+testimonials.length)%testimonials.length;renderTesti();});
@@ -393,18 +816,109 @@
       wrap.appendChild(btn); wrap.appendChild(panel); faqList.appendChild(wrap);
     });
 
-    // Dropdown
-    const dropdownBtn = document.getElementById('dropdownBtn');
-    const dropdownMenu = document.getElementById('dropdownMenu');
-    dropdownBtn.addEventListener('click',()=>{dropdownMenu.classList.toggle('show');dropdownMenu.setAttribute('aria-hidden', dropdownMenu.classList.contains('show')? 'false':'true')});
-    dropdownMenu.querySelectorAll('button').forEach(b=>b.addEventListener('click',(e)=>{
-      const val = e.currentTarget.getAttribute('data-val');
-      if(val==='all'){renderCategories(categories);}
-      else{renderCategories(categories.filter(c=>c.id===val));}
-      dropdownMenu.classList.remove('show');
-    }));
+    // AJAX for Tag Sections
+    function loadTagSections() {
+      fetch('/ajax/tag_sections')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          const container = document.getElementById('tagSectionsContainer');
+          container.innerHTML = '';
+          
+          if (data.sections && data.sections.length > 0) {
+            data.sections.forEach(section => {
+              const sectionEl = document.createElement('section');
+              sectionEl.className = 'tag-section';
+              sectionEl.innerHTML = `
+                <div class="section-header">
+                  <h2 class="section-title">${section.tag}</h2>
+                </div>
+                <div class="tag-carousel">
+                  <button class="tag-carousel-nav prev">‹</button>
+                  <div class="tag-carousel-track">
+                    ${section.variants.map(variant => `
+                      <div class="tag-carousel-item">
+                        <div class="media" style="background-image:url('${variant.image_path}')"></div>
+                        <div class="body">
+                          <h4>${variant.title}</h4>
+                          <div class="price">₹${variant.price ? variant.price.toFixed(2) : '0.00'}</div>
+                          <div class="details">
+                            <span>${variant.size || 'One Size'}</span>
+                            <span>${variant.color || ''}</span>
+                          </div>
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                  <button class="tag-carousel-nav next">›</button>
+                </div>
+              `;
+              
+              container.appendChild(sectionEl);
+              
+              // Initialize carousel for this section
+              const track = sectionEl.querySelector('.tag-carousel-track');
+              const prevBtn = sectionEl.querySelector('.tag-carousel-nav.prev');
+              const nextBtn = sectionEl.querySelector('.tag-carousel-nav.next');
+              
+              let tagIndex = 0;
+              const itemsPerTagView = 5;
+              
+              function updateTagCarousel() {
+                if (track.children.length === 0) return;
+                
+                const itemWidth = track.children[0].offsetWidth + 20; // width + margin
+                const translateX = -tagIndex * itemWidth * itemsPerTagView;
+                track.style.transform = `translateX(${translateX}px)`;
+                
+                // Update button states
+                prevBtn.disabled = tagIndex === 0;
+                const maxIndex = Math.ceil(track.children.length / itemsPerTagView) - 1;
+                nextBtn.disabled = tagIndex >= maxIndex;
+              }
+              
+              prevBtn.addEventListener('click', () => {
+                if (tagIndex > 0) {
+                  tagIndex--;
+                  updateTagCarousel();
+                }
+              });
+              
+              nextBtn.addEventListener('click', () => {
+                const maxIndex = Math.ceil(track.children.length / itemsPerTagView) - 1;
+                if (tagIndex < maxIndex) {
+                  tagIndex++;
+                  updateTagCarousel();
+                }
+              });
+              
+              // Initialize carousel after a brief delay to ensure DOM is ready
+              setTimeout(updateTagCarousel, 100);
+            });
+          } else {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--muted);">No tag sections available.</div>';
+          }
+        })
+        .catch(error => {
+          console.error('Error loading tag sections:', error);
+          document.getElementById('tagSectionsContainer').innerHTML = 
+            '<div style="text-align: center; padding: 40px; color: var(--muted);">Failed to load tag sections. Please try again later.</div>';
+        });
+    }
+    
+    // Load tag sections after page load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadTagSections();
+    });
 
-
+    // Explore button
+    document.getElementById('exploreBtn').addEventListener('click', () => {
+      gotoPlaceOrder('');
+    });
   </script>
 </body>
 </html>

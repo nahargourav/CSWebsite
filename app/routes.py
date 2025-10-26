@@ -340,10 +340,144 @@ def _r2_key_from_public_url(url):
     return None
 
 
-@main.route('/')
-def home():
-    return render_template("customer/index.html")
 
+def rows_to_dicts(cur, rows):
+    """Convert DB rows to list of dicts handling RealDictRow, namedtuple, or plain tuple."""
+    if not rows:
+        return []
+    # if row already mapping-like
+    first = rows[0]
+    if isinstance(first, dict):
+        return [dict(r) for r in rows]
+    # psycopg2.extras.RealDictRow also behaves like mapping, but isinstance may already be dict-like
+    # if it's a namedtuple or sequence, map using cursor.description
+    colnames = [col.name if hasattr(col, 'name') else col[0] for col in cur.description]
+    out = []
+    for r in rows:
+        if hasattr(r, '_asdict'):  # namedtuple
+            out.append(dict(r._asdict()))
+        else:
+            # treat as sequence
+            out.append({colnames[i]: r[i] for i in range(len(colnames))})
+    return out
+
+@main.route("/")
+def home():
+    conn = get_db()
+    try:
+        # create cursor with RealDictCursor for safety
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cur.execute("""
+            SELECT variant_id, product_id, title, category, price, size, color, variant_sku, image
+            FROM public.bestsellers
+            WHERE price IS NOT NULL
+            ORDER BY refreshed_at DESC
+            LIMIT 12
+        """)
+        rows = cur.fetchall()
+        # rows should already be dicts because of RealDictCursor; but use helper for safety
+        bestsellers = rows_to_dicts(cur, rows)
+        # convert decimals (if any) to floats
+        for r in bestsellers:
+            if r.get("price") is not None:
+                try:
+                    r["price"] = float(r["price"])
+                except Exception:
+                    # leave as-is if conversion fails
+                    pass
+    except Exception as e:
+        current_app.logger.exception("Error fetching bestsellers")
+        bestsellers = []
+    finally:
+        conn.close()
+
+    return render_template("customer/index.html", bestsellers=bestsellers)
+
+
+@main.route("/ajax/tag_sections")
+def ajax_tag_sections():
+    """
+    Returns JSON sections grouped by tag.
+    Each variant includes a variant-level image_path (from product_images.variant_id).
+    Output format:
+      { "sections": [ { "tag": "<name>", "variants": [ { variant fields... } ] } ] }
+    """
+    conn = get_db()
+    try:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Fetch tags to render (same selection criteria as before)
+        cur.execute("""
+            SELECT tag_id, name
+            FROM public.tags
+            ORDER BY name
+            LIMIT 8
+        """)
+        tag_rows = cur.fetchall()
+        tags = rows_to_dicts(cur, tag_rows)
+
+        sections = []
+        for t in tags:
+            tag_id = t.get("tag_id")
+            tag_name = t.get("name")
+
+            # Fetch up to 12 variants for this tag, selecting the variant image (variant-level) if any.
+            # We prefer variant images only; if none exist we'll set a placeholder in Python.
+            cur.execute("""
+                SELECT pv.variant_id,
+                       pv.product_id,
+                       COALESCE(p.name, '') AS title,
+                       pv.price,
+                       pv.size,
+                       pv.color,
+                       pv.sku AS variant_sku,
+                       (
+                         SELECT pi.path
+                         FROM public.product_images pi
+                         WHERE pi.variant_id = pv.variant_id
+                         ORDER BY pi.is_primary DESC, pi.position ASC
+                         LIMIT 1
+                       ) AS image_path
+                FROM public.product_tags pt
+                JOIN public.product_variants pv ON pv.product_id = pt.product_id
+                LEFT JOIN public.products p ON p.product_id = pv.product_id
+                WHERE pt.tag_id = %s
+                LIMIT 12
+            """, (tag_id,))
+
+            var_rows = cur.fetchall()
+            variants = rows_to_dicts(cur, var_rows)
+
+            items = []
+            for v in variants:
+                # Normalize numeric fields to JSON-friendly types
+                if v.get("price") is not None:
+                    try:
+                        v["price"] = float(v["price"])
+                    except Exception:
+                        # leave as-is if conversion fails
+                        pass
+
+                # Ensure variant-level image only; if missing use placeholder (do NOT use product image)
+                if not v.get("image_path"):
+                    v["image_path"] = "/static/images/placeholder-420x280.png"
+
+                items.append(v)
+
+            if items:
+                sections.append({"tag": tag_name, "variants": items})
+
+    except Exception:
+        # Keep error handling consistent with previous code: log and return empty sections
+        current_app.logger.exception("Error building tag sections")
+        sections = []
+    finally:
+        try:
+            conn.close()
+        except Exception:
+            current_app.logger.exception("Error closing DB connection in ajax_tag_sections")
+
+    return jsonify({"sections": sections})
 
 
 @main.route("/google_callback")

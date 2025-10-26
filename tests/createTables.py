@@ -608,6 +608,7 @@ BEGIN
 END
 $$;
 
+CREATE INDEX idx_variants_products ON public.product_variants (product_id);
 -- Index to look up a customer's wishlist quickly
 CREATE INDEX idx_wishlist_customer_created ON public.wishlist (customer_id, created_at DESC);
 
