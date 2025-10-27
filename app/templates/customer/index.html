@@ -807,7 +807,7 @@
         
         if (response.status === 401) {
           // Redirect to login if not authenticated
-          window.location.href = '/auth/login?next=' + encodeURIComponent(window.location.pathname);
+          window.location.href = '/login';
           return;
         }
         
