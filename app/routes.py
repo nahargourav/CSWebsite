@@ -368,7 +368,7 @@ def home():
         # create cursor with RealDictCursor for safety
         cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
         cur.execute("""
-            SELECT variant_id, product_id, title, category, price, size, color, variant_sku, image
+            SELECT variant_id, product_id, title, category, price, size, color, variant_sku, image, rating_avg AS rating
             FROM public.bestsellers
             WHERE price IS NOT NULL
             ORDER BY refreshed_at DESC
