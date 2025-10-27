@@ -1,15 +1,3 @@
-<!doctype html>
-<html lang="en">
-
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>{% block title %}Champalal & Sons — Light & Crafted{% endblock %}</title>
-  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" >
-  <meta name="description" content="Champalal & Sons — curated fabrics since 1930. Handloom sarees, suiting, kurta cloths, shawals & bedsheets (yardage only)." />
-
-  {# Intentionally avoiding a global Bootstrap include to prevent CSS conflicts with the homepage styling. #}
-  {% block head %}{% endblock %}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -327,9 +315,6 @@
       body.mobile-menu-open { overflow: hidden; touch-action: none; }
     }
   </style>
-</head>
-
-<body>
   <!-- Header exactly as homepage (keeps logo/title/links/profile on same row on desktop) -->
   <header>
     <div class="container nav">
@@ -642,7 +627,3 @@
     handleCTA(); window.addEventListener('resize', handleCTA);
   </script>
 
-  {% block scripts %}{% endblock %}
-</body>
-
-</html>
