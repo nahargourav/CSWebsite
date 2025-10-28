@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Exclusive Collection - Premium Ethnic Wear</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='customer/browse.css') }}">
+    <style>
+        @media (min-width: 769px) {
+      .auth-list{left: 0% !important;}
+      .brand{width: 7% !important;}
+        .links{width: 93% !important;}
+      .nav{width: 100% !important;}
+    }
+    .back-to-top {
+      display: none !important;
+    }
+    </style>
+</head>
+<body>
+  {% include 'customer/layout.html' %}
+
+  <!-- Hero Banner -->
+  <section class="collection-hero">
+    <div class="hero-content">
+      <span class="hero-badge">Premium Collection</span>
+      <h1 class="hero-title">Discover Our Heritage</h1>
+      <p class="hero-subtitle">Explore curated fabrics crafted with tradition, chosen with care — every piece tells a story</p>
+    </div>
+  </section>
+
+  <!-- Main Browse Container -->
+  <div class="browse-container">
+    
+    <!-- Search & Sort Bar -->
+    <div class="search-sort-bar">
+      <div class="search-box">
+        <input 
+          type="text" 
+          class="search-input" 
+          id="searchInput" 
+          placeholder="Search fabrics, colors, designs..."
+          autocomplete="off"
+        >
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.35-4.35"></path>
+        </svg>
+      </div>
+
+      <button class="filter-toggle-btn" id="filterToggleBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="4" y1="6" x2="20" y2="6"></line>
+          <line x1="4" y1="12" x2="20" y2="12"></line>
+          <line x1="4" y1="18" x2="20" y2="18"></line>
+          <circle cx="8" cy="6" r="2" fill="white"></circle>
+          <circle cx="16" cy="12" r="2" fill="white"></circle>
+          <circle cx="12" cy="18" r="2" fill="white"></circle>
+        </svg>
+        Filters
+      </button>
+
+      <select class="sort-select" id="sortSelect">
+        <option value="relevance">Most Relevant</option>
+        <option value="newest">Newest First</option>
+        <option value="price_asc">Price: Low to High</option>
+        <option value="price_desc">Price: High to Low</option>
+        <option value="rating_desc">Highest Rated</option>
+      </select>
+    </div>
+
+    <!-- Active Filters -->
+    <div class="active-filters" id="activeFilters"></div>
+
+    <!-- Main Layout -->
+    <div class="browse-layout">
+      
+      <!-- Filters Sidebar -->
+      <aside class="filters-sidebar" id="filtersSidebar">
+        <div class="filters-header">
+          <h2 class="filters-title">Filters</h2>
+          <button class="clear-filters-btn" id="clearAllFilters">Clear All</button>
+        </div>
+
+        <!-- Price Range Filter -->
+        <div class="filter-group">
+          <div class="filter-group-title" data-filter="price">
+            <span>Price Range</span>
+            <span class="filter-toggle-icon">▼</span>
+          </div>
+          <div class="filter-options price-range-container">
+            <div class="price-inputs">
+              <div class="price-input-wrapper">
+                <span class="price-symbol">₹</span>
+                <input type="number" class="price-input" id="minPrice" placeholder="Min">
+              </div>
+              <div class="price-input-wrapper">
+                <span class="price-symbol">₹</span>
+                <input type="number" class="price-input" id="maxPrice" placeholder="Max">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category Filter -->
+        <div class="filter-group">
+          <div class="filter-group-title" data-filter="category">
+            <span>Category</span>
+            <span class="filter-toggle-icon">▼</span>
+          </div>
+          <div class="filter-options" id="categoryFilters"></div>
+        </div>
+
+        <!-- Brand Filter -->
+        <div class="filter-group">
+          <div class="filter-group-title" data-filter="brand">
+            <span>Brand</span>
+            <span class="filter-toggle-icon">▼</span>
+          </div>
+          <div class="filter-options" id="brandFilters"></div>
+        </div>
+
+        <!-- Color Filter -->
+        <div class="filter-group">
+          <div class="filter-group-title" data-filter="color">
+            <span>Color</span>
+            <span class="filter-toggle-icon">▼</span>
+          </div>
+          <div class="filter-options" id="colorFilters"></div>
+        </div>
+
+        <!-- Size Filter -->
+        <div class="filter-group">
+          <div class="filter-group-title" data-filter="size">
+            <span>Size</span>
+            <span class="filter-toggle-icon">▼</span>
+          </div>
+          <div class="filter-options" id="sizeFilters"></div>
+        </div>
+
+        <!-- Tag Filter -->
+        <div class="filter-group">
+          <div class="filter-group-title" data-filter="tag">
+            <span>Collections</span>
+            <span class="filter-toggle-icon">▼</span>
+          </div>
+          <div class="filter-options" id="tagFilters"></div>
+        </div>
+
+        <!-- Rating Filter -->
+        <div class="filter-group">
+          <div class="filter-group-title" data-filter="rating">
+            <span>Rating</span>
+            <span class="filter-toggle-icon">▼</span>
+          </div>
+          <div class="filter-options" id="ratingFilters"></div>
+        </div>
+      </aside>
+
+      <!-- Products Section -->
+      <section class="products-section">
+        <div class="products-header">
+          <div class="results-count">
+            Showing <span id="resultsCount">0</span> products
+          </div>
+          <div class="view-toggle">
+            <button class="view-btn active" data-view="grid" title="Grid View">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+              </svg>
+            </button>
+            <button class="view-btn" data-view="list" title="List View">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="8" y1="6" x2="21" y2="6"></line>
+                <line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line>
+                <rect x="3" y="4" width="2" height="4"></rect>
+                <rect x="3" y="10" width="2" height="4"></rect>
+                <rect x="3" y="16" width="2" height="4"></rect>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading-container" id="loadingContainer">
+          <div class="loader"></div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="products-grid" id="productsGrid"></div>
+
+        <!-- Empty State -->
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">🔍</div>
+          <h3 class="empty-title">No Products Found</h3>
+          <p class="empty-subtitle">Try adjusting your filters or search terms</p>
+          <button class="btn-clear-filters" onclick="clearAllFilters()">Clear All Filters</button>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="pagination"></div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Filter Overlay (Mobile) -->
+  <div class="filter-overlay" id="filterOverlay"></div>
+
+  {% include 'customer/footer.html' %}
+
+  <script>
+    (function() {
+      'use strict';
+
+      // ========== STATE MANAGEMENT ==========
+      const state = {
+        filters: {
+          category: [],
+          brand: [],
+          color: [],
+          size: [],
+          tag: [],
+          min_price: null,
+          max_price: null,
+          min_rating: null
+        },
+        search: '',
+        sort: 'relevance',
+        page: 1,
+        per_page: 24,
+        total: 0,
+        variants: [],
+        filterOptions: {},
+        view: 'grid'
+      };
+
+      // ========== DOM ELEMENTS ==========
+      const elements = {
+        searchInput: document.getElementById('searchInput'),
+        sortSelect: document.getElementById('sortSelect'),
+        filterToggleBtn: document.getElementById('filterToggleBtn'),
+        filtersSidebar: document.getElementById('filtersSidebar'),
+        filterOverlay: document.getElementById('filterOverlay'),
+        clearAllFilters: document.getElementById('clearAllFilters'),
+        activeFilters: document.getElementById('activeFilters'),
+        productsGrid: document.getElementById('productsGrid'),
+        loadingContainer: document.getElementById('loadingContainer'),
+        emptyState: document.getElementById('emptyState'),
+        resultsCount: document.getElementById('resultsCount'),
+        pagination: document.getElementById('pagination'),
+        minPrice: document.getElementById('minPrice'),
+        maxPrice: document.getElementById('maxPrice'),
+        categoryFilters: document.getElementById('categoryFilters'),
+        brandFilters: document.getElementById('brandFilters'),
+        colorFilters: document.getElementById('colorFilters'),
+        sizeFilters: document.getElementById('sizeFilters'),
+        tagFilters: document.getElementById('tagFilters'),
+        ratingFilters: document.getElementById('ratingFilters')
+      };
+
+      // ========== API CALLS ==========
+      async function fetchFilters() {
+        try {
+          const response = await fetch('/filters');
+          if (!response.ok) throw new Error('Failed to fetch filters');
+          state.filterOptions = await response.json();
+          renderFilterOptions();
+        } catch (error) {
+          console.error('Error fetching filters:', error);
+        }
+      }
+
+      async function fetchVariants() {
+        showLoading();
+        
+        try {
+          const params = new URLSearchParams();
+          
+          // Add search
+          if (state.search) params.append('q', state.search);
+          
+          // Add filters
+          state.filters.category.forEach(cat => params.append('category', cat));
+          state.filters.brand.forEach(brand => params.append('brand', brand));
+          state.filters.color.forEach(color => params.append('color', color));
+          state.filters.size.forEach(size => params.append('size', size));
+          state.filters.tag.forEach(tag => params.append('tag', tag));
+          
+          if (state.filters.min_price !== null) params.append('min_price', state.filters.min_price);
+          if (state.filters.max_price !== null) params.append('max_price', state.filters.max_price);
+          if (state.filters.min_rating !== null) params.append('min_rating', state.filters.min_rating);
+          
+          // Add sort and pagination
+          params.append('sort', state.sort);
+          params.append('page', state.page);
+          params.append('per_page', state.per_page);
+          
+          const response = await fetch(`/variants?${params.toString()}`);
+          if (!response.ok) throw new Error('Failed to fetch variants');
+          
+          const data = await response.json();
+          state.variants = data.variants;
+          state.total = data.total;
+          
+          renderProducts();
+          renderPagination();
+          updateResultsCount();
+          updateActiveFilters();
+          hideLoading();
+          
+        } catch (error) {
+          console.error('Error fetching variants:', error);
+          hideLoading();
+          showEmptyState();
+        }
+      }
+
+      // ========== RENDER FUNCTIONS ==========
+      function renderFilterOptions() {
+        // Categories
+        elements.categoryFilters.innerHTML = state.filterOptions.categories.map(cat => `
+          <label class="filter-option" data-type="category" data-value="${cat}">
+            <div class="filter-checkbox"></div>
+            <span class="filter-label">${cat}</span>
+          </label>
+        `).join('');
+
+        // Brands
+        elements.brandFilters.innerHTML = state.filterOptions.brands.map(brand => `
+          <label class="filter-option" data-type="brand" data-value="${brand}">
+            <div class="filter-checkbox"></div>
+            <span class="filter-label">${brand}</span>
+          </label>
+        `).join('');
+
+        // Colors
+        elements.colorFilters.innerHTML = state.filterOptions.colors.map(color => `
+          <div class="color-option" data-type="color" data-value="${color}">
+            <div class="color-swatch" style="background-color: ${color}"></div>
+            <span class="filter-label">${color}</span>
+          </div>
+        `).join('');
+
+        // Sizes
+        elements.sizeFilters.innerHTML = state.filterOptions.sizes.map(size => `
+          <label class="filter-option" data-type="size" data-value="${size}">
+            <div class="filter-checkbox"></div>
+            <span class="filter-label">${size}</span>
+          </label>
+        `).join('');
+
+        // Tags
+        elements.tagFilters.innerHTML = state.filterOptions.tags.map(tag => `
+          <label class="filter-option" data-type="tag" data-value="${tag}">
+            <div class="filter-checkbox"></div>
+            <span class="filter-label">${tag}</span>
+          </label>
+        `).join('');
+
+        // Ratings
+        elements.ratingFilters.innerHTML = state.filterOptions.rating_options.map(rating => `
+          <label class="rating-option" data-type="rating" data-value="${rating}">
+            <div class="filter-checkbox"></div>
+            <div class="rating-stars">${'★'.repeat(rating)}${'☆'.repeat(5 - rating)}</div>
+            <span class="rating-label">& Up</span>
+          </label>
+        `).join('');
+
+        // Set price range placeholders
+        if (state.filterOptions.min_price !== undefined) {
+          elements.minPrice.placeholder = `₹${state.filterOptions.min_price}`;
+          elements.minPrice.min = state.filterOptions.min_price;
+        }
+        if (state.filterOptions.max_price !== undefined) {
+          elements.maxPrice.placeholder = `₹${state.filterOptions.max_price}`;
+          elements.maxPrice.max = state.filterOptions.max_price;
+        }
+
+        attachFilterListeners();
+      }
+
+      function renderProducts() {
+        if (state.variants.length === 0) {
+          showEmptyState();
+          return;
+        }
+
+        hideEmptyState();
+
+        elements.productsGrid.innerHTML = state.variants.map(variant => {
+          const stockStatus = variant.variant_stock > 10 ? 'in-stock' : 
+                             variant.variant_stock > 0 ? 'low-stock' : 'out-of-stock';
+          const stockText = variant.variant_stock > 10 ? 'In Stock' : 
+                           variant.variant_stock > 0 ? 'Low Stock' : 'Out of Stock';
+          
+          const ratingStars = '★'.repeat(Math.floor(variant.rating_avg)) + 
+                             '☆'.repeat(5 - Math.floor(variant.rating_avg));
+          
+          return `
+            <div class="product-card" data-variant-id="${variant.variant_id}" data-product-id="${variant.product_id}">
+              <div class="product-image-wrapper">
+                <img 
+                  src="${variant.image || '/static/images/placeholder-420x280.png'}" 
+                  alt="${variant.product_name}"
+                  class="product-image"
+                  loading="lazy"
+                >
+                ${variant.brand ? `<div class="product-badge">${variant.brand}</div>` : ''}
+                <button class="wishlist-btn" data-variant-id="${variant.variant_id}" data-product-id="${variant.product_id}">
+                  ♡
+                </button>
+                ${variant.color ? `
+                  <div class="product-colors">
+                    <div class="color-dot" style="background-color: ${variant.color_hex || variant.color}" title="${variant.color}"></div>
+                  </div>
+                ` : ''}
+              </div>
+              <div class="product-body">
+                ${variant.brand ? `<div class="product-brand">${variant.brand}</div>` : ''}
+                <h3 class="product-name">${variant.product_name}</h3>
+                <div class="product-meta">
+                  <div class="product-rating">
+                    <span class="rating-stars-display">${ratingStars}</span>
+                    <span class="rating-value">${variant.rating_avg.toFixed(1)}</span>
+                  </div>
+                  ${variant.reviews_count > 0 ? `<span class="reviews-count">(${variant.reviews_count})</span>` : ''}
+                </div>
+                <div class="product-pricing">
+                  <div class="product-price">₹${variant.price.toFixed(2)}</div>
+                  <div class="stock-status ${stockStatus}">${stockText}</div>
+                </div>
+                <div class="product-footer">
+                  <button class="btn-view-details" onclick="viewProduct('${variant.product_id}', '${variant.variant_id}', '${variant.variant_sku}')">
+                    View Details
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        attachWishlistListeners();
+      }
+
+      function renderPagination() {
+        const totalPages = Math.ceil(state.total / state.per_page);
+        
+        if (totalPages <= 1) {
+          elements.pagination.innerHTML = '';
+          return;
+        }
+
+        let paginationHTML = `
+          <button class="pagination-btn" ${state.page === 1 ? 'disabled' : ''} onclick="changePage(${state.page - 1})">
+            ‹ Prev
+          </button>
+        `;
+
+        // Page numbers
+        const maxVisible = 5;
+        let startPage = Math.max(1, state.page - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+        
+        if (endPage - startPage < maxVisible - 1) {
+          startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+
+        if (startPage > 1) {
+          paginationHTML += `<button class="pagination-btn" onclick="changePage(1)">1</button>`;
+          if (startPage > 2) {
+            paginationHTML += `<span class="pagination-info">...</span>`;
+          }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+          paginationHTML += `
+            <button class="pagination-btn ${i === state.page ? 'active' : ''}" onclick="changePage(${i})">
+              ${i}
+            </button>
+          `;
+        }
+
+        if (endPage < totalPages) {
+          if (endPage < totalPages - 1) {
+            paginationHTML += `<span class="pagination-info">...</span>`;
+          }
+          paginationHTML += `<button class="pagination-btn" onclick="changePage(${totalPages})">${totalPages}</button>`;
+        }
+
+        paginationHTML += `
+          <button class="pagination-btn" ${state.page === totalPages ? 'disabled' : ''} onclick="changePage(${state.page + 1})">
+            Next ›
+          </button>
+        `;
+
+        elements.pagination.innerHTML = paginationHTML;
+      }
+
+      function updateResultsCount() {
+        elements.resultsCount.textContent = state.total;
+      }
+
+      function updateActiveFilters() {
+        const tags = [];
+        
+        // Collect all active filters
+        ['category', 'brand', 'color', 'size', 'tag'].forEach(type => {
+          state.filters[type].forEach(value => {
+            tags.push({ type, value, label: value });
+          });
+        });
+
+        if (state.filters.min_price || state.filters.max_price) {
+          const priceLabel = `₹${state.filters.min_price || state.filterOptions.min_price} - ₹${state.filters.max_price || state.filterOptions.max_price}`;
+          tags.push({ type: 'price', value: 'price', label: priceLabel });
+        }
+
+        if (state.filters.min_rating) {
+          tags.push({ type: 'rating', value: state.filters.min_rating, label: `${state.filters.min_rating}★ & Up` });
+        }
+
+        elements.activeFilters.innerHTML = tags.map(tag => `
+          <div class="filter-tag">
+            <span>${tag.label}</span>
+            <span class="filter-tag-remove" onclick="removeFilter('${tag.type}', '${tag.value}')">×</span>
+          </div>
+        `).join('');
+      }
+
+      // ========== EVENT HANDLERS ==========
+      function attachFilterListeners() {
+        // Standard checkbox filters
+        document.querySelectorAll('.filter-option').forEach(option => {
+          option.addEventListener('click', function() {
+            const type = this.dataset.type;
+            const value = this.dataset.value;
+            toggleFilter(type, value);
+            this.querySelector('.filter-checkbox').classList.toggle('checked');
+          });
+        });
+
+        // Color filters
+        document.querySelectorAll('.color-option').forEach(option => {
+          option.addEventListener('click', function() {
+            const type = this.dataset.type;
+            const value = this.dataset.value;
+            toggleFilter(type, value);
+            this.querySelector('.color-swatch').classList.toggle('selected');
+          });
+        });
+
+        // Rating filters
+        document.querySelectorAll('.rating-option').forEach(option => {
+          option.addEventListener('click', function() {
+            const value = parseFloat(this.dataset.value);
+            
+            // Clear other ratings
+            document.querySelectorAll('.rating-option .filter-checkbox').forEach(cb => {
+              cb.classList.remove('checked');
+            });
+            
+            state.filters.min_rating = value;
+            this.querySelector('.filter-checkbox').classList.add('checked');
+            state.page = 1;
+            fetchVariants();
+          });
+        });
+
+        // Filter group toggle
+        document.querySelectorAll('.filter-group-title').forEach(title => {
+          title.addEventListener('click', function() {
+            this.classList.toggle('collapsed');
+            const options = this.parentElement.querySelector('.filter-options');
+            if (options) {
+              options.classList.toggle('collapsed');
+            }
+          });
+        });
+      }
+
+      function attachWishlistListeners() {
+        document.querySelectorAll('.wishlist-btn').forEach(btn => {
+          btn.addEventListener('click', async function(e) {
+            e.stopPropagation();
+            const variantId = this.dataset.variantId;
+            const productId = this.dataset.productId;
+            
+            try {
+              const response = await fetch('/wishlist/toggle', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ variant_id: variantId, product_id: productId })
+              });
+
+              if (response.status === 401) {
+                window.location.href = '/login';
+                return;
+              }
+
+              const data = await response.json();
+              if (data.ok) {
+                this.classList.toggle('active');
+                this.textContent = this.classList.contains('active') ? '♥' : '♡';
+              }
+            } catch (error) {
+              console.error('Error toggling wishlist:', error);
+            }
+          });
+        });
+
+        // Product card click
+        document.querySelectorAll('.product-card').forEach(card => {
+          card.addEventListener('click', function(e) {
+            if (!e.target.closest('.wishlist-btn') && !e.target.closest('.btn-view-details')) {
+              const productId = this.dataset.productId;
+              const variantId = this.dataset.variantId;
+              const variantSku = this.querySelector('.product-name').textContent;
+              viewProduct(productId, variantId, variantSku);
+            }
+          });
+        });
+      }
+
+      function toggleFilter(type, value) {
+        const filterArray = state.filters[type];
+        const index = filterArray.indexOf(value);
+        
+        if (index > -1) {
+          filterArray.splice(index, 1);
+        } else {
+          filterArray.push(value);
+        }
+        
+        state.page = 1;
+        fetchVariants();
+      }
+
+      window.removeFilter = function(type, value) {
+        if (type === 'price') {
+          state.filters.min_price = null;
+          state.filters.max_price = null;
+          elements.minPrice.value = '';
+          elements.maxPrice.value = '';
+        } else if (type === 'rating') {
+          state.filters.min_rating = null;
+          document.querySelectorAll('.rating-option .filter-checkbox').forEach(cb => {
+            cb.classList.remove('checked');
+          });
+        } else {
+          const index = state.filters[type].indexOf(value);
+          if (index > -1) {
+            state.filters[type].splice(index, 1);
+          }
+          
+          // Update UI
+          document.querySelectorAll(`[data-type="${type}"][data-value="${value}"]`).forEach(el => {
+            const checkbox = el.querySelector('.filter-checkbox');
+            if (checkbox) checkbox.classList.remove('checked');
+            const swatch = el.querySelector('.color-swatch');
+            if (swatch) swatch.classList.remove('selected');
+          });
+        }
+        
+        state.page = 1;
+        fetchVariants();
+      };
+
+      window.clearAllFilters = function() {
+        // Reset all filters
+        state.filters = {
+          category: [],
+          brand: [],
+          color: [],
+          size: [],
+          tag: [],
+          min_price: null,
+          max_price: null,
+          min_rating: null
+        };
+        
+        // Clear UI
+        document.querySelectorAll('.filter-checkbox').forEach(cb => cb.classList.remove('checked'));
+        document.querySelectorAll('.color-swatch').forEach(swatch => swatch.classList.remove('selected'));
+        elements.minPrice.value = '';
+        elements.maxPrice.value = '';
+        
+        state.page = 1;
+        fetchVariants();
+      };
+
+      window.changePage = function(page) {
+        if (page < 1 || page > Math.ceil(state.total / state.per_page)) return;
+        state.page = page;
+        fetchVariants();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      window.viewProduct = function(productId, variantId, variantSku) {
+        window.location.href = `/prod/${productId}?variant_id=${variantId}&variant_sku=${variantSku}`;
+      };
+
+      // ========== UI STATE FUNCTIONS ==========
+      function showLoading() {
+        elements.loadingContainer.classList.add('active');
+        elements.productsGrid.classList.add('hidden');
+        elements.emptyState.classList.remove('active');
+        elements.pagination.classList.add('hidden');
+      }
+
+      function hideLoading() {
+        elements.loadingContainer.classList.remove('active');
+        elements.productsGrid.classList.remove('hidden');
+        elements.pagination.classList.remove('hidden');
+      }
+
+      function showEmptyState() {
+        elements.emptyState.classList.add('active');
+        elements.productsGrid.classList.add('hidden');
+        elements.pagination.classList.add('hidden');
+      }
+
+      function hideEmptyState() {
+        elements.emptyState.classList.remove('active');
+      }
+
+      // ========== SEARCH & SORT HANDLERS ==========
+      let searchTimeout;
+      elements.searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          state.search = this.value.trim();
+          state.page = 1;
+                    state.search = this.value.trim();
+          state.page = 1;
+          fetchVariants();
+        }, 500);
+      });
+
+      elements.sortSelect.addEventListener('change', function() {
+        state.sort = this.value;
+        state.page = 1;
+        fetchVariants();
+      });
+
+      // Price range filters
+      let priceTimeout;
+      elements.minPrice.addEventListener('input', function() {
+        clearTimeout(priceTimeout);
+        priceTimeout = setTimeout(() => {
+          state.filters.min_price = this.value ? parseFloat(this.value) : null;
+          state.page = 1;
+          fetchVariants();
+        }, 800);
+      });
+
+      elements.maxPrice.addEventListener('input', function() {
+        clearTimeout(priceTimeout);
+        priceTimeout = setTimeout(() => {
+          state.filters.max_price = this.value ? parseFloat(this.value) : null;
+          state.page = 1;
+          fetchVariants();
+        }, 800);
+      });
+
+      // Clear all filters button
+      elements.clearAllFilters.addEventListener('click', clearAllFilters);
+
+      // ========== MOBILE FILTER TOGGLE ==========
+      elements.filterToggleBtn.addEventListener('click', function() {
+        elements.filtersSidebar.classList.add('active');
+        elements.filterOverlay.classList.add('active');
+        document.body.classList.add('no-scroll');
+      });
+
+      elements.filterOverlay.addEventListener('click', function() {
+        elements.filtersSidebar.classList.remove('active');
+        elements.filterOverlay.classList.remove('active');
+        document.body.classList.remove('no-scroll');
+      });
+
+      // Close filters on filter selection (mobile)
+      if (window.innerWidth <= 1024) {
+        document.addEventListener('click', function(e) {
+          if (e.target.closest('.filter-option') || 
+              e.target.closest('.color-option') || 
+              e.target.closest('.rating-option')) {
+            setTimeout(() => {
+              if (window.innerWidth <= 768) {
+                elements.filtersSidebar.classList.remove('active');
+                elements.filterOverlay.classList.remove('active');
+                document.body.classList.remove('no-scroll');
+              }
+            }, 300);
+          }
+        });
+      }
+
+      // ========== VIEW TOGGLE (GRID/LIST) ==========
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const view = this.dataset.view;
+          state.view = view;
+          
+          // Update button states
+          document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          
+          // Update grid class
+          if (view === 'list') {
+            elements.productsGrid.classList.add('list-view');
+          } else {
+            elements.productsGrid.classList.remove('list-view');
+          }
+        });
+      });
+
+      // ========== KEYBOARD SHORTCUTS ==========
+      document.addEventListener('keydown', function(e) {
+        // Close filters on Escape
+        if (e.key === 'Escape') {
+          if (elements.filtersSidebar.classList.contains('active')) {
+            elements.filtersSidebar.classList.remove('active');
+            elements.filterOverlay.classList.remove('active');
+            document.body.classList.remove('no-scroll');
+          }
+        }
+        
+        // Focus search on Ctrl/Cmd + K
+        if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+          e.preventDefault();
+          elements.searchInput.focus();
+        }
+      });
+
+      // ========== SCROLL TO TOP ON PAGINATION ==========
+      window.addEventListener('scroll', function() {
+        const scrollBtn = document.getElementById('scrollToTop');
+        if (scrollBtn) {
+          if (window.pageYOffset > 500) {
+            scrollBtn.style.display = 'flex';
+          } else {
+            scrollBtn.style.display = 'none';
+          }
+        }
+      });
+
+      // ========== URL PARAMETERS SYNC ==========
+      function updateURLParams() {
+        const params = new URLSearchParams();
+        
+        if (state.search) params.set('q', state.search);
+        if (state.sort !== 'relevance') params.set('sort', state.sort);
+        if (state.page > 1) params.set('page', state.page);
+        
+        state.filters.category.forEach(cat => params.append('category', cat));
+        state.filters.brand.forEach(brand => params.append('brand', brand));
+        state.filters.color.forEach(color => params.append('color', color));
+        state.filters.size.forEach(size => params.append('size', size));
+        state.filters.tag.forEach(tag => params.append('tag', tag));
+        
+        if (state.filters.min_price) params.set('min_price', state.filters.min_price);
+        if (state.filters.max_price) params.set('max_price', state.filters.max_price);
+        if (state.filters.min_rating) params.set('min_rating', state.filters.min_rating);
+        
+        const newURL = params.toString() ? `${window.location.pathname}?${params.toString()}` : window.location.pathname;
+        window.history.pushState({}, '', newURL);
+      }
+
+      function loadFromURLParams() {
+        const params = new URLSearchParams(window.location.search);
+        
+        state.search = params.get('q') || '';
+        state.sort = params.get('sort') || 'relevance';
+        state.page = parseInt(params.get('page')) || 1;
+        
+        state.filters.category = params.getAll('category');
+        state.filters.brand = params.getAll('brand');
+        state.filters.color = params.getAll('color');
+        state.filters.size = params.getAll('size');
+        state.filters.tag = params.getAll('tag');
+        
+        const minPrice = params.get('min_price');
+        const maxPrice = params.get('max_price');
+        const minRating = params.get('min_rating');
+        
+        if (minPrice) state.filters.min_price = parseFloat(minPrice);
+        if (maxPrice) state.filters.max_price = parseFloat(maxPrice);
+        if (minRating) state.filters.min_rating = parseFloat(minRating);
+        
+        // Update UI elements
+        elements.searchInput.value = state.search;
+        elements.sortSelect.value = state.sort;
+        if (state.filters.min_price) elements.minPrice.value = state.filters.min_price;
+        if (state.filters.max_price) elements.maxPrice.value = state.filters.max_price;
+      }
+
+      // ========== BROWSER BACK/FORWARD SUPPORT ==========
+      window.addEventListener('popstate', function() {
+        loadFromURLParams();
+        fetchVariants();
+      });
+
+      // ========== LAZY LOADING IMAGES ==========
+      function setupLazyLoading() {
+        if ('IntersectionObserver' in window) {
+          const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+              if (entry.isIntersecting) {
+                const img = entry.target;
+                if (img.dataset.src) {
+                  img.src = img.dataset.src;
+                  img.removeAttribute('data-src');
+                  observer.unobserve(img);
+                }
+              }
+            });
+          });
+
+          document.querySelectorAll('img[data-src]').forEach(img => {
+            imageObserver.observe(img);
+          });
+        }
+      }
+
+      // ========== PERFORMANCE OPTIMIZATION ==========
+      let resizeTimeout;
+      window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          // Handle responsive changes if needed
+          if (window.innerWidth > 1024) {
+            elements.filtersSidebar.classList.remove('active');
+            elements.filterOverlay.classList.remove('active');
+            document.body.classList.remove('no-scroll');
+          }
+        }, 250);
+      }, { passive: true });
+
+      // ========== ERROR HANDLING ==========
+      window.addEventListener('error', function(e) {
+        console.error('Global error:', e.error);
+      });
+
+      window.addEventListener('unhandledrejection', function(e) {
+        console.error('Unhandled promise rejection:', e.reason);
+      });
+
+      // ========== ANALYTICS TRACKING (Optional) ==========
+      function trackEvent(eventName, eventData) {
+        // Implement your analytics tracking here
+        // Example: gtag('event', eventName, eventData);
+        console.log('Event:', eventName, eventData);
+      }
+
+      // Track search
+      elements.searchInput.addEventListener('change', function() {
+        if (this.value.trim()) {
+          trackEvent('search', { search_term: this.value.trim() });
+        }
+      });
+
+      // Track filter usage
+      document.addEventListener('click', function(e) {
+        if (e.target.closest('.filter-option') || e.target.closest('.color-option')) {
+          const filterElement = e.target.closest('.filter-option') || e.target.closest('.color-option');
+          trackEvent('filter_applied', {
+            filter_type: filterElement.dataset.type,
+            filter_value: filterElement.dataset.value
+          });
+        }
+      });
+
+      // ========== ACCESSIBILITY IMPROVEMENTS ==========
+      // Announce results to screen readers
+      function announceResults() {
+        const announcement = document.createElement('div');
+        announcement.setAttribute('role', 'status');
+        announcement.setAttribute('aria-live', 'polite');
+        announcement.className = 'sr-only';
+        announcement.textContent = `Showing ${state.variants.length} of ${state.total} products`;
+        document.body.appendChild(announcement);
+        
+        setTimeout(() => announcement.remove(), 1000);
+      }
+
+      // Add screen reader only class
+      const srOnlyStyle = document.createElement('style');
+      srOnlyStyle.textContent = `
+        .sr-only {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+          border-width: 0;
+        }
+      `;
+      document.head.appendChild(srOnlyStyle);
+
+      // ========== SCROLL TO TOP BUTTON ==========
+      const scrollToTopHTML = `
+        <button id="scrollToTop" style="
+          position: fixed;
+          bottom: 32px;
+          right: 32px;
+          width: 56px;
+          height: 56px;
+          border-radius: 50%;
+          background: var(--gradient-royal);
+          color: white;
+          border: none;
+          box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+          cursor: pointer;
+          display: none;
+          align-items: center;
+          justify-content: center;
+          font-size: 24px;
+          z-index: 999;
+          transition: var(--transition);
+        " aria-label="Scroll to top">
+          ↑
+        </button>
+      `;
+      document.body.insertAdjacentHTML('beforeend', scrollToTopHTML);
+
+      document.getElementById('scrollToTop').addEventListener('click', function() {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      // ========== INITIALIZE APP ==========
+      async function init() {
+        try {
+          // Load URL parameters first
+          loadFromURLParams();
+          
+          // Fetch filter options
+          await fetchFilters();
+          
+          // Update UI for pre-selected filters
+          updateFilterUI();
+          
+          // Fetch initial variants
+          await fetchVariants();
+          
+          // Setup lazy loading
+          setupLazyLoading();
+          
+          console.log('Browse page initialized successfully');
+        } catch (error) {
+          console.error('Error initializing browse page:', error);
+          showEmptyState();
+        }
+      }
+
+      function updateFilterUI() {
+        // Update checkboxes based on state
+        state.filters.category.forEach(value => {
+          const option = document.querySelector(`[data-type="category"][data-value="${value}"]`);
+          if (option) option.querySelector('.filter-checkbox').classList.add('checked');
+        });
+        
+        state.filters.brand.forEach(value => {
+          const option = document.querySelector(`[data-type="brand"][data-value="${value}"]`);
+          if (option) option.querySelector('.filter-checkbox').classList.add('checked');
+        });
+        
+        state.filters.color.forEach(value => {
+          const option = document.querySelector(`[data-type="color"][data-value="${value}"]`);
+          if (option) option.querySelector('.color-swatch').classList.add('selected');
+        });
+        
+        state.filters.size.forEach(value => {
+          const option = document.querySelector(`[data-type="size"][data-value="${value}"]`);
+          if (option) option.querySelector('.filter-checkbox').classList.add('checked');
+        });
+        
+        state.filters.tag.forEach(value => {
+          const option = document.querySelector(`[data-type="tag"][data-value="${value}"]`);
+          if (option) option.querySelector('.filter-checkbox').classList.add('checked');
+        });
+        
+        if (state.filters.min_rating) {
+          const ratingOption = document.querySelector(`[data-type="rating"][data-value="${state.filters.min_rating}"]`);
+          if (ratingOption) ratingOption.querySelector('.filter-checkbox').classList.add('checked');
+        }
+      }
+
+      // ========== CHECK WISHLIST STATUS ON LOAD ==========
+      async function checkWishlistStatuses() {
+        const wishlistBtns = document.querySelectorAll('.wishlist-btn');
+        for (const btn of wishlistBtns) {
+          try {
+            const variantId = btn.dataset.variantId;
+            const response = await fetch(`/wishlist/status?variant_id=${variantId}`);
+            if (response.ok) {
+              const data = await response.json();
+              if (data.in_wishlist) {
+                btn.classList.add('active');
+                btn.textContent = '♥';
+              }
+            }
+          } catch (error) {
+            console.error('Error checking wishlist status:', error);
+          }
+        }
+      }
+
+      // Override fetchVariants to include wishlist check
+      const originalFetchVariants = fetchVariants;
+      fetchVariants = async function() {
+        await originalFetchVariants();
+        setTimeout(checkWishlistStatuses, 100);
+        announceResults();
+        updateURLParams();
+      };
+
+      // ========== START APPLICATION ==========
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+      } else {
+        init();
+      }
+
+      // ========== EXPOSE PUBLIC API ==========
+      window.BrowseApp = {
+        state,
+        fetchVariants,
+        clearAllFilters,
+        changePage,
+        viewProduct,
+        removeFilter
+      };
+
+    })();
+  </script>
+</body>
+</html>

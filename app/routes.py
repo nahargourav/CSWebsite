@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 from collections import OrderedDict
 import html as _html
 import urllib.parse
+import decimal
 # Environment helpers
 from dotenv import load_dotenv
 import razorpay as rz_module
@@ -1751,6 +1752,246 @@ def place_order():
         'request_args': request.args
     }
     return render_template('customer/view_products.html', **context)
+
+
+
+
+def normalize(row):
+    # convert Decimal to float for JSON
+    for k, v in list(row.items()):
+        if isinstance(v, decimal.Decimal):
+            row[k] = float(v)
+    return row
+
+@main.route("/filters", methods=["GET"])
+def api_filters():
+    """
+    Return dynamic filter options generated from DB:
+    { categories: [...], brands: [...], colors: [...], sizes: [...], tags: [...],
+      min_price, max_price, rating_options: [5,4,3,2,1] }
+    """
+    conn = None
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # categories
+        cur.execute("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category <> '' AND is_active = 1 ORDER BY category;")
+        categories = [r['category'] for r in cur.fetchall()]
+
+        # brands
+        cur.execute("SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL AND brand <> '' AND is_active = 1 ORDER BY brand;")
+        brands = [r['brand'] for r in cur.fetchall()]
+
+        # colors (from variants)
+        cur.execute("SELECT DISTINCT color FROM product_variants WHERE color IS NOT NULL AND color <> '' ORDER BY color;")
+        colors = [r['color'] for r in cur.fetchall()]
+
+        # sizes
+        cur.execute("SELECT DISTINCT size FROM product_variants WHERE size IS NOT NULL AND size <> '' ORDER BY size;")
+        sizes = [r['size'] for r in cur.fetchall()]
+
+        # tags (join)
+        cur.execute("""
+            SELECT DISTINCT t.name
+            FROM tags t
+            JOIN product_tags pt ON pt.tag_id = t.tag_id
+            JOIN products p ON p.product_id = pt.product_id
+            WHERE t.name IS NOT NULL AND t.name <> '' AND p.is_active = 1
+            ORDER BY t.name;
+        """)
+        tags = [r['name'] for r in cur.fetchall()]
+
+        # min/max price from product_variants
+        cur.execute("SELECT COALESCE(MIN(price),0) AS min_price, COALESCE(MAX(price),0) AS max_price FROM product_variants pv JOIN products p ON pv.product_id = p.product_id WHERE p.is_active = 1;")
+        pr = cur.fetchone()
+        min_price, max_price = float(pr['min_price']), float(pr['max_price'])
+
+        # simple rating options (1-5)
+        rating_options = [5,4,3,2,1]
+
+        resp = {
+            "categories": categories,
+            "brands": brands,
+            "colors": colors,
+            "sizes": sizes,
+            "tags": tags,
+            "min_price": min_price,
+            "max_price": max_price,
+            "rating_options": rating_options
+        }
+        return jsonify(resp)
+    except Exception as e:
+        current_app.logger.exception("Error in /filters: %s", e)
+        return jsonify({"error": "internal", "message": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+
+@main.route("/variants", methods=["GET"])
+def api_variants():
+    """
+    Query params supported:
+      q (search string),
+      category (repeated), brand (repeated), color (repeated), size (repeated), tag (repeated)
+      min_price, max_price, min_rating
+      sort: price_asc, price_desc, rating_desc, newest, relevance (default)
+      page (default 1), per_page (default 24)
+    Returns JSON: {variants: [...], total: N, page, per_page}
+    """
+    args = request.args
+    q = args.get("q", "").strip()
+    categories = args.getlist("category")
+    brands = args.getlist("brand")
+    colors = args.getlist("color")
+    sizes = args.getlist("size")
+    tags = args.getlist("tag")
+    min_price = args.get("min_price")
+    max_price = args.get("max_price")
+    min_rating = args.get("min_rating")
+    sort = args.get("sort", "relevance")
+    page = int(args.get("page", 1))
+    per_page = int(args.get("per_page", 24))
+    offset = (page - 1) * per_page
+
+    where_clauses = ["p.is_active = 1"]
+    params = []
+
+    # Search (name, brand, short_description, description, color, sku)
+    if q:
+        q_like = f"%{q}%"
+        where_clauses.append("(p.name ILIKE %s OR p.brand ILIKE %s OR p.short_description ILIKE %s OR p.description ILIKE %s OR pv.color ILIKE %s OR pv.sku ILIKE %s)")
+        params.extend([q_like]*6)
+
+    # IN filters using ANY
+    if categories:
+        where_clauses.append("p.category = ANY(%s)")
+        params.append(categories)
+    if brands:
+        where_clauses.append("p.brand = ANY(%s)")
+        params.append(brands)
+    if colors:
+        where_clauses.append("pv.color = ANY(%s)")
+        params.append(colors)
+    if sizes:
+        where_clauses.append("pv.size = ANY(%s)")
+        params.append(sizes)
+    if tags:
+        # require product has at least one of the tags
+        where_clauses.append("""
+            EXISTS (
+              SELECT 1 FROM product_tags pt JOIN tags t ON t.tag_id = pt.tag_id
+              WHERE pt.product_id = p.product_id AND t.name = ANY(%s)
+            )
+        """)
+        params.append(tags)
+
+    if min_price:
+        where_clauses.append("pv.price >= %s")
+        params.append(float(min_price))
+    if max_price:
+        where_clauses.append("pv.price <= %s")
+        params.append(float(max_price))
+    if min_rating:
+        where_clauses.append("p.rating_avg >= %s")
+        params.append(float(min_rating))
+
+    where_sql = " AND ".join(where_clauses)
+
+    # SELECT with image selection (variant image > product image > product.image_path)
+    base_select = f"""
+    FROM product_variants pv
+    JOIN products p ON pv.product_id = p.product_id
+    WHERE {where_sql}
+    """
+
+    # ORDER BY mapping
+    order_by = "p.product_id, pv.variant_id"
+    if sort == "price_asc":
+        order_by = "pv.price ASC"
+    elif sort == "price_desc":
+        order_by = "pv.price DESC"
+    elif sort == "rating_desc":
+        order_by = "p.rating_avg DESC"
+    elif sort == "newest":
+        order_by = "pv.created_at DESC"
+    # relevance fallback if q present -> prioritize name ILIKE
+    elif sort == "relevance" and q:
+        order_by = f"(CASE WHEN p.name ILIKE %s THEN 0 WHEN p.brand ILIKE %s THEN 1 ELSE 2 END), p.product_id"
+        # add extra params for the ordering CASE (two params)
+        params_for_order = [f"%{q}%", f"%{q}%"]
+        # We'll append to params when executing the main query (below).
+
+    # main query with image preference
+    sql = f"""
+    SELECT
+      pv.variant_id,
+      pv.sku AS variant_sku,
+      pv.size,
+      pv.color,
+      pv.color_hex,
+      pv.price,
+      pv.stock_count AS variant_stock,
+      p.product_id,
+      p.name AS product_name,
+      p.brand,
+      p.category,
+      COALESCE(p.reviews_count, 0) AS reviews_count,
+      COALESCE(p.rating_avg, 0.00) AS rating_avg,
+      COALESCE(
+        (SELECT path FROM product_images WHERE variant_id = pv.variant_id ORDER BY is_primary DESC, position ASC LIMIT 1),
+        (SELECT path FROM product_images WHERE product_id = p.product_id ORDER BY is_primary DESC, position ASC LIMIT 1),
+        p.image_path
+      ) AS image
+    {base_select}
+    ORDER BY {order_by}
+    LIMIT %s OFFSET %s
+    """
+
+    # count query (same where) to return total
+    count_sql = f"SELECT COUNT(*) {base_select};"
+
+    conn = None
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # If we used relevance CASE ordering, append those two params before LIMIT/OFFSET
+        exec_params = list(params)
+        if sort == "relevance" and q:
+            exec_params.extend([f"%{q}%", f"%{q}%"])
+
+        # add pagination params
+        exec_params.extend([per_page, offset])
+
+        # fetch rows
+        cur.execute(sql, exec_params)
+        rows = cur.fetchall()
+        variants = [normalize(dict(r)) for r in rows]
+
+        # fetch total count
+        cur.execute(count_sql, params)
+        total = cur.fetchone()['count']
+
+        return jsonify({
+            "variants": variants,
+            "total": int(total),
+            "page": page,
+            "per_page": per_page,
+        })
+    except Exception as e:
+        current_app.logger.exception("Error in /variants: %s", e)
+        return jsonify({"error": "internal", "message": str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+
+# route to render the initial page (serves the template with JS that will call /filters and /variants)
+@main.route("/browse", methods=["GET"])
+def browse_page():
+    return render_template("customer/variants_ajax.html")
 
 
 
