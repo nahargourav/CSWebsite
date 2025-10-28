@@ -1332,7 +1332,7 @@
           <h1 class="hero-title">Cloth That Tells a Story</h1>
           <p class="hero-subtitle">Curated yardage for tailors, families and homes — crafted with tradition, chosen with care</p>
           <div class="hero-cta">
-            <a href="/place-order" class="btn btn-primary" id="exploreBtn">
+            <a href="/browse" class="btn btn-primary" id="exploreBtn">
               Explore Collections
               <span>→</span>
             </a>
@@ -1351,7 +1351,7 @@
           <h1 class="hero-title">Handloom & Premium Weaves</h1>
           <p class="hero-subtitle">Selected textures, honest fibers, lasting value — every yard a masterpiece</p>
           <div class="hero-cta">
-            <a href="/place-order" class="btn btn-primary" id="shopNowBtn">
+            <a href="/browse" class="btn btn-primary" id="shopNowBtn">
               Shop Now
               <span>→</span>
             </a>
@@ -1367,7 +1367,7 @@
           <h1 class="hero-title">Exceptional Fabrics, Your Vision</h1>
           <p class="hero-subtitle">No ready-made garments — just premium yardage for your perfect creation</p>
           <div class="hero-cta">
-            <a href="/place-order" class="btn btn-primary" id="discoverBtn">
+            <a href="/browse" class="btn btn-primary" id="discoverBtn">
               Discover More
               <span>→</span>
             </a>
@@ -1541,7 +1541,7 @@
 
     function gotoPlaceOrder(q) {
       const qClean = q ? encodeURIComponent(q) : '';
-      location.href = `/place-order?q=${qClean}&sort=newest`;
+      location.href = `/browse?q=${qClean}&sort=newest`;
     }
 
     // ========== WISHLIST FUNCTIONS ==========

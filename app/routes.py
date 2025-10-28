@@ -1519,239 +1519,239 @@ def address_set_default(address_id):
 
 # -----------------------place order----------------------------
 
-@main.route('/place-order', methods=['GET'])
-def place_order():
-    q = (request.args.get('q') or '').strip()
-    sort = request.args.get('sort') or 'newest'   # default sort
-    selected_categories = request.args.getlist('category')  # can be many
-    selected_brands = request.args.getlist('brand')
-    selected_tags = request.args.getlist('tag')
-    selected_colors = request.args.getlist('color')
-    selected_sizes = request.args.getlist('size')
-    # price range
-    min_price = request.args.get('min_price') or None
-    max_price = request.args.get('max_price') or None
-    # rating threshold (e.g., 4 for 4★ & above)
-    rating_min = request.args.get('rating') or None
+# @main.route('/place-order', methods=['GET'])
+# def place_order():
+#     q = (request.args.get('q') or '').strip()
+#     sort = request.args.get('sort') or 'newest'   # default sort
+#     selected_categories = request.args.getlist('category')  # can be many
+#     selected_brands = request.args.getlist('brand')
+#     selected_tags = request.args.getlist('tag')
+#     selected_colors = request.args.getlist('color')
+#     selected_sizes = request.args.getlist('size')
+#     # price range
+#     min_price = request.args.get('min_price') or None
+#     max_price = request.args.get('max_price') or None
+#     # rating threshold (e.g., 4 for 4★ & above)
+#     rating_min = request.args.get('rating') or None
 
-    conn = get_db()
-    cursor = conn.cursor(dictionary=True)
+#     conn = get_db()
+#     cursor = conn.cursor(dictionary=True)
 
-    # Build WHERE clauses (safe parameterized)
-    where_clauses = []
-    params = []
+#     # Build WHERE clauses (safe parameterized)
+#     where_clauses = []
+#     params = []
 
-    # search across name, brand, category, short_description, description (case-insensitive only here)
-    if q:
-        # Only the search clause is made case-insensitive using LOWER(...)
-        where_clauses.append(
-            "(LOWER(p.name) LIKE %s OR LOWER(p.brand) LIKE %s OR LOWER(p.category) LIKE %s OR LOWER(p.short_description) LIKE %s OR LOWER(p.description) LIKE %s)"
-        )
-        like = f"%{q.lower()}%"
-        params.extend([like, like, like, like, like])
+#     # search across name, brand, category, short_description, description (case-insensitive only here)
+#     if q:
+#         # Only the search clause is made case-insensitive using LOWER(...)
+#         where_clauses.append(
+#             "(LOWER(p.name) LIKE %s OR LOWER(p.brand) LIKE %s OR LOWER(p.category) LIKE %s OR LOWER(p.short_description) LIKE %s OR LOWER(p.description) LIKE %s)"
+#         )
+#         like = f"%{q.lower()}%"
+#         params.extend([like, like, like, like, like])
 
-    if selected_categories:
-        placeholders = ",".join(["%s"] * len(selected_categories))
-        where_clauses.append(f"p.category IN ({placeholders})")
-        params.extend(selected_categories)
+#     if selected_categories:
+#         placeholders = ",".join(["%s"] * len(selected_categories))
+#         where_clauses.append(f"p.category IN ({placeholders})")
+#         params.extend(selected_categories)
 
-    if selected_brands:
-        placeholders = ",".join(["%s"] * len(selected_brands))
-        where_clauses.append(f"p.brand IN ({placeholders})")
-        params.extend(selected_brands)
+#     if selected_brands:
+#         placeholders = ",".join(["%s"] * len(selected_brands))
+#         where_clauses.append(f"p.brand IN ({placeholders})")
+#         params.extend(selected_brands)
 
-    # color/size/tag filters via EXISTS subqueries (works in both MySQL and Postgres)
-    if selected_colors:
-        placeholders = ",".join(["%s"] * len(selected_colors))
-        where_clauses.append(
-            f"EXISTS (SELECT 1 FROM product_variants pv_c WHERE pv_c.product_id = p.product_id AND pv_c.color IN ({placeholders}))"
-        )
-        params.extend(selected_colors)
+#     # color/size/tag filters via EXISTS subqueries (works in both MySQL and Postgres)
+#     if selected_colors:
+#         placeholders = ",".join(["%s"] * len(selected_colors))
+#         where_clauses.append(
+#             f"EXISTS (SELECT 1 FROM product_variants pv_c WHERE pv_c.product_id = p.product_id AND pv_c.color IN ({placeholders}))"
+#         )
+#         params.extend(selected_colors)
 
-    if selected_sizes:
-        placeholders = ",".join(["%s"] * len(selected_sizes))
-        where_clauses.append(
-            f"EXISTS (SELECT 1 FROM product_variants pv_s WHERE pv_s.product_id = p.product_id AND pv_s.size IN ({placeholders}))"
-        )
-        params.extend(selected_sizes)
+#     if selected_sizes:
+#         placeholders = ",".join(["%s"] * len(selected_sizes))
+#         where_clauses.append(
+#             f"EXISTS (SELECT 1 FROM product_variants pv_s WHERE pv_s.product_id = p.product_id AND pv_s.size IN ({placeholders}))"
+#         )
+#         params.extend(selected_sizes)
 
-    if selected_tags:
-        placeholders = ",".join(["%s"] * len(selected_tags))
-        where_clauses.append(
-            f"EXISTS (SELECT 1 FROM product_tags pt WHERE pt.product_id = p.product_id AND pt.tag_id IN ({placeholders}))"
-        )
-        params.extend(selected_tags)
+#     if selected_tags:
+#         placeholders = ",".join(["%s"] * len(selected_tags))
+#         where_clauses.append(
+#             f"EXISTS (SELECT 1 FROM product_tags pt WHERE pt.product_id = p.product_id AND pt.tag_id IN ({placeholders}))"
+#         )
+#         params.extend(selected_tags)
 
-    # combine where
-    where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
+#     # combine where
+#     where_sql = " AND ".join(where_clauses) if where_clauses else "1=1"
 
-    # Derived table for reviews:
-    #  - first collapse product_reviews by (product_id, customer_id, order_id) => avg per cluster
-    #  - then avg those cluster averages per product and count clusters -> rating_avg, reviews_count
-    # We'll LEFT JOIN that derived table so we can aggregate safely in the outer query.
-    reviews_subquery = """
-        LEFT JOIN (
-            SELECT t.product_id,
-                   AVG(t.avg_rating) AS avg_of_customer_order_ratings,
-                   COUNT(1) AS reviews_count
-            FROM (
-                SELECT pr.product_id, pr.customer_id, pr.order_id, AVG(pr.rating) AS avg_rating
-                FROM product_reviews pr
-                GROUP BY pr.product_id, pr.customer_id, pr.order_id
-            ) t
-            GROUP BY t.product_id
-        ) pr ON pr.product_id = p.product_id
-    """
+#     # Derived table for reviews:
+#     #  - first collapse product_reviews by (product_id, customer_id, order_id) => avg per cluster
+#     #  - then avg those cluster averages per product and count clusters -> rating_avg, reviews_count
+#     # We'll LEFT JOIN that derived table so we can aggregate safely in the outer query.
+#     reviews_subquery = """
+#         LEFT JOIN (
+#             SELECT t.product_id,
+#                    AVG(t.avg_rating) AS avg_of_customer_order_ratings,
+#                    COUNT(1) AS reviews_count
+#             FROM (
+#                 SELECT pr.product_id, pr.customer_id, pr.order_id, AVG(pr.rating) AS avg_rating
+#                 FROM product_reviews pr
+#                 GROUP BY pr.product_id, pr.customer_id, pr.order_id
+#             ) t
+#             GROUP BY t.product_id
+#         ) pr ON pr.product_id = p.product_id
+#     """
 
-    # Main query.
-    # Note: to satisfy Postgres' grouping rules we include non-aggregated p.* columns in GROUP BY.
-    main_q = f"""
-        SELECT
-            p.product_id,
-            p.name,
-            p.brand,
-            p.category,
-            p.image_path,
-            p.is_active,
-            p.is_returnable,
-            COALESCE(MIN(pv.price), 0) AS min_price,
-            COALESCE(MAX(pv.price), 0) AS max_price,
-            -- use product-level stock_count as you requested
-            COALESCE(p.stock_count, 0) AS total_stock,
-            COUNT(DISTINCT pv.variant_id) AS variant_count,
-            -- aggregate the joined review columns so Postgres allows them in SELECT while grouping by product fields
-            COALESCE(MAX(pr.avg_of_customer_order_ratings), 0) AS rating_avg,
-            COALESCE(MAX(pr.reviews_count), 0) AS reviews_count,
-            (SELECT COUNT(1) FROM product_images pi WHERE pi.product_id = p.product_id) AS total_images,
-            p.created_at
-        FROM products p
-        LEFT JOIN product_variants pv ON pv.product_id = p.product_id
-        {reviews_subquery}
-        WHERE {where_sql}
-        GROUP BY
-            p.product_id, p.name, p.brand, p.category, p.image_path,
-            p.is_active, p.is_returnable, p.stock_count, p.created_at
-    """
+#     # Main query.
+#     # Note: to satisfy Postgres' grouping rules we include non-aggregated p.* columns in GROUP BY.
+#     main_q = f"""
+#         SELECT
+#             p.product_id,
+#             p.name,
+#             p.brand,
+#             p.category,
+#             p.image_path,
+#             p.is_active,
+#             p.is_returnable,
+#             COALESCE(MIN(pv.price), 0) AS min_price,
+#             COALESCE(MAX(pv.price), 0) AS max_price,
+#             -- use product-level stock_count as you requested
+#             COALESCE(p.stock_count, 0) AS total_stock,
+#             COUNT(DISTINCT pv.variant_id) AS variant_count,
+#             -- aggregate the joined review columns so Postgres allows them in SELECT while grouping by product fields
+#             COALESCE(MAX(pr.avg_of_customer_order_ratings), 0) AS rating_avg,
+#             COALESCE(MAX(pr.reviews_count), 0) AS reviews_count,
+#             (SELECT COUNT(1) FROM product_images pi WHERE pi.product_id = p.product_id) AS total_images,
+#             p.created_at
+#         FROM products p
+#         LEFT JOIN product_variants pv ON pv.product_id = p.product_id
+#         {reviews_subquery}
+#         WHERE {where_sql}
+#         GROUP BY
+#             p.product_id, p.name, p.brand, p.category, p.image_path,
+#             p.is_active, p.is_returnable, p.stock_count, p.created_at
+#     """
 
-    # HAVING: price and rating filters (operate on the aggregated results)
-    having_clauses = []
-    having_params = []
-    if min_price:
-        try:
-            min_val = float(min_price)
-            having_clauses.append("MIN(pv.price) >= %s")
-            having_params.append(min_val)
-        except Exception:
-            pass
-    if max_price:
-        try:
-            max_val = float(max_price)
-            having_clauses.append("MAX(pv.price) <= %s")
-            having_params.append(max_val)
-        except Exception:
-            pass
-    if rating_min:
-        try:
-            rv = float(rating_min)
-            # reference the aggregated alias (we used MAX(pr.avg_of_customer_order_ratings) as rating_avg)
-            having_clauses.append("COALESCE(MAX(pr.avg_of_customer_order_ratings),0) >= %s")
-            having_params.append(rv)
-        except Exception:
-            pass
+#     # HAVING: price and rating filters (operate on the aggregated results)
+#     having_clauses = []
+#     having_params = []
+#     if min_price:
+#         try:
+#             min_val = float(min_price)
+#             having_clauses.append("MIN(pv.price) >= %s")
+#             having_params.append(min_val)
+#         except Exception:
+#             pass
+#     if max_price:
+#         try:
+#             max_val = float(max_price)
+#             having_clauses.append("MAX(pv.price) <= %s")
+#             having_params.append(max_val)
+#         except Exception:
+#             pass
+#     if rating_min:
+#         try:
+#             rv = float(rating_min)
+#             # reference the aggregated alias (we used MAX(pr.avg_of_customer_order_ratings) as rating_avg)
+#             having_clauses.append("COALESCE(MAX(pr.avg_of_customer_order_ratings),0) >= %s")
+#             having_params.append(rv)
+#         except Exception:
+#             pass
 
-    having_sql = (" HAVING " + " AND ".join(having_clauses)) if having_clauses else ""
+#     having_sql = (" HAVING " + " AND ".join(having_clauses)) if having_clauses else ""
 
-    # Sorting
-    sort_sql = " ORDER BY p.created_at DESC "
-    if sort == 'low':
-        sort_sql = " ORDER BY min_price ASC "
-    elif sort == 'high':
-        sort_sql = " ORDER BY min_price DESC "
-    elif sort == 'rating':
-        sort_sql = " ORDER BY rating_avg DESC "
-    elif sort == 'newest':
-        sort_sql = " ORDER BY p.created_at DESC "
+#     # Sorting
+#     sort_sql = " ORDER BY p.created_at DESC "
+#     if sort == 'low':
+#         sort_sql = " ORDER BY min_price ASC "
+#     elif sort == 'high':
+#         sort_sql = " ORDER BY min_price DESC "
+#     elif sort == 'rating':
+#         sort_sql = " ORDER BY rating_avg DESC "
+#     elif sort == 'newest':
+#         sort_sql = " ORDER BY p.created_at DESC "
 
-    final_q = main_q + having_sql + sort_sql
+#     final_q = main_q + having_sql + sort_sql
 
-    # Execute product query
-    cursor.execute(final_q, params + having_params)
-    products = cursor.fetchall() or []
+#     # Execute product query
+#     cursor.execute(final_q, params + having_params)
+#     products = cursor.fetchall() or []
 
-    # Format price_range and stats for each product (template convenience)
-    for p in products:
-        p['price_range'] = {
-            'min': float(p['min_price'] or 0),
-            'max': float(p['max_price'] or 0),
-            'has_range': (p['min_price'] is not None and p['max_price'] is not None and p['min_price'] != p['max_price'] and p['variant_count'] > 1)
-        }
-        p['stats'] = {
-            'variants': int(p['variant_count'] or 0),
-            # use the product stock_count column (already selected as total_stock)
-            'total_stock': int(p['total_stock'] or 0),
-            'total_images': int(p['total_images'] or 0)
-        }
-        # normalize path
-        if p.get('image_path'):
-            p['image_path'] = p['image_path'].replace('\\', '/')
+#     # Format price_range and stats for each product (template convenience)
+#     for p in products:
+#         p['price_range'] = {
+#             'min': float(p['min_price'] or 0),
+#             'max': float(p['max_price'] or 0),
+#             'has_range': (p['min_price'] is not None and p['max_price'] is not None and p['min_price'] != p['max_price'] and p['variant_count'] > 1)
+#         }
+#         p['stats'] = {
+#             'variants': int(p['variant_count'] or 0),
+#             # use the product stock_count column (already selected as total_stock)
+#             'total_stock': int(p['total_stock'] or 0),
+#             'total_images': int(p['total_images'] or 0)
+#         }
+#         # normalize path
+#         if p.get('image_path'):
+#             p['image_path'] = p['image_path'].replace('\\', '/')
 
-    # --- Fetch dynamic filter values (distinct categories, brands, tags, colors, sizes) ---
-    cursor.execute("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category <> '' ORDER BY category ASC")
-    categories = [r['category'] for r in cursor.fetchall()]
+#     # --- Fetch dynamic filter values (distinct categories, brands, tags, colors, sizes) ---
+#     cursor.execute("SELECT DISTINCT category FROM products WHERE category IS NOT NULL AND category <> '' ORDER BY category ASC")
+#     categories = [r['category'] for r in cursor.fetchall()]
 
-    cursor.execute("SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL AND brand <> '' ORDER BY brand ASC")
-    brands = [r['brand'] for r in cursor.fetchall()]
+#     cursor.execute("SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL AND brand <> '' ORDER BY brand ASC")
+#     brands = [r['brand'] for r in cursor.fetchall()]
 
-    cursor.execute("""
-        SELECT t.tag_id, t.name FROM tags t
-        JOIN product_tags pt ON pt.tag_id = t.tag_id
-        GROUP BY t.tag_id, t.name
-        ORDER BY t.name ASC
-    """)
-    tags = cursor.fetchall()
+#     cursor.execute("""
+#         SELECT t.tag_id, t.name FROM tags t
+#         JOIN product_tags pt ON pt.tag_id = t.tag_id
+#         GROUP BY t.tag_id, t.name
+#         ORDER BY t.name ASC
+#     """)
+#     tags = cursor.fetchall()
 
-    cursor.execute("SELECT DISTINCT color FROM product_variants WHERE color IS NOT NULL AND color <> '' ORDER BY color ASC")
-    colors = [r['color'] for r in cursor.fetchall()]
+#     cursor.execute("SELECT DISTINCT color FROM product_variants WHERE color IS NOT NULL AND color <> '' ORDER BY color ASC")
+#     colors = [r['color'] for r in cursor.fetchall()]
 
-    cursor.execute("SELECT DISTINCT size FROM product_variants WHERE size IS NOT NULL AND size <> '' ORDER BY size ASC")
-    sizes = [r['size'] for r in cursor.fetchall()]
+#     cursor.execute("SELECT DISTINCT size FROM product_variants WHERE size IS NOT NULL AND size <> '' ORDER BY size ASC")
+#     sizes = [r['size'] for r in cursor.fetchall()]
 
-    cursor.execute("SELECT COALESCE(MIN(price),0) AS min_price, COALESCE(MAX(price),0) AS max_price FROM product_variants")
-    price_row = cursor.fetchone()
-    global_min_price = float(price_row['min_price'] or 0)
-    global_max_price = float(price_row['max_price'] or 0)
+#     cursor.execute("SELECT COALESCE(MIN(price),0) AS min_price, COALESCE(MAX(price),0) AS max_price FROM product_variants")
+#     price_row = cursor.fetchone()
+#     global_min_price = float(price_row['min_price'] or 0)
+#     global_max_price = float(price_row['max_price'] or 0)
 
-    cursor.close()
-    conn.close()
+#     cursor.close()
+#     conn.close()
 
-    # pass current query params so template can keep boxes checked
-    context = {
-        'products': products,
-        'filters': {
-            'categories': categories,
-            'brands': brands,
-            'tags': tags,
-            'colors': colors,
-            'sizes': sizes,
-            'global_min_price': int(global_min_price),
-            'global_max_price': int(global_max_price),
-        },
-        # reflect selected filters back to template (so boxes remain checked)
-        'selected': {
-            'q': q, 'sort': sort,
-            'categories': selected_categories,
-            'brands': selected_brands,
-            'tags': selected_tags,
-            'colors': selected_colors,
-            'sizes': selected_sizes,
-            'min_price': min_price,
-            'max_price': max_price,
-            'rating': rating_min
-        },
-        # include request.args for convenience
-        'request_args': request.args
-    }
-    return render_template('customer/view_products.html', **context)
+#     # pass current query params so template can keep boxes checked
+#     context = {
+#         'products': products,
+#         'filters': {
+#             'categories': categories,
+#             'brands': brands,
+#             'tags': tags,
+#             'colors': colors,
+#             'sizes': sizes,
+#             'global_min_price': int(global_min_price),
+#             'global_max_price': int(global_max_price),
+#         },
+#         # reflect selected filters back to template (so boxes remain checked)
+#         'selected': {
+#             'q': q, 'sort': sort,
+#             'categories': selected_categories,
+#             'brands': selected_brands,
+#             'tags': selected_tags,
+#             'colors': selected_colors,
+#             'sizes': selected_sizes,
+#             'min_price': min_price,
+#             'max_price': max_price,
+#             'rating': rating_min
+#         },
+#         # include request.args for convenience
+#         'request_args': request.args
+#     }
+#     return render_template('customer/view_products.html', **context)
 
 
 

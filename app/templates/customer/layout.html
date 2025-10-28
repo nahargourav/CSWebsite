@@ -329,7 +329,7 @@
       <nav class="links" aria-label="Main navigation" style="display:flex;align-items:center;justify-content:space-between;width:80%">
         <div style="display:flex;gap:40px;align-items:center; margin: auto;padding-left: 9%;">
           <a href="/">HOME</a>
-          <a href="/place-order">PRODUCTS</a>
+          <a href="/browse">PRODUCTS</a>
           <a href="/orders">VIEW ORDERS</a>
         </div>
 
@@ -488,7 +488,7 @@
 
       <nav class="mobile-links" aria-label="Mobile primary navigation">
         <a href="/">Home</a>
-        <a href="/place-order">Products</a>
+        <a href="/browse">Products</a>
         <a href="/orders">View orders</a>
         <a href="/contact">Contact</a>
         <a href="/about">About</a>
@@ -589,7 +589,7 @@
         if (!searchInput) return;
         var q = (searchInput.value || '').trim();
         if (!q) return;
-        var url = '/place-order?q=' + encodeURIComponent(q) + '&sort=newest';
+        var url = '/browse?q=' + encodeURIComponent(q) + '&sort=newest';
         // close menu then navigate
         closeMenu();
         window.location.href = url;
