@@ -216,7 +216,7 @@
         <div class="muted">Items you saved for later. <span id="wishlistCountText">({{ wishlist_count }})</span></div>
       </div>
       <div style="display:flex;gap:12px;align-items:center;">
-        <a class="btn btn-outline-secondary" href="{{ url_for('main.place_order') }}" style="border-radius:10px;">Continue shopping</a>
+        <a class="btn btn-outline-secondary" href="{{ url_for('main.browse_page') }}" style="border-radius:10px;">Continue shopping</a>
       </div>
     </div>
 
@@ -283,7 +283,7 @@
       <div class="empty-wishlist">
         <h3>Your Wishlist is empty</h3>
         <p class="muted-small text-muted">Browse products and add items to your wishlist. We'll save them here for you.</p>
-        <a class="btn btn-outline-primary "style ="background: linear-gradient(90deg, #ff7f66, #ff3d6b);color: white; border: none;" href="{{ url_for('main.place_order') }}">Continue shopping</a>
+        <a class="btn btn-outline-primary "style ="background: linear-gradient(90deg, #ff7f66, #ff3d6b);color: white; border: none;" href="{{ url_for('main.browse_page') }}">Continue shopping</a>
       </div>
     {% endif %}
   </main>
@@ -328,7 +328,7 @@
                   <div class="empty-wishlist" style="margin:24px auto;">
                     <h3>Your Wishlist is empty</h3>
                     <p class="muted-small text-muted">Browse products and add items to your wishlist. We'll save them here for you.</p>
-                    <a class="btn btn-outline-primary" style ="background: linear-gradient(90deg, #ff7f66, #ff3d6b);color: white; border: none;" href="{{ url_for('main.place_order') }}">Continue shopping</a>
+                    <a class="btn btn-outline-primary" style ="background: linear-gradient(90deg, #ff7f66, #ff3d6b);color: white; border: none;" href="{{ url_for('main.browse_page') }}">Continue shopping</a>
                   </div>`;
               }
             }

@@ -1,629 +1,953 @@
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
-    rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <style>
-    /* --- Core variables & typography copied from homepage to guarantee identical navbar visuals --- */
-    :root {
-      --bg: #fff5ee;
-      --muted: #6b7280;
-      --accent: #f59e0b;
-      /* amber */
-      --accent-contrast: #111827;
-      --surface: #f8fafc;
-      --card: #ffffff;
-      --radius: 14px;
-      --glass: rgba(255, 255, 255, 0.6);
-      --shadow: 0 6px 18px rgba(17, 24, 39, 0.06);
-      --max: 1200px;
-      --focus: 3px solid rgba(245, 158, 11, 0.18);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    }
+<style>
+  /* ========== ROOT VARIABLES ========== */
+  :root {
+    --royal-gold: #D4AF37;
+    --deep-navy: #1a1f3a;
+    --charcoal: #2d2d2d;
+    --ivory: #FFFFF0;
+    --warm-cream: #FFF8E7;
+    --muted-gold: #C9A961;
+    --accent: #f59e0b;
+    --accent-contrast: #111827;
+    
+    --font-heading: 'Cormorant Garamond', serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+    
+    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-fast: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
-    * {
-      box-sizing: border-box
-    }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-    html,
-    body {
-      height: 100%;
-      font-family: 'Poppins';
-    }
+  html,
+  body {
+    height: 100%;
+    font-family: var(--font-body);
+  }
 
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--accent-contrast);
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale
-    }
+  body {
+    background: var(--ivory);
+    color: var(--charcoal);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-    /* Homepage-style container used everywhere to match visuals exactly */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
 
-    /* HEADER (exact copy of homepage styles) */
-    header {
-      position:sticky;
-      top: 0;
-      background: white;
-      backdrop-filter: blur(6px);
-      z-index: 40;
-    }
-    .container { --max:1200px;}
+  /* ========== PREMIUM NAVBAR ========== */
+  header {
+    position: sticky;
+    top: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    z-index: 1000;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: var(--transition);
+  }
 
+  header.scrolled {
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: var(--shadow-md);
+    border-bottom-color: rgba(212, 175, 55, 0.15);
+  }
+
+  /* ========== NAVIGATION CONTAINER ========== */
+  .nav {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 240px 1fr auto;
+    align-items: center;
+    gap: 48px;
+    padding: 20px 40px;
+    min-height: 80px;
+  }
+
+  /* ========== BRAND SECTION ========== */
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo {
+    position: relative;
+    padding: 10px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(212, 175, 55, 0.03) 100%);
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.1);
+    transition: var(--transition);
+  }
+
+  .logo::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--royal-gold), transparent);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: var(--transition);
+  }
+
+  .logo:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(212, 175, 55, 0.2);
+  }
+
+  .logo:hover::before {
+    opacity: 1;
+  }
+
+  .logo img {
+    display: block;
+    height: 44px;
+    width: auto;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.05));
+  }
+
+  .site-title {
+    line-height: 1.3;
+  }
+
+  .site-title h1 {
+    font-family: var(--font-heading);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--deep-navy);
+    letter-spacing: -0.4px;
+    margin-bottom: 2px;
+  }
+
+  .site-title p {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted-gold);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+  }
+
+  /* ========== NAVIGATION LINKS ========== */
+  nav.links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+  }
+
+  nav.links a {
+    position: relative;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--charcoal);
+    letter-spacing: 0.3px;
+    padding: 10px 20px;
+    border-radius: 10px;
+    transition: var(--transition-fast);
+    overflow: hidden;
+  }
+
+  nav.links a::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(212, 175, 55, 0.04));
+    opacity: 0;
+    transition: var(--transition-fast);
+    border-radius: 10px;
+  }
+
+  nav.links a::after {
+    content: '';
+    position: absolute;
+    bottom: 8px;
+    left: 20px;
+    right: 20px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--royal-gold), var(--muted-gold));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 1px;
+  }
+
+  nav.links a:hover {
+    color: var(--royal-gold);
+  }
+
+  nav.links a:hover::before {
+    opacity: 1;
+  }
+
+  nav.links a:hover::after {
+    transform: scaleX(1);
+  }
+
+  nav.links a.active {
+    color: var(--royal-gold);
+    background: rgba(212, 175, 55, 0.06);
+  }
+
+  nav.links a.active::after {
+    transform: scaleX(1);
+  }
+
+  /* ========== AUTH SECTION ========== */
+  .auth-list {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    list-style: none;
+  }
+
+  .auth-list li {
+    display: flex;
+    align-items: center;
+  }
+
+  /* ========== ICON BUTTONS ========== */
+  .icon-btn {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition-fast);
+    color: var(--charcoal);
+  }
+
+  .icon-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: rgba(212, 175, 55, 0.06);
+    opacity: 0;
+    transition: var(--transition-fast);
+  }
+
+  .icon-btn:hover {
+    transform: translateY(-2px);
+    color: var(--royal-gold);
+  }
+
+  .icon-btn:hover::before {
+    opacity: 1;
+  }
+
+  .icon-btn:active {
+    transform: translateY(0);
+  }
+
+  /* Icon badge */
+  .icon-btn .badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 9px;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  }
+
+  /* ========== PROFILE BUTTON ========== */
+  .profile-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px 8px 8px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(212, 175, 55, 0.04));
+    border: 1px solid rgba(212, 175, 55, 0.15);
+    transition: var(--transition-fast);
+    cursor: pointer;
+  }
+
+  .profile-btn:hover {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0.06));
+    border-color: rgba(212, 175, 55, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
+  }
+
+  .profile-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--royal-gold), var(--muted-gold));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+  }
+
+  .profile-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--charcoal);
+  }
+
+  /* ========== AUTH LINKS ========== */
+  .auth-link {
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    transition: var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .auth-link.login {
+    color: var(--charcoal);
+    border: 1.5px solid rgba(212, 175, 55, 0.2);
+  }
+
+  .auth-link.login:hover {
+    border-color: var(--royal-gold);
+    background: rgba(212, 175, 55, 0.05);
+    color: var(--royal-gold);
+  }
+
+  .auth-link.register {
+    background: linear-gradient(135deg, var(--royal-gold), var(--muted-gold));
+    color: white;
+    border: 1.5px solid transparent;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
+  }
+
+  .auth-link.register:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(212, 175, 55, 0.35);
+  }
+
+  .logout-link {
+    color: var(--charcoal);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: var(--transition-fast);
+  }
+
+  .logout-link:hover {
+    background: rgba(239, 68, 68, 0.08);
+    color: #dc2626;
+  }
+
+  /* ========== DIVIDER ========== */
+  .nav-divider {
+    width: 1px;
+    height: 24px;
+    background: linear-gradient(to bottom, transparent, rgba(212, 175, 55, 0.2), transparent);
+  }
+
+  /* ========== MOBILE STYLES ========== */
+  @media (max-width: 1024px) {
     .nav {
-      margin: auto;
-      width: 100em;
-      display: flex;
-      align-items: center;
-      flex-direction: row;
-      padding-top: 0.5em;
-      padding-bottom: 0.5em;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      width: 14%;
-      margin: 0% 1.5%;
-    }
-
-    .logo {
-      /* background: linear-gradient(135deg, #FEF3E0, #FFF7ED); */
-      padding: 8px;
-      border-radius: 12px;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    .site-title {
-      line-height: 1
-    }
-
-    .site-title h1 {
-      margin: 0;
-      font-size: 16px
-    }
-
-    .site-title p {
-      margin: 0;
-      font-size: 12px;
-      color: var(--muted)
+      grid-template-columns: 1fr auto;
+      gap: 20px;
+      padding: 16px 24px;
+      min-height: 72px;
     }
 
     nav.links {
-      display: flex;
-      gap: 18px;
-      align-items: center
+      display: none !important;
     }
 
-    nav.links a {
-      font-size: 14px;
-      color: black;
-      font-weight: 470;
-      font-size: medium;
-      text-decoration: none;
-      font-family: poppins;
+    .auth-list {
+      display: none !important;
     }
 
-    /* icon button box: unified sizing so all icons + interactive areas match */
-    .icon-btn {
-      border-radius: 10px;
-      padding: 6px;              /* inner spacing between svg and edge */
-      border: none;
-      background: transparent;
-      cursor: pointer;
-      display: inline-flex;
+    .brand {
+      gap: 12px;
+    }
+
+    .logo img {
+      height: 40px;
+    }
+
+    .site-title h1 {
+      font-size: 17px;
+    }
+
+    .site-title p {
+      font-size: 10px;
+    }
+
+    /* Mobile icons */
+    .mobile-icons {
+      display: flex !important;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .mobile-icons .icon-btn {
+      width: 44px;
+      height: 44px;
+      background: white;
+      border: 1px solid rgba(212, 175, 55, 0.12);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* Mobile toggle */
+    .mobile-toggle {
+      display: flex !important;
       align-items: center;
       justify-content: center;
-      width: 50px;               /* consistent box size */
-      height: 50px;
-      box-sizing: border-box;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(212, 175, 55, 0.04));
+      border: 1px solid rgba(212, 175, 55, 0.15);
+      cursor: pointer;
+      transition: var(--transition-fast);
     }
 
-    /* keep profile and auth area visually separate */
-    .auth-list {
-      display: flex;
-      gap: 0px;                /* uniform spacing between items */
-      align-items: center;
-      margin: 0;
-      padding: 0;
-      list-style: none
+    .mobile-toggle:hover {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(212, 175, 55, 0.06));
+      transform: translateY(-2px);
     }
 
-    .auth-list li { margin: 0; } /* ensure no extra margins from list items */
-
-    .auth-list .nav-item {
-      display: flex;
-      align-items: center
-    }
-
-    /* helper classes (same as homepage) */
-    .muted {
-      color: var(--muted)
-    }
-
-    .pill {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: #fff7ed;
-      color: var(--accent);
-      font-weight: 600
-    }
-
-    /* Page content wrapper */
-    main {
-      max-width: var(--max);
-      margin: 22px auto;
-      padding: 0 20px
-    }
-
-    /* Mobile call CTA (same behavior) */
-    .call-cta {
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      background: var(--accent);
-      color: white;
-      padding: 10px 14px;
-      border-radius: 999px;
-      display: none;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 8px 30px rgba(245, 158, 11, 0.18)
-    }
-
-    /* small responsive tweaks */
-    @media(max-width:767px) {
-      .nav {
-        height: 64px
-      }
-
-      .site-title h1 {
-        font-size: 14px
-      }
-
-      .site-title p {
-        font-size: 11px
-      }
-
-      .call-cta {
-        display: flex
-      }
-    }
-
-    /* Remove any inherited Bootstrap-like defaults that could interfere */
-    /* These are scoped and minimal — leaving the rest of the page to individual templates */
-    a {
-      color: inherit;
-    }
-
-    .nav a {
-      text-decoration: none;
-    }
-
-    /* small helper to size the image inside the existing .logo block without changing layout */
-    .logo img {
+    .mobile-toggle .bar {
+      width: 20px;
+      height: 2px;
+      background: var(--royal-gold);
       display: block;
-      height: 40px;
+      border-radius: 2px;
+      position: relative;
+      transition: var(--transition);
+    }
+
+    .mobile-toggle .bar::before,
+    .mobile-toggle .bar::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: inherit;
+      border-radius: 2px;
+      transition: var(--transition);
+    }
+
+    .mobile-toggle .bar::before {
+      top: -6px;
+    }
+
+    .mobile-toggle .bar::after {
+      top: 6px;
+    }
+
+    .mobile-toggle.open .bar {
+      background: transparent;
+    }
+
+    .mobile-toggle.open .bar::before {
+      top: 0;
+      transform: rotate(45deg);
+    }
+
+    .mobile-toggle.open .bar::after {
+      top: 0;
+      transform: rotate(-45deg);
+    }
+
+    /* Mobile overlay */
+    .mobile-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+    }
+
+    .mobile-overlay.open {
+      display: block;
+    }
+
+    .mobile-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(26, 31, 58, 0.6);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .mobile-sheet {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: min(85vw, 380px);
+      background: linear-gradient(180deg, #ffffff, #fffbf7);
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12);
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.25, 1);
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      overflow-y: auto;
+      will-change: transform;
+    }
+
+    .mobile-overlay.open .mobile-sheet {
+      transform: translateX(0);
+    }
+
+    .mobile-sheet-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .mobile-brand-compact {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .mobile-brand-compact img {
+      height: 36px;
       width: auto;
     }
 
-
-    /* ===========================
-       MOBILE-ONLY OVERRIDES & UI
-       These rules are applied only when viewport width <= 767px.
-       They intentionally override the desktop rules so the desktop
-       layout remains byte-for-byte identical.
-       =========================== */
-
-    @media (max-width: 767px) {
-
-      /* Reset header layout to be mobile-friendly without changing desktop rules:
-         - .nav must not use its desktop width 100em (causes overflow).
-         - hide desktop nav links to avoid duplication; we'll show a mobile sheet instead.
-         - show a hamburger that sits inside header (absolute) so desktop remains unchanged.
-      */
-      .container.nav { position: relative; } /* allow absolutely-positioned hamburger inside */
-      .nav { width: 100%; margin: 0 auto; padding-left: 12px; padding-right: 12px; } /* mobile width */
-
-      /* Hide large desktop navigation on mobile */
-      nav.links { display: none !important; }
-
-      /* Reduce brand proportion so it doesn't wrap */
-      .brand { width: auto; margin-right: 8px; }
-
-      /* Hide full auth-list on mobile header (profile/logout are moved to mobile sheet).
-         We will show compact mobile icons (cart + wishlist) in the header instead. */
-      .auth-list { display: none !important; }
-
-      /* compact cart + wishlist icons shown in mobile header (keeps desktop unchanged) */
-      .mobile-icons { display: flex; gap: 8px; position: absolute; right: 64px; top: 50%; transform: translateY(-50%); z-index: 62; }
-      .mobile-icons .icon-btn { width:44px; height:44px; padding:6px; border-radius:10px; background:white; box-shadow:0 6px 16px rgba(2,6,23,0.06); border:1px solid rgba(17,24,39,0.03); }
-
-      /* show hamburger */
-      .mobile-toggle {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        position: absolute;
-        right: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        background: white;
-        box-shadow: 0 6px 18px rgba(17,24,39,0.06);
-        border: 1px solid rgba(17,24,39,0.03);
-        z-index: 63;
-      }
-
-      .mobile-toggle .bar { width: 20px; height: 2px; background: #111827; display:block; border-radius:2px; position:relative; transition: transform 220ms ease, opacity 180ms ease; }
-      .mobile-toggle .bar::before, .mobile-toggle .bar::after { content: ""; position: absolute; left: 0; right: 0; height: 2px; background: inherit; border-radius:2px; transition: transform 220ms ease, opacity 180ms ease; }
-      .mobile-toggle .bar::before { top: -6px; }
-      .mobile-toggle .bar::after { top: 6px; }
-      .mobile-toggle.open .bar { transform: rotate(45deg); }
-      .mobile-toggle.open .bar::before, .mobile-toggle.open .bar::after { opacity: 0; transform: translateY(0) rotate(0deg); }
-
-      /* Mobile overlay/backdrop and right sheet */
-      .mobile-overlay { display: none; position: fixed; inset: 0; z-index: 59; }
-      .mobile-overlay.open { display: block; }
-
-      .mobile-backdrop { position: absolute; inset: 0; background: rgba(8,10,15,0.45); backdrop-filter: blur(6px); }
-
-      .mobile-sheet {
-        position: absolute;
-        right: 0;
-        top: 0;
-        bottom: 0;
-        width: min(92vw, 420px);
-        background: linear-gradient(180deg,#ffffff, #fffaf8);
-        box-shadow: -18px 20px 60px rgba(2,6,23,0.12);
-        transform: translateX(100%);
-        transition: transform 320ms cubic-bezier(.2,.9,.25,1);
-        display:flex;
-        flex-direction:column;
-        gap:12px;
-        padding:18px;
-        overflow-y:auto;
-        will-change: transform;
-      }
-      .mobile-overlay.open .mobile-sheet { transform: translateX(0); }
-
-      .mobile-sheet-top { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-      .mobile-brand-compact { display:flex; gap:10px; align-items:center; }
-      .mobile-brand-compact img { height:36px; width:auto; display:block; }
-
-      .mobile-search { margin-top:12px; display:flex; gap:8px; align-items:center; background:#fff; padding:10px; border-radius:12px; border:1px solid rgba(17,24,39,0.05); }
-      .mobile-search input { border:none; outline:none; flex:1; font-size:16px; background:transparent; }
-
-      .mobile-links { margin-top: 14px; display:flex; flex-direction:column; gap:12px; }
-      .mobile-links a { display:block; padding:12px 14px; border-radius:12px; text-decoration:none; font-size:18px; font-weight:700; color:var(--accent-contrast); }
-      .mobile-links a:hover { background: rgba(17,24,39,0.02); transform: translateY(-2px); }
-
-      .mobile-quick { margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-      .mobile-account { margin-top: 16px; display:flex; flex-direction:column; gap:8px; }
-
-      .mobile-close { width:44px; height:44px; display:flex; align-items:center; justify-content:center; background:white; border-radius:10px; box-shadow: 0 6px 18px rgba(17,24,39,0.06); border:1px solid rgba(17,24,39,0.03); }
-
-      /* When mobile menu is open, prevent background scroll */
-      body.mobile-menu-open { overflow: hidden; touch-action: none; }
+    .mobile-close {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(212, 175, 55, 0.08);
+      border-radius: 12px;
+      border: 1px solid rgba(212, 175, 55, 0.15);
+      cursor: pointer;
+      transition: var(--transition-fast);
     }
-  </style>
-  <!-- Header exactly as homepage (keeps logo/title/links/profile on same row on desktop) -->
-  <header>
-    <div class="container nav">
-      <div class="brand">
-        <div class="logo">
-          <a href="/" aria-label="Home">
-            <img src="{{ url_for('static', filename='images/C&S logo.png') }}" style="transform: scale(2.4); transform-origin: center;" alt="C&S logo">
-          </a>
-        </div>
+
+    .mobile-close:hover {
+      background: rgba(239, 68, 68, 0.08);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .mobile-search {
+      margin-bottom: 20px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: white;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(212, 175, 55, 0.12);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mobile-search input {
+      border: none;
+      outline: none;
+      flex: 1;
+      font-size: 15px;
+      background: transparent;
+      font-family: var(--font-body);
+      color: var(--charcoal);
+    }
+
+    .mobile-search input::placeholder {
+      color: rgba(45, 45, 45, 0.5);
+    }
+
+    .mobile-links {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+
+    .mobile-links a {
+      display: block;
+      padding: 14px 16px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--charcoal);
+      transition: var(--transition-fast);
+    }
+
+    .mobile-links a:hover,
+    .mobile-links a.active {
+      background: rgba(212, 175, 55, 0.08);
+      color: var(--royal-gold);
+      transform: translateX(4px);
+    }
+
+    .mobile-quick {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(212, 175, 55, 0.1);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      background: rgba(212, 175, 55, 0.08);
+      color: var(--royal-gold);
+      font-weight: 600;
+      font-size: 14px;
+      border: 1px solid rgba(212, 175, 55, 0.15);
+    }
+
+    .mobile-account {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: auto;
+      padding-top: 20px;
+    }
+
+    .mobile-account a {
+      padding: 14px 20px;
+      border-radius: 12px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 15px;
+      transition: var(--transition-fast);
+    }
+
+    .mobile-account a.profile-link {
+      background: white;
+      border: 1px solid rgba(212, 175, 55, 0.15);
+      color: var(--charcoal);
+    }
+
+    .mobile-account a.logout-link {
+      background: rgba(239, 68, 68, 0.08);
+      color: #dc2626;
+      border: 1px solid rgba(239, 68, 68, 0.15);
+    }
+
+    .mobile-account a.login-link {
+      background: white;
+      border: 1px solid rgba(212, 175, 55, 0.15);
+      color: var(--charcoal);
+    }
+
+    .mobile-account a.register-link {
+      background: linear-gradient(135deg, var(--royal-gold), var(--muted-gold));
+      color: white;
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
+    }
+
+    body.mobile-menu-open {
+      overflow: hidden;
+      touch-action: none;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .nav {
+      padding: 14px 16px;
+    }
+
+    .site-title {
+      display: none;
+    }
+
+    .mobile-sheet {
+      width: 90vw;
+    }
+  }
+
+  /* ========== UTILITIES ========== */
+  .hidden {
+    display: none !important;
+  }
+
+  /* Page content wrapper */
+  main {
+    max-width: 1200px;
+    margin: 24px auto;
+    padding: 0 40px;
+  }
+
+  @media (max-width: 1024px) {
+    main {
+      padding: 0 24px;
+    }
+  }
+</style>
+
+<!-- Premium Header -->
+<header id="mainHeader">
+  <nav class="nav">
+    <!-- Brand -->
+    <div class="brand">
+      <a href="/" class="logo" aria-label="Home">
+        <img src="{{ url_for('static', filename='images/C&S logo.png') }}" alt="Champalal & Sons" style="transform: scale(2.4); transform-origin: center;">
+      </a>
+      <div class="site-title">
+        <h1>Champalal & Sons</h1>
+        <p>Since 1930</p>
       </div>
+    </div>
 
-      <nav class="links" aria-label="Main navigation" style="display:flex;align-items:center;justify-content:space-between;width:80%">
-        <div style="display:flex;gap:40px;align-items:center; margin: auto;padding-left: 9%;">
-          <a href="/">HOME</a>
-          <a href="/browse">PRODUCTS</a>
-          <a href="/orders">VIEW ORDERS</a>
-        </div>
+    <!-- Desktop Navigation -->
+    <nav class="links" aria-label="Main navigation">
+      <a href="/" {% if request.endpoint == 'main.home' %}class="active"{% endif %}>HOME</a>
+      <a href="/browse" {% if request.endpoint == 'main.browse_page' %}class="active"{% endif %}>PRODUCTS</a>
+      <a href="/orders" {% if request.endpoint == 'main.orders' %}class="active"{% endif %}>ORDERS</a>
+      <a href="/contact" {% if request.endpoint == 'main.contact' %}class="active"{% endif %}>CONTACT</a>
+    </nav>
 
-        <!-- Desktop auth-list (kept exactly as before for desktop). On mobile we hide this (.auth-list {display:none}) and show compact .mobile-icons -->
-        <ul class="auth-list" style="position: relative; left: 8%;" aria-hidden="false">
-          <li>
-            <a class="icon-btn" href="/wishlist" aria-label="Wishlist" title="Wishlist">
-              <!-- Big, well-designed heart icon (SVG) -->
-              <svg width="32" height="32" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
-                   aria-hidden="true" focusable="false"
-                   style="display:block; transition: transform 160ms cubic-bezier(.2,.9,.3,1); transform-origin: center;"
-                   onmouseenter="this.style.transform='scale(1.08)';"
-                   onmouseleave="this.style.transform='scale(1)';">
-                <defs>
-                  <linearGradient id="heartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#ff7f66"/>
-                    <stop offset="100%" stop-color="#ff3d6b"/>
-                  </linearGradient>
-                  <filter id="heartShadow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#ff7f66" flood-opacity="0.18"/>
-                  </filter>
-                </defs>
-                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
-                      fill="url(#heartGrad)" filter="url(#heartShadow)"></path>
-                <path d="M12.1 19.02c-4.35-3.94-7-6.33-7-10.52 0-2.3 1.9-4.2 4.2-4.2 1.6 0 3.07.88 3.9 2.22.83-1.34 2.3-2.22 3.9-2.22 2.3 0 4.2 1.9 4.2 4.2 0 4.19-2.65 6.58-7 10.52l-1.2 1.09-1.2-1.09z"
-                      fill-opacity="0.06" fill="#000"></path>
-              </svg>
-            </a>
-          </li>
-
-          <li>
-            <!-- Improved cart icon (SVG) -->
-            <a class="icon-btn" style="position: relative;top: 3px;" href="/cart" aria-label="Cart" title="Cart">
-              <svg width="35" height="35" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
-                   aria-hidden="true" focusable="false"
-                   style="display:block; transition: transform 160ms cubic-bezier(.2,.9,.3,1); transform-origin: center;"
-                   onmouseenter="this.style.transform='scale(1.06)';"
-                   onmouseleave="this.style.transform='scale(1)';">
-                <defs>
-                  <linearGradient id="cartGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#444b54"/>
-                    <stop offset="100%" stop-color="#111827"/>
-                  </linearGradient>
-                  <filter id="cartShadow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#000" flood-opacity="0.08"/>
-                  </filter>
-                </defs>
-                <!-- cart body -->
-                <path d="M3 3h2.4l1.8 9.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 6H6"
-                      fill="none" stroke="url(#cartGrad)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" filter="url(#cartShadow)"/>
-                <!-- handle / top bar -->
-                <path d="M16 16a1 1 0 1 1 0 2 1 1 0 0 1 0-2zm-8 0a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"
-                      fill="url(#cartGrad)" opacity="0.98"/>
-                <!-- subtle fill for cart base -->
-                <path d="M5 6l1.5 7.5c.12.6.62 1 1.23 1h8.54c.6 0 1.1-.4 1.23-1L20 6"
-                      fill="rgba(17,24,39,0.03)"/>
-              </svg>
-            </a>
-          </li>
-
-
-          {% if session.get('customer_id') and session.get('name') %}
-          <li class="nav-item d-flex align-items-center">
-            <a class="nav-link fw-bold" href="{{ url_for('main.profile') }}" style="font-size:1.05rem;color:var(--accent);">
-              <!-- NEW: refined profile avatar icon (slightly reduced to 28) -->
-              <svg width="30" height="30" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"
-                   aria-hidden="true" focusable="false"
-                   style="display:block; transition: transform 160ms cubic-bezier(.2,.9,.3,1); transform-origin: center;"
-                   onmouseenter="this.style.transform='scale(1.06)';"
-                   onmouseleave="this.style.transform='scale(1)';" title="Profile">
-                <defs>
-                  <linearGradient id="avatarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#f59e0b"/>
-                    <stop offset="100%" stop-color="#ff7f66"/>
-                  </linearGradient>
-                  <filter id="avatarShadow" x="-50%" y="-50%" width="200%" height="200%">
-                    <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity="0.06"/>
-                  </filter>
-                </defs>
-
-                <!-- circular backdrop -->
-                <circle cx="12" cy="12" r="10" fill="url(#avatarGrad)" opacity="0.12"></circle>
-
-                <!-- user silhouette (modern rounded) -->
-                <g filter="url(#avatarShadow)">
-                  <path d="M12 13.2c1.77 0 3.2-1.43 3.2-3.2S13.77 6.8 12 6.8 8.8 8.23 8.8 10s1.43 3.2 3.2 3.2z" fill="#ff7f66"/>
-                  <path d="M5.5 18.2c.8-2.1 3.0-3.6 6.5-3.6s5.7 1.5 6.5 3.6a0.6.6 0 0 1-.55.86H6.05a0.6.6 0 0 1-.55-.86z" fill="#ff7f66" opacity="0.95"/>
-                </g>
-
-                <!-- subtle outline -->
-                <circle cx="12" cy="12" r="11" fill="none" stroke="rgba(17,24,39,0.06)" stroke-width="1"/>
-              </svg>
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/logout" style="color: black; font-weight: 470; font-size: medium; text-decoration: none; font-family: poppins; padding: 6px 12px; border-radius: 10px;">Log out</a>
-          </li>
-          {% else %}
-          <li class="nav-item"><a class="nav-link"  href="/login">Login</a></li>
-          <li class="nav-item"><a class="nav-link" style="position: relative;right: -10px;" href="/register">Register</a></li>
-          {% endif %}
-        </ul>
-      </nav>
-
-      <!-- MOBILE ICONS (visible only on mobile via CSS) - compact Cart + Wishlist shown in header -->
-      <div class="mobile-icons" aria-hidden="true" style="display:none;">
-        <a class="icon-btn" href="/wishlist" aria-label="Wishlist (mobile)" title="Wishlist">
-          <!-- small wishlist svg (same look as desktop but smaller) -->
-          <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#ff7f66"/>
+    <!-- Desktop Auth -->
+    <ul class="auth-list">
+      <li>
+        <a href="/wishlist" class="icon-btn" aria-label="Wishlist" title="Wishlist">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
           </svg>
         </a>
-
-        <a class="icon-btn" href="/cart" aria-label="Cart (mobile)" title="Cart">
-          <svg width="22" height="22" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <path d="M3 3h2.4l1.8 9.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 6H6" fill="none" stroke="#111827" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </li>
+      <li>
+        <a href="/cart" class="icon-btn" aria-label="Cart" title="Cart">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="9" cy="21" r="1"></circle>
+            <circle cx="20" cy="21" r="1"></circle>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
           </svg>
         </a>
-      </div>
+      </li>
 
-      <!-- MOBILE HAMBURGER (only visible on mobile via CSS above) -->
-      <button id="mobileToggle" class="mobile-toggle" aria-expanded="false" aria-label="Open menu" style="display:none;">
-        <span class="bar" aria-hidden="true"></span>
+      {% if session.get('customer_id') and session.get('name') %}
+      <li><div class="nav-divider"></div></li>
+      <li>
+        <a href="{{ url_for('main.profile') }}" class="profile-btn" title="Profile">
+          <div class="profile-avatar">{{ session.get('name')[0].upper() }}</div>
+          <span class="profile-name">{{ session.get('name').split()[0] }}</span>
+        </a>
+      </li>
+      <li>
+        <a href="/logout" class="logout-link">Logout</a>
+      </li>
+      {% else %}
+      <li><div class="nav-divider"></div></li>
+      <li>
+        <a href="/login" class="auth-link login">Login</a>
+      </li>
+      <li>
+        <a href="/register" class="auth-link register">Register</a>
+      </li>
+      {% endif %}
+    </ul>
+
+    <!-- Mobile Icons -->
+    <div class="mobile-icons" style="display:none;">
+      <a href="/wishlist" class="icon-btn" aria-label="Wishlist">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+      </a>
+      <a href="/cart" class="icon-btn" aria-label="Cart">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="9" cy="21" r="1"></circle>
+          <circle cx="20" cy="21" r="1"></circle>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+      </a>
+      <button id="mobileToggle" class="mobile-toggle" aria-label="Menu">
+        <span class="bar"></span>
       </button>
     </div>
-  </header>
+  </nav>
+</header>
 
-  <!-- Your normal page content -->
-  {% block content %}{% endblock %}
-
-  <!-- MOBILE OVERLAY & SHEET (server-rendered; hidden on desktop via CSS) -->
-  <div id="mobileOverlay" class="mobile-overlay" aria-hidden="true" style="display:none;">
-    <div class="mobile-backdrop" data-action="close" tabindex="-1"></div>
-
-    <aside class="mobile-sheet" role="dialog" aria-modal="true" aria-labelledby="mobileMenuLabel">
-      <div class="mobile-sheet-top">
-        <div class="mobile-brand-compact">
-          <a href="/" style="display:flex;align-items:center;text-decoration:none;color:inherit;">
-            <img src="{{ url_for('static', filename='images/C&S logo.png') }}" alt="C&S" style="height:36px;width:auto;display:block;">
-            <div style="margin-left:8px;">
-              <div style="font-weight:800;font-size:16px;">Champalal &amp; Sons</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px;">Light & Crafted</div>
-            </div>
-          </a>
+<!-- Mobile Menu -->
+<div id="mobileOverlay" class="mobile-overlay" style="display:none;">
+  <div class="mobile-backdrop" data-action="close"></div>
+  <aside class="mobile-sheet">
+    <div class="mobile-sheet-top">
+      <div class="mobile-brand-compact">
+        <img src="{{ url_for('static', filename='images/C&S logo.png') }}" alt="C&S">
+        <div>
+          <div style="font-weight:700;font-size:16px;color:var(--deep-navy);">Champalal & Sons</div>
+          <div style="font-size:11px;color:var(--muted-gold);margin-top:2px;">SINCE 1930</div>
         </div>
-
-        <button class="mobile-close" aria-label="Close menu" data-action="close" type="button">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="#111827" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
       </div>
+      <button class="mobile-close" data-action="close" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
 
-      <div class="mobile-search" role="search" style="margin-top:12px; cursor: text;">
-        <svg id="mobileSearchIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" style="opacity:0.6;cursor:pointer"><path d="M21 21l-4.35-4.35" stroke="#111827" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <input id="mobileSearchInput" aria-label="Search site" placeholder="Search Your Look..." type="search" />
-      </div>
+    <div class="mobile-search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
+      </svg>
+      <input id="mobileSearchInput" type="search" placeholder="Search products..." aria-label="Search">
+    </div>
 
-      <nav class="mobile-links" aria-label="Mobile primary navigation">
-        <a href="/">Home</a>
-        <a href="/browse">Products</a>
-        <a href="/orders">View orders</a>
-        <a href="/contact">Contact</a>
-        <a href="/about">About</a>
-      </nav>
+    <nav class="mobile-links">
+      <a href="/" {% if request.endpoint == 'main.home' %}class="active"{% endif %}>Home</a>
+      <a href="/browse" {% if request.endpoint == 'main.browse_page' %}class="active"{% endif %}>Products</a>
+      <a href="/orders" {% if request.endpoint == 'main.orders' %}class="active"{% endif %}>My Orders</a>
+      <a href="/contact" {% if request.endpoint == 'main.contact' %}class="active"{% endif %}>Contact</a>
+      <a href="/about" {% if request.endpoint == 'main.about' %}class="active"{% endif %}>About</a>
+    </nav>
 
-      <!-- Replaced redundant 'Shop now' and 'My orders' with cart & wishlist -->
-      <div class="mobile-quick" style="margin-top:12px;">
-        <a href="/cart" class="pill" style="text-decoration:none; display:flex; align-items:center; gap:8px;">
-          <!-- small cart icon -->
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="opacity:0.95"><path d="M3 3h2.4l1.8 9.2a2 2 0 0 0 2 1.6h7.6a2 2 0 0 0 2-1.6L21 6H6" stroke="#111827" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Cart
-        </a>
+    <div class="mobile-quick">
+      <a href="/cart" class="pill">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="9" cy="21" r="1"></circle>
+          <circle cx="20" cy="21" r="1"></circle>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+        </svg>
+        Cart
+      </a>
+      <a href="/wishlist" class="pill">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+        </svg>
+        Wishlist
+      </a>
+    </div>
 
-        <a href="/wishlist" style="text-decoration:none;color:var(--muted);display:flex;align-items:center;gap:8px;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="opacity:0.95"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#ff7f66"/></svg>
-          Wishlist
-        </a>
-      </div>
+    <div class="mobile-account">
+      {% if session.get('customer_id') and session.get('name') %}
+        <a href="{{ url_for('main.profile') }}" class="profile-link">My Profile</a>
+        <a href="/logout" class="logout-link">Logout</a>
+      {% else %}
+        <a href="/login" class="login-link">Login to Account</a>
+        <a href="/register" class="register-link">Create Account</a>
+      {% endif %}
+    </div>
+  </aside>
+</div>
 
-      <div class="mobile-account" style="margin-top:18px;">
-        {% if session.get('customer_id') and session.get('name') %}
-          <a href="{{ url_for('main.profile') }}" style="padding:12px;border-radius:10px;background:#fff;border:1px solid rgba(17,24,39,0.03);text-decoration:none;color:var(--accent-contrast);font-weight:600;display:block;">Profile</a>
-          <a href="/logout" style="padding:12px;border-radius:10px;background:#fff7ed;color:var(--accent);text-decoration:none;display:block;text-align:center;margin-top:6px;">Log out</a>
-        {% else %}
-          <a href="/login" style="padding:12px;border-radius:10px;background:#fff;border:1px solid rgba(17,24,39,0.03);text-decoration:none;color:var(--accent-contrast);font-weight:600;display:block;">Log in</a>
-          <a href="/register" class="pill" style="padding:10px;display:inline-block;text-decoration:none;margin-top:8px;">Create account</a>
-        {% endif %}
-      </div>
-    </aside>
-  </div>
+{% block content %}{% endblock %}
 
-  <script>
-    /* Mobile menu toggle — minimal, robust, no HTML string construction */
-    (function () {
-      var MOBILE_BREAKPOINT = 767;
-      var toggle = document.getElementById('mobileToggle');
-      var overlay = document.getElementById('mobileOverlay');
-      var mobileIcons = document.querySelector('.mobile-icons');
+<script>
+(function() {
+  'use strict';
+  
+  // Scroll effect
+  const header = document.getElementById('mainHeader');
+  let lastScroll = 0;
+  
+  window.addEventListener('scroll', function() {
+    const currentScroll = window.pageYOffset;
+    if (currentScroll > 20) {
+      header.classList.add('scrolled');
+    } else {
+      header.classList.remove('scrolled');
+    }
+    lastScroll = currentScroll;
+  }, { passive: true });
 
-      if (!toggle || !overlay || !mobileIcons) return;
-
-      function openMenu() {
-        overlay.classList.add('open');
-        overlay.style.display = '';
-        document.body.classList.add('mobile-menu-open');
-        toggle.classList.add('open');
-        toggle.setAttribute('aria-expanded','true');
-        overlay.setAttribute('aria-hidden','false');
-        // focus the search input for convenience
-        var input = overlay.querySelector('#mobileSearchInput');
-        if (input) setTimeout(function(){ input.focus(); }, 220);
-      }
-      function closeMenu() {
-        overlay.classList.remove('open');
-        toggle.classList.remove('open');
-        toggle.setAttribute('aria-expanded','false');
-        overlay.setAttribute('aria-hidden','true');
-        document.body.classList.remove('mobile-menu-open');
-        setTimeout(function () {
-          if (!overlay.classList.contains('open')) overlay.style.display = 'none';
-        }, 360);
-      }
-
-      function syncToggleVisibility() {
-        if (window.innerWidth <= MOBILE_BREAKPOINT) {
-          toggle.style.display = '';
-          mobileIcons.style.display = ''; // show compact icons on mobile
-        } else {
-          toggle.style.display = 'none';
-          mobileIcons.style.display = 'none';
-          closeMenu();
+  // Mobile menu
+  const toggle = document.getElementById('mobileToggle');
+  const overlay = document.getElementById('mobileOverlay');
+  
+  if (toggle && overlay) {
+    function openMenu() {
+      overlay.classList.add('open');
+      overlay.style.display = 'block';
+      toggle.classList.add('open');
+      document.body.classList.add('mobile-menu-open');
+    }
+    
+    function closeMenu() {
+      overlay.classList.remove('open');
+      toggle.classList.remove('open');
+      document.body.classList.remove('mobile-menu-open');
+      setTimeout(() => {
+        if (!overlay.classList.contains('open')) {
+          overlay.style.display = 'none';
         }
-      }
+      }, 350);
+    }
 
-      toggle.addEventListener('click', function (ev) {
-        ev.stopPropagation();
-        if (overlay.classList.contains('open')) closeMenu(); else openMenu();
-      });
+    toggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      overlay.classList.contains('open') ? closeMenu() : openMenu();
+    });
 
-      overlay.addEventListener('click', function (ev) {
-        if (ev.target.classList.contains('mobile-backdrop') || ev.target.closest('[data-action="close"]')) {
-          closeMenu();
-        }
-      });
-
-      document.addEventListener('keydown', function (ev) {
-        if (ev.key === 'Escape' && overlay.classList.contains('open')) closeMenu();
-      });
-
-      window.addEventListener('resize', syncToggleVisibility, { passive: true });
-      syncToggleVisibility();
-
-      // Mobile search: redirect to /place-order?q=...&sort=newest on submit or Enter
-      var searchInput = document.getElementById('mobileSearchInput');
-      var searchIcon = document.getElementById('mobileSearchIcon');
-
-      function mobileSearchRedirect() {
-        if (!searchInput) return;
-        var q = (searchInput.value || '').trim();
-        if (!q) return;
-        var url = '/browse?q=' + encodeURIComponent(q) + '&sort=newest';
-        // close menu then navigate
+    overlay.addEventListener('click', (e) => {
+      if (e.target.classList.contains('mobile-backdrop') || 
+          e.target.closest('[data-action="close"]')) {
         closeMenu();
-        window.location.href = url;
       }
+    });
 
-      if (searchInput) {
-        searchInput.addEventListener('keydown', function (ev) {
-          if (ev.key === 'Enter') {
-            ev.preventDefault();
-            mobileSearchRedirect();
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('open')) {
+        closeMenu();
+      }
+    });
+
+    // Mobile search
+    const searchInput = document.getElementById('mobileSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const query = searchInput.value.trim();
+          if (query) {
+            closeMenu();
+            window.location.href = `/browse?q=${encodeURIComponent(query)}`;
           }
-        });
-      }
-      if (searchIcon) {
-        searchIcon.addEventListener('click', mobileSearchRedirect);
-      }
-
-      // Also allow clicking the search container to focus the input (friendly UX)
-      var searchContainer = document.querySelector('.mobile-search');
-      if (searchContainer) {
-        searchContainer.addEventListener('click', function (ev) {
-          if (ev.target && ev.target.id !== 'mobileSearchIcon') {
-            searchInput && searchInput.focus();
-          }
-        });
-      }
-    })();
-  </script>
-
-  <script>
-    // small behaviour used across pages
-    try { document.getElementById('year').textContent = new Date().getFullYear(); } catch (e) { }
-
-    function handleCTA() { if (window.innerWidth <= 767) { document.querySelector('.call-cta').style.display = 'flex'; } else { document.querySelector('.call-cta').style.display = 'none'; } }
-    handleCTA(); window.addEventListener('resize', handleCTA);
-  </script>
-
+        }
+      });
+    }
+  }
+})();
+</script>

@@ -220,7 +220,7 @@
         <div class="muted">Review items you intend to purchase.</div>
       </div>
       <div>
-        <a class="btn btn-outline-secondary" href="{{ url_for('main.place_order') }}" style="border-radius:10px;">Continue shopping</a>
+        <a class="btn btn-outline-secondary" href="{{ url_for('main.browse_page') }}" style="border-radius:10px;">Continue shopping</a>
       </div>
     </header>
 
@@ -284,7 +284,7 @@
           <div class="empty">
             <h3>Your cart is empty</h3>
             <p class="muted">Browse products and add items to your cart.</p>
-            <a class="btn btn-outline-primary" href="{{ url_for('main.place_order') }}">Continue Shopping</a>
+            <a class="btn btn-outline-primary" href="{{ url_for('main.browse_page') }}">Continue Shopping</a>
           </div>
         {% endif %}
       </section>
