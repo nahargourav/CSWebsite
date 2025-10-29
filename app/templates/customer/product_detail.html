@@ -3,12 +3,204 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ product.name }} - Champalal & Sons</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   
-  <!-- Google Fonts -->
+  <!-- Primary Meta Tags -->
+  <title>{{ product.name }}{% if product.brand %} by {{ product.brand }}{% endif %} - Buy Online at Champalal & Sons</title>
+  <meta name="title" content="{{ product.name }}{% if product.brand %} by {{ product.brand }}{% endif %} - Champalal & Sons">
+  <meta name="description" content="{{ product.short_description or product.description[:160] }}{% if variants %} Available in {{ variants|length }} variants{% endif %}. ⭐ {{ avg_rating }}/5 ({{ total_reviews }} reviews). Free shipping on orders above ₹999.">
+  <meta name="keywords" content="{{ product.name }}, {{ product.brand or 'ethnic wear' }}, {{ product.category or 'fashion' }}, {% if product.material %}{{ product.material }}, {% endif %}{% if product.pattern %}{{ product.pattern }}, {% endif %}buy online, Champalal & Sons">
+  <meta name="author" content="Champalal & Sons">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="{{ request.url }}">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/android-chrome-192x192.png') }}">
+  <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='images/android-chrome-512x512.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="product">
+  <meta property="og:url" content="{{ request.url }}">
+  <meta property="og:title" content="{{ product.name }}{% if product.brand %} by {{ product.brand }}{% endif %}">
+  <meta property="og:description" content="{{ product.short_description or product.description[:200] }}">
+  <meta property="og:image" content="{{ (variant_images[initial_variant_id][0].path if initial_variant_id and initial_variant_id in variant_images and variant_images[initial_variant_id] else (product_images[0].path if product_images else product.image_path)) or url_for('static', filename='images/placeholder.png', _external=True) }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="Champalal & Sons">
+  <meta property="og:locale" content="en_IN">
+  <meta property="product:price:amount" content="{{ variants[0].price if variants else '0' }}">
+  <meta property="product:price:currency" content="INR">
+  {% if variants[0].stock_count > 0 %}
+  <meta property="product:availability" content="in stock">
+  {% else %}
+  <meta property="product:availability" content="out of stock">
+  {% endif %}
+  {% if product.brand %}
+  <meta property="product:brand" content="{{ product.brand }}">
+  {% endif %}
+  {% if product.category %}
+  <meta property="product:category" content="{{ product.category }}">
+  {% endif %}
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="{{ request.url }}">
+  <meta name="twitter:title" content="{{ product.name }}{% if product.brand %} by {{ product.brand }}{% endif %}">
+  <meta name="twitter:description" content="{{ product.short_description or product.description[:200] }}">
+  <meta name="twitter:image" content="{{ (variant_images[initial_variant_id][0].path if initial_variant_id and initial_variant_id in variant_images and variant_images[initial_variant_id] else (product_images[0].path if product_images else product.image_path)) or url_for('static', filename='images/placeholder.png', _external=True) }}">
+  <meta name="twitter:creator" content="@champalalsons">
+  <meta name="twitter:site" content="@champalalsons">
+  
+  <!-- Additional SEO Meta Tags -->
+  <meta name="theme-color" content="#D4AF37">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Champalal & Sons">
+  
+  <!-- Preconnect to External Resources -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- JSON-LD Structured Data for SEO -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": "{{ product.name }}",
+    "image": [
+      {% if variant_images[initial_variant_id] %}
+        {% for img in variant_images[initial_variant_id][:5] %}
+          "{{ img.path }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
+      {% elif product_images %}
+        {% for img in product_images[:5] %}
+          "{{ img.path }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
+      {% else %}
+        "{{ product.image_path or url_for('static', filename='images/placeholder.png', _external=True) }}"
+      {% endif %}
+    ],
+    "description": "{{ product.short_description or product.description }}",
+    {% if product.sku %}
+    "sku": "{{ product.sku }}",
+    {% endif %}
+    {% if variants and variants[0].sku %}
+    "mpn": "{{ variants[0].sku }}",
+    {% endif %}
+    {% if product.brand %}
+    "brand": {
+      "@type": "Brand",
+      "name": "{{ product.brand }}"
+    },
+    {% endif %}
+    "offers": {
+      "@type": "Offer",
+      "url": "{{ request.url }}",
+      "priceCurrency": "INR",
+      "price": "{{ variants[0].price if variants else '0' }}",
+      "priceValidUntil": "2025-12-31",
+      {% if variants[0].stock_count > 0 %}
+      "availability": "https://schema.org/InStock",
+      {% else %}
+      "availability": "https://schema.org/OutOfStock",
+      {% endif %}
+      "itemCondition": "https://schema.org/NewCondition",
+      "seller": {
+        "@type": "Organization",
+        "name": "Champalal & Sons"
+      }
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "{{ avg_rating }}",
+      "reviewCount": "{{ total_reviews }}",
+      "bestRating": "5",
+      "worstRating": "1"
+    }
+    {% if top_reviews %}
+    ,
+    "review": [
+      {% for review in top_reviews[:3] %}
+      {
+        "@type": "Review",
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": "{{ review.rating }}",
+          "bestRating": "5",
+          "worstRating": "1"
+        },
+        "author": {
+          "@type": "Person",
+          "name": "{{ review.customer_name }}"
+        },
+        "datePublished": "{{ review.created_at.strftime('%Y-%m-%d') if review.created_at else '' }}",
+        {% if review.title %}
+        "name": "{{ review.title }}",
+        {% endif %}
+        {% if review.body %}
+        "reviewBody": "{{ review.body }}"
+        {% endif %}
+      }{% if not loop.last %},{% endif %}
+      {% endfor %}
+    ]
+    {% endif %}
+  }
+  </script>
+  
+  <!-- BreadcrumbList Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "{{ url_for('main.home', _external=True) }}"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Products",
+        "item": "{{ url_for('main.browse_page', _external=True) }}"
+      }
+      {% if product.category %}
+      ,{
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{ product.category }}",
+        "item": "{{ url_for('main.browse_page', category=product.category, _external=True) }}"
+      }
+      ,{
+        "@type": "ListItem",
+        "position": 4,
+        "name": "{{ product.name }}",
+        "item": "{{ request.url }}"
+      }
+      {% else %}
+      ,{
+        "@type": "ListItem",
+        "position": 3,
+        "name": "{{ product.name }}",
+        "item": "{{ request.url }}"
+      }
+      {% endif %}
+    ]
+  }
+  </script>
   
   <!-- Custom Styles -->
   <link rel="stylesheet" href="{{ url_for('static', filename='customer/product_detail.css') }}">
@@ -38,8 +230,9 @@
           <img 
             id="mainImage" 
             src="{{ (variant_images[initial_variant_id][0].path if initial_variant_id and initial_variant_id in variant_images and variant_images[initial_variant_id] else (product_images[0].path if product_images else product.image_path)) or url_for('static', filename='images/placeholder.png') }}" 
-            alt="{{ product.name }}"
+            alt="{{ product.name }}{% if product.brand %} by {{ product.brand }}{% endif %} - {{ variants[0].color if variants and variants[0].color else 'Product' }} image"
             class="main-image"
+            itemprop="image"
           >
           
           <!-- Zoom Lens -->
@@ -72,16 +265,16 @@
       </div>
 
       <!-- Right: Product Details -->
-      <div class="details-section">
+      <div class="details-section" itemscope itemtype="https://schema.org/Product">
         <!-- Brand & Title -->
         {% if product.brand %}
-        <div class="brand-badge">{{ product.brand }}</div>
+        <div class="brand-badge" itemprop="brand">{{ product.brand }}</div>
         {% endif %}
         
-        <h1 class="product-title">{{ product.name }}</h1>
+        <h1 class="product-title" itemprop="name">{{ product.name }}</h1>
 
         <!-- Rating Summary -->
-        <div class="rating-summary">
+        <div class="rating-summary" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
           <div class="stars" data-rating="{{ avg_rating }}">
             {% for i in range(1, 6) %}
             <svg class="star {% if i <= avg_rating|round %}filled{% endif %}" width="20" height="20" viewBox="0 0 24 24">
@@ -89,12 +282,19 @@
             </svg>
             {% endfor %}
           </div>
-          <span class="rating-text">{{ avg_rating }} ({{ total_reviews }} reviews)</span>
+          <span class="rating-text">
+            <span itemprop="ratingValue">{{ avg_rating }}</span> 
+            (<span itemprop="reviewCount">{{ total_reviews }}</span> reviews)
+          </span>
+          <meta itemprop="bestRating" content="5">
+          <meta itemprop="worstRating" content="1">
         </div>
 
         <!-- Price -->
-        <div class="price-section">
-          <span class="current-price" id="currentPrice">₹{{ variants[0].price if variants else '0.00' }}</span>
+        <div class="price-section" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+          <span class="current-price" id="currentPrice" itemprop="price" content="{{ variants[0].price if variants else '0' }}">₹{{ variants[0].price if variants else '0.00' }}</span>
+          <meta itemprop="priceCurrency" content="INR">
+          <link itemprop="availability" href="https://schema.org/{% if variants[0].stock_count > 0 %}InStock{% else %}OutOfStock{% endif %}">
           {% if product.get('original_price') and product.original_price > (variants[0].price if variants else 0) %}
           <span class="original-price">₹{{ product.original_price }}</span>
           <span class="discount-badge">{{ ((product.original_price - variants[0].price) / product.original_price * 100)|round|int }}% OFF</span>
@@ -103,7 +303,7 @@
 
         <!-- Short Description -->
         {% if product.short_description %}
-        <p class="short-description">{{ product.short_description }}</p>
+        <p class="short-description" itemprop="description">{{ product.short_description }}</p>
         {% endif %}
 
         <!-- Variant Selectors -->
@@ -188,21 +388,21 @@
           {% if product.sku %}
           <div class="meta-item">
             <span class="meta-label">SKU:</span>
-            <span class="meta-value" id="currentSKU">{{ product.sku }}</span>
+            <span class="meta-value" id="currentSKU" itemprop="sku">{{ product.sku }}</span>
           </div>
           {% endif %}
           
           {% if product.category %}
           <div class="meta-item">
             <span class="meta-label">Category:</span>
-            <span class="meta-value">{{ product.category }}</span>
+            <span class="meta-value" itemprop="category">{{ product.category }}</span>
           </div>
           {% endif %}
 
           {% if product.material %}
           <div class="meta-item">
             <span class="meta-label">Material:</span>
-            <span class="meta-value">{{ product.material }}</span>
+            <span class="meta-value" itemprop="material">{{ product.material }}</span>
           </div>
           {% endif %}
 
@@ -333,7 +533,7 @@
             </div>
 
             <div class="reviews-actions">
-              <select class="review-sort" id="reviewSort">
+              <select class="review-sort" id="reviewSort" aria-label="Sort reviews">
                 <option value="latest">Latest First</option>
                 <option value="oldest">Oldest First</option>
                 <option value="highest">Highest Rated</option>
@@ -344,16 +544,23 @@
 
           <div class="reviews-list" id="reviewsList">
             {% for review in top_reviews %}
-            <div class="review-card">
+            <div class="review-card" itemprop="review" itemscope itemtype="https://schema.org/Review">
               <div class="review-header">
                 <div class="reviewer-info">
                   <div class="reviewer-avatar">{{ review.customer_name[0].upper() }}</div>
                   <div>
-                    <div class="reviewer-name">{{ review.customer_name }}</div>
-                    <div class="review-date">{{ review.created_at_str }}</div>
+                    <div class="reviewer-name" itemprop="author">{{ review.customer_name }}</div>
+                    <div class="review-date">
+                      <time datetime="{{ review.created_at.strftime('%Y-%m-%d') if review.created_at else '' }}" itemprop="datePublished">
+                        {{ review.created_at_str }}
+                      </time>
+                    </div>
                   </div>
                 </div>
-                <div class="review-rating">
+                <div class="review-rating" itemprop="reviewRating" itemscope itemtype="https://schema.org/Rating">
+                  <meta itemprop="ratingValue" content="{{ review.rating }}">
+                  <meta itemprop="bestRating" content="5">
+                  <meta itemprop="worstRating" content="1">
                   {% for i in range(1, 6) %}
                   <svg class="star {% if i <= review.rating %}filled{% endif %}" width="16" height="16" viewBox="0 0 24 24">
                     <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
@@ -362,10 +569,10 @@
                 </div>
               </div>
               {% if review.title %}
-              <h4 class="review-title">{{ review.title }}</h4>
+              <h4 class="review-title" itemprop="name">{{ review.title }}</h4>
               {% endif %}
               {% if review.body %}
-              <p class="review-body">{{ review.body }}</p>
+              <p class="review-body" itemprop="reviewBody">{{ review.body }}</p>
               {% endif %}
             </div>
             {% endfor %}
@@ -398,6 +605,6 @@
   {% include 'customer/footer.html' %}
 
   <!-- Custom Scripts -->
-  <script src="{{ url_for('static', filename='customer/js/product_detail.js') }}"></script>
+  <script src="{{ url_for('static', filename='customer/js/product_detail.js') }}" defer></script>
 </body>
 </html>

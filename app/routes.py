@@ -2179,6 +2179,210 @@ def view_prod_detail(product_id):
 
 
 
+def _normalize_row(row):
+    """Convert Decimal -> float for JSON friendliness"""
+    for k, v in list(row.items()):
+        if isinstance(v, decimal.Decimal):
+            row[k] = float(v)
+    return row
+
+@main.route("/api/recommendations", methods=["GET"])
+def api_recommendations():
+    """
+    Hybrid endpoint:
+      - Query params (required): variant_id
+      - Pagination:
+          per_page (default 20, max 100)
+          For keyset:
+            last_score (float) and last_variant_id (int) -> returns next page where score < last_score OR (score = last_score AND variant_id < last_variant_id)
+        If you DON'T supply last_score/last_variant_id, the endpoint returns the first page using LIMIT per_page+1 and a has_more flag.
+
+    Response:
+      { variants: [...], has_more: bool, next_cursor: { last_score, last_variant_id } | null, per_page, returned }
+    """
+    # --- params & validation ---
+    vid = request.args.get("variant_id")
+    if not vid:
+        return jsonify({"error":"missing_param","message":"variant_id is required"}), 400
+    try:
+        variant_id = int(vid)
+    except ValueError:
+        return jsonify({"error":"bad_param","message":"variant_id must be integer"}), 400
+
+    try:
+        per_page = int(request.args.get("per_page", 20))
+    except ValueError:
+        per_page = 20
+    per_page = max(1, min(100, per_page))
+
+    # keyset cursor (optional)
+    last_score = request.args.get("last_score")   # float string
+    last_variant_id = request.args.get("last_variant_id")  # int string
+    use_keyset = (last_score is not None and last_variant_id is not None)
+
+    if use_keyset:
+        try:
+            last_score = float(last_score)
+            last_variant_id = int(last_variant_id)
+        except ValueError:
+            return jsonify({"error":"bad_param","message":"last_score must be float and last_variant_id must be int"}), 400
+
+    conn = None
+    try:
+        conn = get_db()
+        cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Fetch source variant and product attributes
+        cur.execute("""
+            SELECT pv.variant_id, pv.product_id, pv.color, pv.size, pv.price, pv.sku,
+                   p.name as product_name, p.brand, p.category, p.short_description, p.description
+            FROM product_variants pv
+            JOIN products p ON pv.product_id = p.product_id
+            WHERE pv.variant_id = %s
+            LIMIT 1;
+        """, (variant_id,))
+        src = cur.fetchone()
+        if not src:
+            return jsonify({"error":"not_found","message":"variant not found"}), 404
+
+        tgt_product_id = src['product_id']
+        tgt_brand = src['brand'] or ''
+        tgt_category = src['category'] or ''
+        tgt_color = src['color'] or ''
+        # lightweight token for name matching: first space-separated token of product name
+        tgt_name_token = (src['product_name'] or '').split()[0] if (src['product_name'] or '') else ''
+        name_like = f"%{tgt_name_token}%" if tgt_name_token else '%'
+        desc_snippet = (src['short_description'] or src['description'] or '')[:200]
+        desc_like = f"%{desc_snippet}%" if desc_snippet else '%'
+        try:
+            tgt_price = float(src['price']) if src['price'] is not None else 0.0
+        except Exception:
+            tgt_price = 0.0
+
+        # We'll compute 'score' in a CTE then apply keyset filters in outer query if cursor provided.
+        # Scoring weights (tuneable):
+        # same product: +100, same brand +60, same category +40, same color +30
+        # name token match +25, description match +10, price proximity up to +20
+        cte_sql = f"""
+        WITH scored AS (
+          SELECT
+            pv.variant_id,
+            pv.sku AS variant_sku,
+            pv.size,
+            pv.color,
+            pv.color_hex,
+            pv.price,
+            pv.stock_count AS variant_stock,
+            p.product_id,
+            p.name AS product_name,
+            p.brand,
+            p.category,
+            COALESCE(p.reviews_count, 0) AS reviews_count,
+            COALESCE(p.rating_avg, 0.00) AS rating_avg,
+            COALESCE(
+              (SELECT path FROM product_images WHERE variant_id = pv.variant_id ORDER BY is_primary DESC, position ASC LIMIT 1),
+              (SELECT path FROM product_images WHERE product_id = p.product_id ORDER BY is_primary DESC, position ASC LIMIT 1),
+              p.image_path
+            ) AS image,
+            (
+              (CASE WHEN p.product_id = %s THEN 100 ELSE 0 END)
+              + (CASE WHEN p.brand IS NOT NULL AND p.brand = %s THEN 60 ELSE 0 END)
+              + (CASE WHEN p.category IS NOT NULL AND p.category = %s THEN 40 ELSE 0 END)
+              + (CASE WHEN pv.color IS NOT NULL AND pv.color = %s THEN 30 ELSE 0 END)
+              + (CASE WHEN p.name ILIKE %s THEN 25 ELSE 0 END)
+              + (CASE WHEN (p.short_description ILIKE %s OR p.description ILIKE %s) THEN 10 ELSE 0 END)
+              + (LEAST(1, GREATEST(0, 1 - ABS(COALESCE(pv.price,0) - %s) / NULLIF(%s, 1))) * 20)
+            )::numeric AS score
+          FROM product_variants pv
+          JOIN products p ON pv.product_id = p.product_id
+          WHERE pv.variant_id <> %s
+            AND p.is_active = 1
+        )
+        """
+
+        # Outer query: either first-page (no keyset) -> LIMIT per_page+1
+        # or keyset -> filter scored by score/variant_id and limit per_page+1
+        if use_keyset:
+            outer_sql = cte_sql + """
+            SELECT * FROM scored
+            WHERE (score < %s) OR (score = %s AND variant_id < %s)
+            ORDER BY score DESC, variant_id DESC
+            LIMIT %s;
+            """
+            params = [
+                tgt_product_id, tgt_brand, tgt_category, tgt_color,
+                name_like, desc_like, desc_like, tgt_price, tgt_price, variant_id,
+                # keyset cursor params:
+                last_score, last_score, last_variant_id,
+                per_page + 1
+            ]
+        else:
+            outer_sql = cte_sql + """
+            SELECT * FROM scored
+            ORDER BY score DESC, variant_id DESC
+            LIMIT %s;
+            """
+            params = [
+                tgt_product_id, tgt_brand, tgt_category, tgt_color,
+                name_like, desc_like, desc_like, tgt_price, tgt_price, variant_id,
+                per_page + 1
+            ]
+
+        cur.execute(outer_sql, params)
+        rows = cur.fetchall()
+        items = [_normalize_row(dict(r)) for r in rows]
+
+        # Determine has_more and trim to per_page
+        has_more = False
+        if len(items) > per_page:
+            has_more = True
+            items = items[:per_page]
+
+        # Compose next cursor if has_more: use the last returned item's score and variant_id
+        # We need to obtain the score for the next cursor: the CTE included score, so when we normalized rows we still have 'score'.
+        next_cursor = None
+        if has_more:
+            last_item_for_cursor = rows[per_page] if len(rows) > per_page else None
+            # If we used trimmed items, last returned item is items[-1], but the cursor should be the row just after the page (rows[per_page])
+            # For consistent keyset, use the last item of the returned items:
+            last_returned = items[-1]
+            # score might be present in returned normalization; if not, fetch from DB row object
+            last_score_val = None
+            if 'score' in last_returned:
+                last_score_val = float(last_returned['score'])
+            else:
+                # try to extract from original rows if available
+                orig_row = rows[per_page - 1] if len(rows) >= per_page else None
+                if orig_row and 'score' in orig_row:
+                    last_score_val = float(orig_row['score'])
+            last_variant_id_val = int(last_returned['variant_id'])
+            next_cursor = {
+                "last_score": last_score_val,
+                "last_variant_id": last_variant_id_val
+            }
+
+        # Remove 'score' from responses or keep it (we'll keep it for debugging/insight)
+        for it in items:
+            if 'score' in it:
+                it['score'] = float(it['score'])
+
+        return jsonify({
+            "variants": items,
+            "has_more": has_more,
+            "next_cursor": next_cursor,
+            "per_page": per_page,
+            "returned": len(items)
+        })
+    except Exception as e:
+        current_app.logger.exception("Error in /api/recommendations: %s", e)
+        return jsonify({"error":"internal","message":str(e)}), 500
+    finally:
+        if conn:
+            conn.close()
+
+
+
+
 
 # ---- AJAX endpoint to fetch reviews (JSON) with pagination and sorting ----
 @main.route('/prod/<int:product_id>/reviews_ajax')

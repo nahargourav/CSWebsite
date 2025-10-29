@@ -3,1337 +3,182 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Champalal & Sons — Heritage Fabrics Since 1930</title>
-  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" >
-  <meta name="description" content="Champalal & Sons — Premium curated fabrics since 1930. Handloom sarees, suiting, kurta cloths, shawls & bedsheets." />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   
-  <!-- Google Fonts -->
+  <!-- Primary Meta Tags -->
+  <title>Champalal & Sons - Premium Heritage Fabrics Since 1930 | Handloom Sarees, Suiting & Traditional Textiles</title>
+  <meta name="title" content="Champalal & Sons - Premium Heritage Fabrics Since 1930 | Handloom Sarees, Suiting & Traditional Textiles">
+  <meta name="description" content="Discover premium curated fabrics at Champalal & Sons since 1930. Handloom sarees, premium suiting, kurta fabrics, shawls & bedsheets. Trusted by generations for authentic Indian textiles. Shop tailor-ready yardage online." />
+  <meta name="keywords" content="Champalal & Sons, heritage fabrics, handloom sarees, premium suiting, kurta fabric, traditional textiles, Indian fabrics, tailor ready fabric, ethnic wear fabric, wedding saree fabric, silk fabric, cotton fabric, linen fabric, ethnic textiles, fabric shop, yardage, traditional weaves">
+  <meta name="author" content="Champalal & Sons">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow">
+  <meta name="revisit-after" content="7 days">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="{{ url_for('main.home', _external=True) }}">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/android-chrome-192x192.png') }}">
+  <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='images/android-chrome-512x512.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ url_for('main.home', _external=True) }}">
+  <meta property="og:title" content="Champalal & Sons - Premium Heritage Fabrics Since 1930">
+  <meta property="og:description" content="Discover premium curated fabrics at Champalal & Sons since 1930. Handloom sarees, premium suiting, kurta fabrics, shawls & bedsheets. Trusted by generations.">
+  <meta property="og:image" content="{{ url_for('static', filename='images/og-home.jpg', _external=True) }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="Champalal & Sons">
+  <meta property="og:locale" content="en_IN">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="{{ url_for('main.home', _external=True) }}">
+  <meta name="twitter:title" content="Champalal & Sons - Premium Heritage Fabrics Since 1930">
+  <meta name="twitter:description" content="Discover premium curated fabrics at Champalal & Sons since 1930. Handloom sarees, premium suiting, kurta fabrics, shawls & bedsheets.">
+  <meta name="twitter:image" content="{{ url_for('static', filename='images/og-home.jpg', _external=True) }}">
+  <meta name="twitter:creator" content="@champalalsons">
+  <meta name="twitter:site" content="@champalalsons">
+  
+  <!-- Additional SEO Meta Tags -->
+  <meta name="theme-color" content="#D4AF37">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Champalal & Sons">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="geo.region" content="IN">
+  <meta name="geo.placename" content="India">
+  
+  <!-- Preconnect to External Resources -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://images.unsplash.com">
+  
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <style>
-    :root {
-      /* Premium Color Palette */
-      --royal-gold: #D4AF37;
-      --deep-burgundy: #800020;
-      --rich-navy: #1a1f3a;
-      --ivory: #FFFFF0;
-      --warm-cream: #FFF8E7;
-      --soft-beige: #F5F1E8;
-      --bronze: #CD7F32;
-      --copper: #B87333;
-      --charcoal: #2d2d2d;
-      --muted-gold: #C9A961;
-      
-      /* Typography */
-      --font-heading: 'Cormorant Garamond', serif;
-      --font-body: 'Montserrat', sans-serif;
-      
-      /* Spacing */
-      --max-width: 1440px;
-      --section-padding: 80px 0;
-      --card-radius: 16px;
-      
-      /* Effects */
-      --shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.08);
-      --shadow-lifted: 0 16px 48px rgba(0, 0, 0, 0.12);
-      --gradient-royal: linear-gradient(135deg, #D4AF37 0%, #C9A961 100%);
-      --gradient-overlay: linear-gradient(180deg, rgba(26, 31, 58, 0) 0%, rgba(26, 31, 58, 0.85) 100%);
+  <!-- JSON-LD Structured Data - Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Champalal & Sons",
+    "alternateName": "Champalal and Sons Fabrics",
+    "url": "{{ url_for('main.home', _external=True) }}",
+    "logo": "{{ url_for('static', filename='images/logo.png', _external=True) }}",
+    "description": "Premium heritage fabrics since 1930. Handloom sarees, suiting, kurta cloths, shawls & bedsheets.",
+    "foundingDate": "1930",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "IN"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Customer Service",
+      "availableLanguage": ["en", "hi"]
+    },
+    "sameAs": [
+      "https://www.facebook.com/champalalsons",
+      "https://www.instagram.com/champalalsons",
+      "https://twitter.com/champalalsons"
+    ]
+  }
+  </script>
+  
+  <!-- JSON-LD Structured Data - WebSite -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Champalal & Sons",
+    "url": "{{ url_for('main.home', _external=True) }}",
+    "description": "Premium curated fabrics since 1930. Handloom sarees, suiting, kurta cloths, shawls & bedsheets.",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "{{ url_for('main.browse_page', _external=True) }}?search={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
     }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+  }
+  </script>
+  
+  <!-- JSON-LD Structured Data - LocalBusiness -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Champalal & Sons",
+    "image": "{{ url_for('static', filename='images/store.jpg', _external=True) }}",
+    "@id": "{{ url_for('main.home', _external=True) }}",
+    "url": "{{ url_for('main.home', _external=True) }}",
+    "priceRange": "₹₹-₹₹₹₹",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "IN"
+    },
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ],
+      "opens": "10:00",
+      "closes": "19:00"
     }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      font-family: var(--font-body);
-      background: var(--ivory);
-      color: var(--charcoal);
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      overflow-x: hidden;
-    }
-
-    /* Typography */
-    h1, h2, h3, h4, h5, h6 {
-      font-family: var(--font-heading);
-      font-weight: 600;
-      line-height: 1.2;
-    }
-
-    /* Container */
-    .container {
-      max-width: var(--max-width);
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-
-    /* ========== HEADER ========== */
-    header {
-      position: sticky;
-      top: 0;
-      background: rgba(255, 255, 240, 0.98);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(212, 175, 55, 0.15);
-      z-index: 1000;
-      box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
-    }
-
-    .nav {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 88px;
-      max-width: var(--max-width);
-      margin: 0 auto;
-      padding: 0 32px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      cursor: pointer;
-    }
-
-    .logo-icon {
-      width: 56px;
-      height: 56px;
-      background: var(--gradient-royal);
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: var(--font-heading);
-      font-size: 28px;
-      font-weight: 700;
-      color: white;
-      box-shadow: var(--shadow-soft);
-      transition: transform 0.3s ease;
-    }
-
-    .logo-icon:hover {
-      transform: scale(1.05);
-    }
-
-    .brand-text {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .brand-text h1 {
-      font-size: 22px;
-      color: var(--rich-navy);
-      font-weight: 700;
-      letter-spacing: -0.5px;
-    }
-
-    .brand-text p {
-      font-size: 11px;
-      color: var(--muted-gold);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      font-weight: 500;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 32px;
-    }
-
-    .nav-links a {
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--charcoal);
-      text-decoration: none;
-      position: relative;
-      transition: color 0.3s ease;
-      letter-spacing: 0.3px;
-    }
-
-    .nav-links a:hover {
-      color: var(--royal-gold);
-    }
-
-    .nav-links a::after {
-      content: '';
-      position: absolute;
-      bottom: -4px;
-      left: 0;
-      width: 0;
-      height: 2px;
-      background: var(--gradient-royal);
-      transition: width 0.3s ease;
-    }
-
-    .nav-links a:hover::after {
-      width: 100%;
-    }
-
-    .icon-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      border: 1px solid rgba(212, 175, 55, 0.2);
-      background: transparent;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
-      font-size: 18px;
-    }
-
-    .icon-btn:hover {
-      background: var(--warm-cream);
-      border-color: var(--royal-gold);
-      transform: translateY(-2px);
-    }
-
-    @media (max-width: 768px) {
-      .nav {
-        height: 72px;
-        padding: 0 20px;
+  }
+  </script>
+  
+  <!-- JSON-LD Structured Data - BreadcrumbList -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "{{ url_for('main.home', _external=True) }}"
       }
-      
-      .brand-text h1 {
-        font-size: 18px;
-      }
-      
-      .brand-text p {
-        font-size: 9px;
-      }
-      
-      .nav-links {
-        gap: 16px;
-      }
-      
-      .nav-links a {
-        font-size: 13px;
-      }
-    }
-
-    /* ========== HERO SECTION ========== */
-    .hero-section {
-      position: relative;
-      height: 85vh;
-      min-height: 600px;
-      max-height: 900px;
-      margin-bottom: 80px;
-      overflow: hidden;
-    }
-
-    .hero-slide {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      opacity: 0;
-      transition: opacity 1.2s ease-in-out;
-    }
-
-    .hero-slide.active {
-      opacity: 1;
-    }
-
-    .hero-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
-    }
-
-    .hero-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: var(--gradient-overlay);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 0 24px;
-    }
-
-    .hero-content {
-      max-width: 900px;
-      color: white;
-      animation: fadeInUp 1s ease-out;
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(40px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .hero-badge {
-      display: inline-block;
-      padding: 8px 20px;
-      background: rgba(212, 175, 55, 0.25);
-      border: 1px solid rgba(212, 175, 55, 0.5);
-      border-radius: 50px;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 24px;
-      backdrop-filter: blur(10px);
-    }
-
-    .hero-title {
-      font-size: 72px;
-      font-weight: 700;
-      margin-bottom: 20px;
-      line-height: 1.1;
-      text-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-    }
-
-    .hero-subtitle {
-      font-size: 20px;
-      font-weight: 300;
-      margin-bottom: 40px;
-      opacity: 0.95;
-      max-width: 700px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    .hero-cta {
-      display: inline-flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-
-    .btn {
-      padding: 16px 36px;
-      border-radius: 50px;
-      font-weight: 600;
-      font-size: 15px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: none;
-      letter-spacing: 0.5px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-    }
-
-    .btn-primary {
-      background: var(--gradient-royal);
-      color: white;
-      box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 32px rgba(212, 175, 55, 0.4);
-    }
-
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.15);
-      color: white;
-      border: 2px solid rgba(255, 255, 255, 0.5);
-      backdrop-filter: blur(10px);
-    }
-
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.25);
-      border-color: white;
-    }
-
-    .hero-nav-dots {
-      position: absolute;
-      bottom: 32px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      gap: 12px;
-      z-index: 10;
-    }
-
-    .hero-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.4);
-      border: none;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .hero-dot.active {
-      width: 36px;
-      border-radius: 6px;
-      background: white;
-    }
-
-    @media (max-width: 768px) {
-      .hero-section {
-        height: 70vh;
-        min-height: 500px;
-      }
-      
-      .hero-title {
-        font-size: 42px;
-      }
-      
-      .hero-subtitle {
-        font-size: 16px;
-      }
-      
-      .btn {
-        padding: 14px 28px;
-        font-size: 14px;
-      }
-    }
-
-    /* ========== SECTION HEADERS ========== */
-    .section-header {
-      text-align: center;
-      margin-bottom: 64px;
-    }
-
-    .section-subtitle {
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 2.5px;
-      color: var(--royal-gold);
-      font-weight: 600;
-      margin-bottom: 12px;
-    }
-
-    .section-title {
-      font-size: 48px;
-      color: var(--rich-navy);
-      font-weight: 700;
-      margin-bottom: 16px;
-      position: relative;
-      display: inline-block;
-    }
-
-    .section-title::after {
-      content: '';
-      position: absolute;
-      bottom: -12px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 80px;
-      height: 4px;
-      background: var(--gradient-royal);
-      border-radius: 2px;
-    }
-
-    .section-description {
-      font-size: 16px;
-      color: var(--charcoal);
-      opacity: 0.7;
-      max-width: 600px;
-      margin: 24px auto 0;
-    }
-
-    @media (max-width: 768px) {
-      .section-header {
-        margin-bottom: 40px;
-      }
-      
-      .section-title {
-        font-size: 32px;
-      }
-      
-      .section-subtitle {
-        font-size: 12px;
-      }
-    }
-
-    /* ========== BESTSELLERS CAROUSEL ========== */
-    .bestsellers-section {
-      padding: var(--section-padding);
-      background: white;
-      position: relative;
-    }
-
-    .carousel-wrapper {
-      position: relative;
-      padding: 40px 0;
-    }
-
-    .carousel-container {
-      overflow: hidden;
-      border-radius: 24px;
-      position: relative;
-    }
-
-    .carousel-track {
-      display: flex;
-      transition: transform 0.6s cubic-bezier(0.645, 0.045, 0.355, 1);
-      padding: 0 20px;
-    }
-
-    .carousel-item {
-      flex: 0 0 calc(33.333% - 24px);
-      margin: 0 12px;
-      background: white;
-      border-radius: var(--card-radius);
-      overflow: hidden;
-      box-shadow: var(--shadow-soft);
-      transition: all 0.4s ease;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .carousel-item:hover {
-      transform: translateY(-12px);
-      box-shadow: var(--shadow-lifted);
-    }
-
-    .carousel-item::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      border: 2px solid transparent;
-      border-radius: var(--card-radius);
-      transition: border-color 0.3s ease;
-      pointer-events: none;
-    }
-
-    .carousel-item:hover::before {
-      border-color: var(--royal-gold);
-    }
-
-    .carousel-media {
-      height: 380px;
-      background-size: cover;
-      background-position: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .carousel-media::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 100px;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.3), transparent);
-    }
-
-    .wishlist-btn {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.95);
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 20px;
-      transition: all 0.3s ease;
-      z-index: 5;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-
-    .wishlist-btn:hover {
-      transform: scale(1.1);
-      background: white;
-    }
-
-    .wishlist-btn.active {
-      color: #ef4444;
-      background: #fee;
-    }
-
-    .carousel-badge {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      padding: 6px 14px;
-      background: var(--gradient-royal);
-      color: white;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      border-radius: 20px;
-      z-index: 5;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .carousel-body {
-      padding: 24px;
-    }
-
-    .carousel-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--rich-navy);
-      margin-bottom: 8px;
-      line-height: 1.4;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .carousel-meta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-    }
-
-    .carousel-price {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--royal-gold);
-      font-family: var(--font-heading);
-    }
-
-    .carousel-rating {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 14px;
-      color: #fbbf24;
-    }
-
-    .carousel-description {
-      font-size: 13px;
-      color: var(--charcoal);
-      opacity: 0.7;
-      line-height: 1.6;
-      margin-bottom: 16px;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .carousel-footer {
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn-small {
-      padding: 10px 20px;
-      font-size: 13px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      flex: 1;
-      text-align: center;
-    }
-
-    .btn-outline {
-      background: transparent;
-      border: 1.5px solid var(--royal-gold);
-      color: var(--royal-gold);
-    }
-
-    .btn-outline:hover {
-      background: var(--royal-gold);
-      color: white;
-    }
-
-    .carousel-nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: white;
-      border: none;
-      box-shadow: var(--shadow-soft);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 100;
-      font-size: 24px;
-      color: var(--royal-gold);
-      transition: all 0.3s ease;
-    }
-
-    .carousel-nav:hover {
-      background: var(--royal-gold);
-      color: white;
-      transform: translateY(-50%) scale(1.1);
-    }
-
-    .carousel-nav.prev {
-      left: -28px;
-    }
-
-    .carousel-nav.next {
-      right: -28px;
-    }
-
-    .carousel-nav:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-
-    .carousel-nav:disabled:hover {
-      background: white;
-      color: var(--royal-gold);
-      transform: translateY(-50%);
-    }
-
-    @media (max-width: 1024px) {
-      .carousel-item {
-        flex: 0 0 calc(50% - 24px);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .carousel-item {
-        flex: 0 0 calc(100% - 24px);
-      }
-      
-      .carousel-nav {
-        width: 48px;
-        height: 48px;
-        font-size: 20px;
-      }
-      
-      .carousel-nav.prev {
-        left: 8px;
-      }
-      
-      .carousel-nav.next {
-        right: 8px;
-      }
-    }
-
-    /* ========== CATEGORIES GRID ========== */
-    .categories-section {
-      padding: var(--section-padding);
-      background: var(--soft-beige);
-    }
-
-    .categories-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 24px;
-    }
-
-    .category-card {
-      background: white;
-      border-radius: var(--card-radius);
-      overflow: hidden;
-      box-shadow: var(--shadow-soft);
-      transition: all 0.4s ease;
-      cursor: pointer;
-      position: relative;
-    }
-
-    .category-card:hover {
-      transform: translateY(-8px) scale(1.02);
-      box-shadow: var(--shadow-lifted);
-    }
-
-    .category-image {
-      height: 240px;
-      background-size: cover;
-      background-position: center;
-      position: relative;
-    }
-
-    .category-image::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 80px;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
-    }
-
-    .category-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      padding: 20px;
-      z-index: 1;
-      color: white;
-    }
-
-    .category-name {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 4px;
-    }
-
-    .category-subtitle {
-      font-size: 13px;
-      opacity: 0.9;
-    }
-
-    .category-icon {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.95);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      z-index: 2;
-    }
-
-    @media (max-width: 1200px) {
-      .categories-grid {
-        grid-template-columns: repeat(3, 1fr);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .categories-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-      }
-      
-      .category-image {
-        height: 180px;
-      }
-    }
-
-    /* ========== TAG SECTIONS ========== */
-    .tag-section {
-      padding: 60px 0;
-      background: white;
-      border-top: 1px solid rgba(212, 175, 55, 0.1);
-    }
-
-    .tag-section:nth-child(even) {
-      background: var(--warm-cream);
-    }
-
-    .tag-carousel {
-      position: relative;
-      overflow: hidden;
-      padding: 20px 0;
-    }
-
-    .tag-track {
-      display: flex;
-      transition: transform 0.5s ease;
-      padding: 0 12px;
-    }
-
-    .tag-item {
-      flex: 0 0 calc(25% - 24px);
-      margin: 0 12px;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-      transition: all 0.3s ease;
-      cursor: pointer;
-    }
-
-    .tag-item:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    }
-
-    .tag-media {
-      height: 280px;
-      background-size: cover;
-      background-position: center;
-      position: relative;
-    }
-
-    .tag-body {
-      padding: 16px;
-    }
-
-    .tag-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: var(--rich-navy);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .tag-price {
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--royal-gold);
-      font-family: var(--font-heading);
-    }
-
-    .tag-nav {
-      position: absolute;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: white;
-      border: none;
-      box-shadow: var(--shadow-soft);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      z-index: 1000000;
-      font-size: 20px;
-      color: var(--royal-gold);
-      transition: all 0.3s ease;
-    }
-
-    .tag-nav:hover {
-      background: var(--royal-gold);
-      color: white;
-    }
-
-    .tag-nav.prev {
-      left: 0px;
-    }
-
-    .tag-nav.next {
-      right: 0px;
-    }
-
-    .tag-nav:disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-
-    @media (max-width: 1200px) {
-      .tag-item {
-        flex: 0 0 calc(33.333% - 24px);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .tag-item {
-        flex: 0 0 calc(50% - 24px);
-      }
-      
-      .tag-nav {
-        width: 40px;
-        height: 40px;
-      }
-      
-      .tag-nav.prev {
-        left: 8px;
-      }
-      
-      .tag-nav.next {
-        right: 8px;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .tag-item {
-        flex: 0 0 calc(100% - 24px);
-      }
-    }
-
-    /* ========== TESTIMONIALS ========== */
-    .testimonials-section {
-      padding: var(--section-padding);
-      background: linear-gradient(135deg, var(--royal-gold) 0%, var(--bronze) 100%);
-      color: white;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .testimonials-section::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></svg>') repeat;
-      opacity: 0.3;
-    }
-
-    .testimonial-card {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      padding: 48px;
-      max-width: 900px;
-      margin: 0 auto;
-      text-align: center;
-      position: relative;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .quote-icon {
-      font-size: 64px;
-      opacity: 0.3;
-      line-height: 1;
-      margin-bottom: 24px;
-    }
-
-    .testimonial-text {
-      font-size: 24px;
-      font-style: italic;
-      line-height: 1.7;
-      margin-bottom: 32px;
-      font-family: var(--font-heading);
-    }
-
-    .testimonial-author {
-      font-size: 16px;
-      font-weight: 600;
-      opacity: 0.9;
-    }
-
-    .testimonial-nav {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 32px;
-    }
-
-    .testimonial-nav button {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      color: white;
-      font-size: 20px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .testimonial-nav button:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(1.1);
-    }
-
-    @media (max-width: 768px) {
-      .testimonial-card {
-        padding: 32px 24px;
-      }
-      
-      .testimonial-text {
-        font-size: 18px;
-      }
-    }
-
-    /* ========== CTA SECTION ========== */
-    .cta-section {
-      padding: 100px 0;
-      background: var(--rich-navy);
-      color: white;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .cta-section::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
-      animation: rotate 30s linear infinite;
-    }
-
-    @keyframes rotate {
-      from {
-        transform: rotate(0deg);
-      }
-      to {
-        transform: rotate(360deg);
-      }
-    }
-
-    .cta-content {
-      position: relative;
-      z-index: 1;
-      max-width: 700px;
-      margin: 0 auto;
-    }
-
-    .cta-title {
-      font-size: 52px;
-      margin-bottom: 24px;
-      line-height: 1.2;
-    }
-
-    .cta-description {
-      font-size: 18px;
-      opacity: 0.9;
-      margin-bottom: 40px;
-    }
-
-    @media (max-width: 768px) {
-      .cta-section {
-        padding: 60px 0;
-      }
-      
-      .cta-title {
-        font-size: 36px;
-      }
-    }
-
-    /* ========== LOADING PLACEHOLDER ========== */
-    .loading-placeholder {
-      display: flex;
-      gap: 24px;
-      padding: 20px;
-    }
-
-    .placeholder-card {
-      flex: 0 0 calc(25% - 24px);
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: var(--shadow-soft);
-    }
-
-    .placeholder-media {
-      height: 280px;
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-    }
-
-    .placeholder-body {
-      padding: 16px;
-    }
-
-    .placeholder-line {
-      height: 16px;
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: 4px;
-      margin-bottom: 12px;
-    }
-
-    .placeholder-line.short {
-      width: 60%;
-    }
-
-    @keyframes shimmer {
-      0% {
-        background-position: 200% 0;
-      }
-      100% {
-        background-position: -200% 0;
-      }
-    }
-
-    @media (max-width: 1200px) {
-      .placeholder-card {
-        flex: 0 0 calc(33.333% - 24px);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .placeholder-card {
-        flex: 0 0 calc(50% - 24px);
-      }
-    }
-
-    @media (max-width: 480px) {
-      .placeholder-card {
-        flex: 0 0 calc(100% - 24px);
-      }
-    }
-
-    /* ========== FOOTER ========== */
-    footer {
-      background: var(--rich-navy);
-      color: rgba(255, 255, 255, 0.8);
-      padding: 60px 0 32px;
-    }
-
-    .footer-content {
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr;
-      gap: 48px;
-      margin-bottom: 48px;
-    }
-
-    .footer-brand {
-      max-width: 350px;
-    }
-
-    .footer-logo {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .footer-logo-icon {
-      width: 48px;
-      height: 48px;
-      background: var(--gradient-royal);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-      font-weight: 700;
-      color: white;
-    }
-
-    .footer-logo-text {
-      font-size: 20px;
-      font-family: var(--font-heading);
-      font-weight: 700;
-      color: white;
-    }
-
-    .footer-description {
-      font-size: 14px;
-      line-height: 1.7;
-      opacity: 0.8;
-      margin-bottom: 20px;
-    }
-
-    .footer-social {
-      display: flex;
-      gap: 12px;
-    }
-
-    .social-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      transition: all 0.3s ease;
-      text-decoration: none;
-    }
-
-    .social-icon:hover {
-      background: var(--royal-gold);
-      transform: translateY(-3px);
-    }
-
-    .footer-column h4 {
-      font-size: 16px;
-      font-weight: 600;
-      color: white;
-      margin-bottom: 20px;
-    }
-
-    .footer-links {
-      list-style: none;
-    }
-
-    .footer-links li {
-      margin-bottom: 12px;
-    }
-
-    .footer-links a {
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
-      font-size: 14px;
-      transition: all 0.3s ease;
-      display: inline-block;
-    }
-
-    .footer-links a:hover {
-      color: var(--royal-gold);
-      transform: translateX(4px);
-    }
-
-    .footer-bottom {
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      padding-top: 32px;
-      text-align: center;
-      font-size: 14px;
-      opacity: 0.7;
-    }
-
-    @media (max-width: 1024px) {
-      .footer-content {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (max-width: 640px) {
-      .footer-content {
-        grid-template-columns: 1fr;
-        gap: 32px;
-      }
-    }
-
-    /* ========== MOBILE UTILITIES ========== */
-    @media (max-width: 768px) {
-      .hide-mobile {
-        display: none !important;
-      }
-    }
-
-    @media (min-width: 769px) {
-      .show-mobile {
-        display: none !important;
-      }
-    }
-  </style>
+    ]
+  }
+  </script>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='customer/home.css') }}">
 </head>
-<body>
+<body itemscope itemtype="https://schema.org/WebPage">
   {% include 'customer/layout.html' %}
 
   <!-- ========== HERO SECTION ========== -->
-  <section class="hero-section">
+  <section class="hero-section" role="banner">
     <div class="hero-slide active">
-      <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1920&q=80" alt="Heritage Fabrics" class="hero-image" />
+      <img src="https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1920&q=80" alt="Heritage Indian fabrics and traditional textiles - Champalal & Sons" class="hero-image" />
       <div class="hero-overlay">
         <div class="hero-content">
           <span class="hero-badge">Heritage • Since 1930</span>
-          <h1 class="hero-title">Cloth That Tells a Story</h1>
-          <p class="hero-subtitle">Curated yardage for tailors, families and homes — crafted with tradition, chosen with care</p>
+          <h1 class="hero-title" itemprop="headline">Cloth That Tells a Story</h1>
+          <p class="hero-subtitle" itemprop="description">Curated yardage for tailors, families and homes — crafted with tradition, chosen with care</p>
           <div class="hero-cta">
-            <a href="/browse" class="btn btn-primary" id="exploreBtn">
+            <a href="{{ url_for('main.browse_page') }}" class="btn btn-primary" id="exploreBtn" aria-label="Explore fabric collections">
               Explore Collections
-              <span>→</span>
+              <span aria-hidden="true">→</span>
             </a>
-            <a href="/about" class="btn btn-secondary" id="learnMoreBtn">
+            <a href="{{ url_for('main.about') }}" class="btn btn-secondary" id="learnMoreBtn" aria-label="Learn about our legacy">
               Our Legacy
             </a>
           </div>
@@ -1341,72 +186,77 @@
       </div>
     </div>
     <div class="hero-slide">
-      <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=1920&q=80" alt="Premium Weaves" class="hero-image" />
+      <img src="https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=1920&q=80" alt="Premium handloom and traditional weaves - Champalal & Sons" class="hero-image" />
       <div class="hero-overlay">
         <div class="hero-content">
           <span class="hero-badge">Premium Quality</span>
-          <h1 class="hero-title">Handloom & Premium Weaves</h1>
+          <h2 class="hero-title">Handloom & Premium Weaves</h2>
           <p class="hero-subtitle">Selected textures, honest fibers, lasting value — every yard a masterpiece</p>
           <div class="hero-cta">
-            <a href="/browse" class="btn btn-primary" id="shopNowBtn">
+            <a href="{{ url_for('main.browse_page') }}" class="btn btn-primary" id="shopNowBtn" aria-label="Shop premium fabrics now">
               Shop Now
-              <span>→</span>
+              <span aria-hidden="true">→</span>
             </a>
           </div>
         </div>
       </div>
     </div>
     <div class="hero-slide">
-      <img src="https://images.unsplash.com/photo-1495121605193-b116b5b09b07?auto=format&fit=crop&w=1920&q=80" alt="Tailor Ready" class="hero-image" />
+      <img src="https://images.unsplash.com/photo-1495121605193-b116b5b09b07?auto=format&fit=crop&w=1920&q=80" alt="Tailor-ready premium fabric yardage - Champalal & Sons" class="hero-image" />
       <div class="hero-overlay">
         <div class="hero-content">
           <span class="hero-badge">Tailor Ready</span>
-          <h1 class="hero-title">Exceptional Fabrics, Your Vision</h1>
+          <h2 class="hero-title">Exceptional Fabrics, Your Vision</h2>
           <p class="hero-subtitle">No ready-made garments — just premium yardage for your perfect creation</p>
           <div class="hero-cta">
-            <a href="/browse" class="btn btn-primary" id="discoverBtn">
+            <a href="{{ url_for('main.browse_page') }}" class="btn btn-primary" id="discoverBtn" aria-label="Discover more fabrics">
               Discover More
-              <span>→</span>
+              <span aria-hidden="true">→</span>
             </a>
           </div>
         </div>
       </div>
     </div>
-    <div class="hero-nav-dots" id="heroDots"></div>
+    <div class="hero-nav-dots" id="heroDots" role="navigation" aria-label="Hero slider navigation"></div>
   </section>
 
-  <main>
+  <main role="main" itemprop="mainContentOfPage">
     <!-- ========== BESTSELLERS SECTION ========== -->
-    <section class="bestsellers-section">
+    <section class="bestsellers-section" aria-labelledby="bestsellers-heading">
       <div class="container">
         <div class="section-header">
           <p class="section-subtitle">Most Loved</p>
-          <h2 class="section-title">Bestsellers</h2>
+          <h2 class="section-title" id="bestsellers-heading">Bestsellers</h2>
           <p class="section-description">Handpicked favorites that define elegance and quality</p>
         </div>
 
         <div class="carousel-wrapper">
-          <button class="carousel-nav prev" id="bestsellersPrev">‹</button>
+          <button class="carousel-nav prev" id="bestsellersPrev" aria-label="Previous bestsellers">‹</button>
           <div class="carousel-container">
-            <div class="carousel-track" id="bestsellersTrack">
+            <div class="carousel-track" id="bestsellersTrack" role="list">
               {% if bestsellers %}
                 {% for item in bestsellers %}
-                <div class="carousel-item" data-product-id="{{ item.product_id }}" data-variant-id="{{ item.variant_id }}" data-variant-sku="{{ item.variant_sku }}">
+                <div class="carousel-item" data-product-id="{{ item.product_id }}" data-variant-id="{{ item.variant_id }}" data-variant-sku="{{ item.variant_sku }}" role="listitem" itemscope itemtype="https://schema.org/Product">
                   <div class="carousel-media" style="background-image:url('{{ item.image or '/static/images/placeholder-420x280.png' }}')">
                     <span class="carousel-badge">Bestseller</span>
-                    <button class="wishlist-btn" data-variant-id="{{ item.variant_id }}" data-product-id="{{ item.product_id }}">♡</button>
+                    <button class="wishlist-btn" data-variant-id="{{ item.variant_id }}" data-product-id="{{ item.product_id }}" aria-label="Add {{ item.title }} to wishlist">♡</button>
                   </div>
                   <div class="carousel-body">
-                    <h3 class="carousel-title">{{ item.title }}</h3>
+                    <h3 class="carousel-title" itemprop="name">{{ item.title }}</h3>
                     <div class="carousel-meta">
-                      <span class="carousel-price">₹{{ item.price | int }}</span>
-                      <div class="carousel-rating">
-                        ★★★★★ <span style="opacity: 0.6;">({{ item.rating }})</span>
+                      <span class="carousel-price" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+                        <meta itemprop="priceCurrency" content="INR">
+                        <span itemprop="price" content="{{ item.price }}">₹{{ item.price | int }}</span>
+                      </span>
+                      <div class="carousel-rating" itemprop="aggregateRating" itemscope itemtype="https://schema.org/AggregateRating">
+                        <meta itemprop="ratingValue" content="{{ item.rating }}">
+                        <meta itemprop="bestRating" content="5">
+                        ★★★★★ <span style="opacity: 0.6;">(<span itemprop="ratingCount">{{ item.rating }}</span>)</span>
                       </div>
                     </div>
-                    <p class="carousel-description">Premium handloom fabric crafted with traditional techniques</p>
+                    <p class="carousel-description" itemprop="description">Premium handloom fabric crafted with traditional techniques</p>
                     <div class="carousel-footer">
-                      <button class="btn-small btn-outline view-details">View Details</button>
+                      <button class="btn-small btn-outline view-details" aria-label="View details of {{ item.title }}">View Details</button>
                     </div>
                   </div>
                 </div>
@@ -1418,21 +268,21 @@
               {% endif %}
             </div>
           </div>
-          <button class="carousel-nav next" id="bestsellersNext">›</button>
+          <button class="carousel-nav next" id="bestsellersNext" aria-label="Next bestsellers">›</button>
         </div>
       </div>
     </section>
 
     <!-- ========== CATEGORIES SECTION ========== -->
-    <section class="categories-section">
+    <section class="categories-section" aria-labelledby="categories-heading">
       <div class="container">
         <div class="section-header">
           <p class="section-subtitle">Explore</p>
-          <h2 class="section-title">Our Collections</h2>
+          <h2 class="section-title" id="categories-heading">Our Collections</h2>
           <p class="section-description">From timeless sarees to premium suiting — discover fabrics for every occasion</p>
         </div>
 
-        <div class="categories-grid" id="categoriesGrid">
+        <div class="categories-grid" id="categoriesGrid" role="list">
           <!-- Categories will be populated by JavaScript -->
         </div>
       </div>
@@ -1440,7 +290,7 @@
 
     <!-- ========== TAG SECTIONS ========== -->
     <div id="tagSectionsContainer">
-      <div class="loading-placeholder" style="padding: 60px 0; background: white;">
+      <div class="loading-placeholder" style="padding: 60px 0; background: white;" aria-label="Loading featured collections">
         <div class="placeholder-card">
           <div class="placeholder-media"></div>
           <div class="placeholder-body">
@@ -1473,21 +323,22 @@
     </div>
 
     <!-- ========== TESTIMONIALS SECTION ========== -->
-    <section class="testimonials-section">
+    <section class="testimonials-section" aria-labelledby="testimonials-heading">
       <div class="container">
         <div class="section-header" style="color: white;">
           <p class="section-subtitle" style="color: white; opacity: 0.9;">Testimonials</p>
-          <h2 class="section-title" style="color: white;">Trusted Over Generations</h2>
+          <h2 class="section-title" id="testimonials-heading" style="color: white;">Trusted Over Generations</h2>
           <div class="section-title" style="border: none;"></div>
         </div>
 
-        <div class="testimonial-card">
-          <div class="quote-icon">"</div>
-          <p class="testimonial-text" id="testimonialText">They helped me choose the perfect silk for my wedding saree — the texture was unmatched.</p>
-          <p class="testimonial-author" id="testimonialAuthor">— Asha</p>
-          <div class="testimonial-nav">
-            <button id="prevTestimonial">‹</button>
-            <button id="nextTestimonial">›</button>
+        <div class="testimonial-card" itemscope itemtype="https://schema.org/Review">
+          <div class="quote-icon" aria-hidden="true">"</div>
+          <p class="testimonial-text" id="testimonialText" itemprop="reviewBody">They helped me choose the perfect silk for my wedding saree — the texture was unmatched.</p>
+          <p class="testimonial-author" id="testimonialAuthor" itemprop="author">— Asha</p>
+          <meta itemprop="itemReviewed" content="Champalal & Sons">
+          <div class="testimonial-nav" role="navigation" aria-label="Testimonial navigation">
+            <button id="prevTestimonial" aria-label="Previous testimonial">‹</button>
+            <button id="nextTestimonial" aria-label="Next testimonial">›</button>
           </div>
         </div>
       </div>
@@ -1500,11 +351,11 @@
           <h2 class="cta-title">Begin Your Fabric Journey</h2>
           <p class="cta-description">Visit our store or enquire online to explore our curated collection of premium fabrics</p>
           <div class="hero-cta">
-            <button class="btn btn-primary" id="visitStoreBtn">
+            <button class="btn btn-primary" id="visitStoreBtn" aria-label="Visit our physical store">
               Visit Store
-              <span>→</span>
+              <span aria-hidden="true">→</span>
             </button>
-            <button class="btn btn-secondary" id="enquireBtn">
+            <button class="btn btn-secondary" id="enquireBtn" aria-label="Enquire online">
               Enquire Online
             </button>
           </div>
@@ -1515,410 +366,6 @@
 
   {% include 'customer/footer.html' %}
 
-  <script>
-    // ========== DATA & CONFIG ==========
-    const categories = [
-      { id: 'saree', name: 'Sarees', subtitle: 'Handloom silks & blends', image: 'https://images.unsplash.com/photo-1583391733981-e99d47e34417?auto=format&fit=crop&w=800&q=80', icon: '🪷' },
-      { id: 'suiting', name: 'Suiting', subtitle: 'Fine worsted & blends', image: 'https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=800&q=80', icon: '👔' },
-      { id: 'kurta', name: 'Kurta Cloths', subtitle: 'Cool breathable weaves', image: 'https://images.unsplash.com/photo-1622495893460-9a9f3d36f0b6?auto=format&fit=crop&w=800&q=80', icon: '🧵' },
-      { id: 'shawals', name: 'Shawls', subtitle: 'Soft woolens & handwoven', image: 'https://images.unsplash.com/photo-1542576826-6f6f6f7b8e4b?auto=format&fit=crop&w=800&q=80', icon: '🧣' },
-      { id: 'bedsheet', name: 'Bedsheets', subtitle: 'Premium linens & cottons', image: 'https://images.unsplash.com/photo-1505691723518-36a45b6f4e77?auto=format&fit=crop&w=800&q=80', icon: '🛏️' }
-    ];
-
-    const testimonials = [
-      { name: 'Asha', text: 'They helped me choose the perfect silk for my wedding saree — the texture was unmatched.' },
-      { name: 'Ramesh', text: 'Excellent suiting cloth; my tailor loved the drape. Staff are patient and honest.' },
-      { name: 'Meera', text: 'I always come here for bedsheets — quality lasts for years.' }
-    ];
-
-    // ========== NAVIGATION FUNCTIONS ==========
-    function gotoProduct(productId, variantId, variantSku) {
-      location.href = `/prod/${productId}?variant_id=${variantId}&variant_sku=${variantSku}`;
-    }
-
-    function gotoPlaceOrder(q) {
-      const qClean = q ? encodeURIComponent(q) : '';
-      location.href = `/browse?q=${qClean}&sort=newest`;
-    }
-
-    // ========== WISHLIST FUNCTIONS ==========
-    async function toggleWishlist(variantId, productId, button) {
-      try {
-        const response = await fetch('/wishlist/toggle', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-          },
-          body: JSON.stringify({ variant_id: variantId, product_id: productId })
-        });
-
-        if (response.status === 401) {
-          window.location.href = '/login';
-          return;
-        }
-
-        const data = await response.json();
-        if (data.ok) {
-          button.classList.toggle('active');
-          button.textContent = button.classList.contains('active') ? '♥' : '♡';
-        }
-      } catch (error) {
-        console.error('Error toggling wishlist:', error);
-      }
-    }
-
-    async function checkWishlistStatus(variantId, button) {
-      try {
-        const response = await fetch(`/wishlist/status?variant_id=${variantId}`);
-        if (response.ok) {
-          const data = await response.json();
-          if (data.in_wishlist) {
-            button.classList.add('active');
-            button.textContent = '♥';
-          }
-        }
-      } catch (error) {
-        console.error('Error checking wishlist status:', error);
-      }
-    }
-
-    // ========== HERO CAROUSEL ==========
-    let currentSlide = 0;
-    const slides = document.querySelectorAll('.hero-slide');
-    const dotsContainer = document.getElementById('heroDots');
-
-    function renderHeroDots() {
-      dotsContainer.innerHTML = '';
-      slides.forEach((_, index) => {
-        const dot = document.createElement('button');
-        dot.className = `hero-dot ${index === currentSlide ? 'active' : ''}`;
-        dot.addEventListener('click', () => {
-          currentSlide = index;
-          updateHeroSlide();
-        });
-        dotsContainer.appendChild(dot);
-      });
-    }
-
-    function updateHeroSlide() {
-      slides.forEach((slide, index) => {
-        slide.classList.toggle('active', index === currentSlide);
-      });
-      renderHeroDots();
-    }
-
-    function nextHeroSlide() {
-      currentSlide = (currentSlide + 1) % slides.length;
-      updateHeroSlide();
-    }
-
-    renderHeroDots();
-    setInterval(nextHeroSlide, 6000);
-
-    // ========== CATEGORIES RENDERING ==========
-    const categoriesGrid = document.getElementById('categoriesGrid');
-    function renderCategories() {
-      categoriesGrid.innerHTML = '';
-      categories.forEach(cat => {
-        const card = document.createElement('div');
-        card.className = 'category-card';
-        card.innerHTML = `
-          <div class="category-image" style="background-image:url('${cat.image}')">
-            <div class="category-icon">${cat.icon}</div>
-            <div class="category-overlay">
-              <h3 class="category-name">${cat.name}</h3>
-              <p class="category-subtitle">${cat.subtitle}</p>
-            </div>
-          </div>
-        `;
-        card.addEventListener('click', () => gotoPlaceOrder(cat.id));
-        categoriesGrid.appendChild(card);
-      });
-    }
-    renderCategories();
-
-    // ========== BESTSELLERS CAROUSEL ==========
-    const bestsellersTrack = document.getElementById('bestsellersTrack');
-    const bestsellersPrev = document.getElementById('bestsellersPrev');
-    const bestsellersNext = document.getElementById('bestsellersNext');
-    let bestsellerIndex = 0;
-    let itemsPerView = 3;
-
-    function updateItemsPerView() {
-      if (window.innerWidth < 768) itemsPerView = 1;
-      else if (window.innerWidth < 1024) itemsPerView = 2;
-      else itemsPerView = 3;
-    }
-
-    function updateBestsellersCarousel() {
-      updateItemsPerView();
-      if (!bestsellersTrack || bestsellersTrack.children.length === 0) return;
-
-      const itemWidth = bestsellersTrack.children[0].offsetWidth + 24;
-      const translateX = -bestsellerIndex * itemWidth;
-      bestsellersTrack.style.transform = `translateX(${translateX}px)`;
-
-      bestsellersPrev.disabled = bestsellerIndex === 0;
-      const maxIndex = Math.max(0, bestsellersTrack.children.length - itemsPerView);
-      bestsellersNext.disabled = bestsellerIndex >= maxIndex;
-    }
-
-    if (bestsellersPrev && bestsellersNext) {
-      bestsellersPrev.addEventListener('click', () => {
-        if (bestsellerIndex > 0) {
-          bestsellerIndex--;
-          updateBestsellersCarousel();
-        }
-      });
-
-      bestsellersNext.addEventListener('click', () => {
-        const maxIndex = Math.max(0, bestsellersTrack.children.length - itemsPerView);
-        if (bestsellerIndex < maxIndex) {
-          bestsellerIndex++;
-          updateBestsellersCarousel();
-        }
-      });
-    }
-
-    // Touch/swipe for bestsellers
-    let startX = 0;
-    let currentX = 0;
-    let isSwiping = false;
-
-    if (bestsellersTrack) {
-      bestsellersTrack.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        isSwiping = true;
-      });
-
-      bestsellersTrack.addEventListener('touchmove', (e) => {
-        if (!isSwiping) return;
-        currentX = e.touches[0].clientX;
-      });
-
-      bestsellersTrack.addEventListener('touchend', () => {
-        if (!isSwiping) return;
-        isSwiping = false;
-
-        const diff = startX - currentX;
-        const threshold = 50;
-        const maxIndex = Math.max(0, bestsellersTrack.children.length - itemsPerView);
-
-        if (diff > threshold && bestsellerIndex < maxIndex) {
-          bestsellerIndex++;
-          updateBestsellersCarousel();
-        } else if (diff < -threshold && bestsellerIndex > 0) {
-          bestsellerIndex--;
-          updateBestsellersCarousel();
-        }
-      });
-    }
-
-    // Initialize bestsellers
-    document.addEventListener('DOMContentLoaded', () => {
-      // Bestseller item clicks
-      document.querySelectorAll('.carousel-item').forEach(item => {
-        item.addEventListener('click', (e) => {
-          if (!e.target.closest('.wishlist-btn') && !e.target.closest('.view-details')) {
-            const productId = item.dataset.productId;
-            const variantId = item.dataset.variantId;
-            const variantSku = item.dataset.variantSku;
-            gotoProduct(productId, variantId, variantSku);
-          }
-        });
-
-        const wishlistBtn = item.querySelector('.wishlist-btn');
-        if (wishlistBtn) {
-          const variantId = wishlistBtn.dataset.variantId;
-          const productId = wishlistBtn.dataset.productId;
-          checkWishlistStatus(variantId, wishlistBtn);
-          wishlistBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleWishlist(variantId, productId, wishlistBtn);
-          });
-        }
-
-        const viewBtn = item.querySelector('.view-details');
-        if (viewBtn) {
-          viewBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const productId = item.dataset.productId;
-            const variantId = item.dataset.variantId;
-            const variantSku = item.dataset.variantSku;
-            gotoProduct(productId, variantId, variantSku);
-          });
-        }
-      });
-
-      updateItemsPerView();
-      updateBestsellersCarousel();
-    });
-
-    window.addEventListener('resize', updateBestsellersCarousel);
-
-    // ========== TAG SECTIONS LOADING ==========
-    function loadTagSections() {
-      fetch('/ajax/tag_sections')
-        .then(response => {
-          if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-          return response.json();
-        })
-        .then(data => {
-          const container = document.getElementById('tagSectionsContainer');
-          container.innerHTML = '';
-
-          if (data.sections && data.sections.length > 0) {
-            data.sections.forEach((section, sectionIdx) => {
-              const sectionEl = document.createElement('section');
-              sectionEl.className = 'tag-section';
-              sectionEl.innerHTML = `
-                <div class="container">
-                  <div class="section-header">
-                    <p class="section-subtitle">${section.tag}</p>
-                    <h2 class="section-title">${section.tag} Collection</h2>
-                  </div>
-                  <div class="tag-carousel">
-                    <button class="tag-nav prev" data-section="${sectionIdx}">‹</button>
-                    <div class="tag-track" data-section="${sectionIdx}">
-                      ${section.variants.map(variant => `
-                        <div class="tag-item" data-product-id="${variant.product_id}" data-variant-id="${variant.variant_id}" data-variant-sku="${variant.variant_sku}">
-                          <div class="tag-media" style="background-image:url('${variant.image_path || '/static/images/placeholder-420x280.png'}')">
-                            <button class="wishlist-btn" data-variant-id="${variant.variant_id}" data-product-id="${variant.product_id}">♡</button>
-                          </div>
-                          <div class="tag-body">
-                            <h4 class="tag-title">${variant.title}</h4>
-                            <div class="tag-price">₹${variant.price ? variant.price : '0.00'}</div>
-                          </div>
-                        </div>
-                      `).join('')}
-                    </div>
-                    <button class="tag-nav next" data-section="${sectionIdx}">›</button>
-                  </div>
-                </div>
-              `;
-              container.appendChild(sectionEl);
-
-              // Initialize carousel for this section
-              const track = sectionEl.querySelector('.tag-track');
-              const prevBtn = sectionEl.querySelector('.tag-nav.prev');
-              const nextBtn = sectionEl.querySelector('.tag-nav.next');
-              let tagIndex = 0;
-              let itemsPerTagView = 4;
-
-              function updateTagItemsPerView() {
-                if (window.innerWidth < 480) itemsPerTagView = 1;
-                else if (window.innerWidth < 768) itemsPerTagView = 2;
-                else if (window.innerWidth < 1200) itemsPerTagView = 3;
-                else itemsPerTagView = 4;
-              }
-              function updateTagCarousel() {
-                updateTagItemsPerView();
-                if (!track || track.children.length === 0) return;
-
-                const itemWidth = track.children[0].offsetWidth + 24;
-                const translateX = -tagIndex * itemWidth;
-                track.style.transform = `translateX(${translateX}px)`;
-
-                prevBtn.disabled = tagIndex === 0;
-                const maxIndex = Math.max(0, track.children.length - itemsPerTagView);
-                nextBtn.disabled = tagIndex >= maxIndex;
-              }
-              prevBtn.addEventListener('click', () => {
-                if (tagIndex > 0) {
-                  tagIndex--;
-                  updateTagCarousel();
-                }
-              });
-              nextBtn.addEventListener('click', () => {
-                const maxIndex = Math.max(0, track.children.length - itemsPerTagView);
-                if (tagIndex < maxIndex) {
-                  tagIndex++;
-                  updateTagCarousel();
-                }
-              });
-              // Touch/swipe for tag carousel
-              let startX = 0;
-              let currentX = 0;
-              let isSwiping = false;
-              track.addEventListener('touchstart', (e) => {
-                startX = e.touches[0].clientX;
-                isSwiping = true;
-              });
-              track.addEventListener('touchmove', (e) => {
-                if (!isSwiping) return;
-                currentX = e.touches[0].clientX;
-              });
-              track.addEventListener('touchend', () => {
-                if (!isSwiping) return;
-                isSwiping = false;
-
-                const diff = startX - currentX;
-                const threshold = 50;
-                const maxIndex = Math.max(0, track.children.length - itemsPerTagView);
-
-                if (diff > threshold && tagIndex < maxIndex) {
-                  tagIndex++;
-                  updateTagCarousel();
-                } else if (diff < -threshold && tagIndex > 0) {
-                  tagIndex--;
-                  updateTagCarousel();
-                }
-              });
-              // Initialize tag items
-              sectionEl.querySelectorAll('.tag-item').forEach(item => {
-                item.addEventListener('click', (e) => {
-                  if (!e.target.closest('.wishlist-btn')) {
-                    const productId = item.dataset.productId;
-                    const variantId = item.dataset.variantId;
-                    const variantSku = item.dataset.variantSku;
-                    gotoProduct(productId, variantId, variantSku);
-                  }
-                });
-
-                const wishlistBtn = item.querySelector('.wishlist-btn');
-                if (wishlistBtn) {
-                  const variantId = wishlistBtn.dataset.variantId;
-                  const productId = wishlistBtn.dataset.productId;
-                  checkWishlistStatus(variantId, wishlistBtn);
-                  wishlistBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    toggleWishlist(variantId, productId, wishlistBtn);
-                  });
-                }
-              });
-              updateTagCarousel();
-              window.addEventListener('resize', updateTagCarousel);
-            });
-          } else {
-            container.innerHTML = '<p style="padding: 40px; text-align: center; color: var(--charcoal);">No tagged sections available.</p>';
-          }
-        })
-        .catch(error => {
-          console.error('Error loading tag sections:', error);
-        });
-    }
-    document.addEventListener('DOMContentLoaded', loadTagSections);
-    // ========== TESTIMONIALS ==========
-    let currentTestimonial = 0;
-    const testimonialText = document.getElementById('testimonialText');
-    const testimonialAuthor = document.getElementById('testimonialAuthor');
-    const prevTestimonialBtn = document.getElementById('prevTestimonial');
-    const nextTestimonialBtn = document.getElementById('nextTestimonial');
-    function updateTestimonial() {
-      const testimonial = testimonials[currentTestimonial];
-      testimonialText.textContent = testimonial.text;
-      testimonialAuthor.textContent = `— ${testimonial.name}`;
-    }
-    prevTestimonialBtn.addEventListener('click', () => {
-      currentTestimonial = (currentTestimonial - 1 + testimonials.length) % testimonials.length;
-      updateTestimonial();
-    });
-    nextTestimonialBtn.addEventListener('click', () => {
-      currentTestimonial = (currentTestimonial + 1) % testimonials.length;
-      updateTestimonial();
-    });
-    document.addEventListener('DOMContentLoaded', updateTestimonial);
-  </script>
+  <script src="{{ url_for('static', filename='customer/js/home.js') }}" defer></script>
 </body>
 </html>

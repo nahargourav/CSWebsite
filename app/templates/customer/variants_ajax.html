@@ -3,12 +3,143 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Browse Collection — Champalal & Sons</title>
-  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" >
-  <!-- Google Fonts -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  
+  <!-- Primary Meta Tags -->
+  <title>Browse Premium Ethnic Wear Collection - Champalal & Sons</title>
+  <meta name="title" content="Browse Premium Ethnic Wear Collection - Champalal & Sons">
+  <meta name="description" content="Discover our curated collection of premium ethnic wear, traditional fabrics, and designer outfits. Shop by category, brand, color, size with easy filters. Free shipping on orders above ₹999. Authentic Indian ethnic wear online.">
+  <meta name="keywords" content="ethnic wear, traditional fabrics, indian clothing, designer outfits, sarees, kurtas, lehengas, sherwanis, ethnic fashion, traditional wear, premium fabrics, Champalal & Sons">
+  <meta name="author" content="Champalal & Sons">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="{{ request.url }}">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/android-chrome-192x192.png') }}">
+  <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='images/android-chrome-512x512.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="{{ request.url }}">
+  <meta property="og:title" content="Browse Premium Ethnic Wear Collection - Champalal & Sons">
+  <meta property="og:description" content="Discover our curated collection of premium ethnic wear, traditional fabrics, and designer outfits. Shop with easy filters and free shipping.">
+  <meta property="og:image" content="{{ url_for('static', filename='images/collection-banner.jpg', _external=True) }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="Champalal & Sons">
+  <meta property="og:locale" content="en_IN">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="{{ request.url }}">
+  <meta name="twitter:title" content="Browse Premium Ethnic Wear Collection - Champalal & Sons">
+  <meta name="twitter:description" content="Discover our curated collection of premium ethnic wear, traditional fabrics, and designer outfits. Shop with easy filters and free shipping.">
+  <meta name="twitter:image" content="{{ url_for('static', filename='images/collection-banner.jpg', _external=True) }}">
+  <meta name="twitter:creator" content="@champalalsons">
+  <meta name="twitter:site" content="@champalalsons">
+  
+  <!-- Additional SEO Meta Tags -->
+  <meta name="theme-color" content="#D4AF37">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Champalal & Sons">
+  <meta name="format-detection" content="telephone=no">
+  
+  <!-- Preconnect to External Resources -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Browse Collection",
+    "description": "Discover our curated collection of premium ethnic wear, traditional fabrics, and designer outfits",
+    "url": "{{ request.url }}",
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "{{ url_for('main.home', _external=True) }}"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Browse Collection",
+          "item": "{{ request.url }}"
+        }
+      ]
+    },
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "Product Collection"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Champalal & Sons",
+      "url": "{{ url_for('main.home', _external=True) }}",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ url_for('static', filename='images/logo.png', _external=True) }}"
+      }
+    }
+  }
+  </script>
+  
+  <!-- WebSite Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Champalal & Sons",
+    "url": "{{ url_for('main.home', _external=True) }}",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "{{ url_for('main.browse_page', _external=True) }}?search={search_term_string}"
+      },
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+  
+  <!-- Organization Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Champalal & Sons",
+    "url": "{{ url_for('main.home', _external=True) }}",
+    "logo": "{{ url_for('static', filename='images/logo.png', _external=True) }}",
+    "description": "Premium ethnic wear and traditional fabrics",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "IN"
+    },
+    "sameAs": [
+      "https://www.facebook.com/champalalsons",
+      "https://www.instagram.com/champalalsons",
+      "https://twitter.com/champalalsons"
+    ]
+  }
+  </script>
   
   <!-- Custom Styles -->
   <link rel="stylesheet" href="{{ url_for('static', filename='customer/browse.css') }}">
@@ -23,41 +154,42 @@
       position: sticky !important;
       background: white !important;
     }
-    </style>
+  </style>
 </head>
-<body>
+<body itemscope itemtype="https://schema.org/WebPage">
   {% include 'customer/layout.html' %}
 
   <!-- Hero Banner -->
-  <section class="collection-hero">
+  <section class="collection-hero" role="banner">
     <div class="hero-content">
       <span class="hero-badge">Premium Collection</span>
-      <h1 class="hero-title">Discover Our Heritage</h1>
-      <p class="hero-subtitle">Explore curated fabrics crafted with tradition, chosen with care — every piece tells a story</p>
+      <h1 class="hero-title" itemprop="headline">Discover Our Heritage</h1>
+      <p class="hero-subtitle" itemprop="description">Explore curated fabrics crafted with tradition, chosen with care — every piece tells a story</p>
     </div>
   </section>
 
   <!-- Main Browse Container -->
-  <div class="browse-container">
+  <div class="browse-container" role="main" itemprop="mainContentOfPage">
     
     <!-- Search & Sort Bar -->
     <div class="search-sort-bar">
-      <div class="search-box">
+      <div class="search-box" role="search">
         <input 
           type="text" 
           class="search-input" 
           id="searchInput" 
           placeholder="Search fabrics, colors, designs..."
           autocomplete="off"
+          aria-label="Search products"
         >
-        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <circle cx="11" cy="11" r="8"></circle>
           <path d="m21 21-4.35-4.35"></path>
         </svg>
       </div>
 
-      <button class="filter-toggle-btn" id="filterToggleBtn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <button class="filter-toggle-btn" id="filterToggleBtn" aria-label="Toggle filters" aria-expanded="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <line x1="4" y1="6" x2="20" y2="6"></line>
           <line x1="4" y1="12" x2="20" y2="12"></line>
           <line x1="4" y1="18" x2="20" y2="18"></line>
@@ -68,7 +200,7 @@
         Filters
       </button>
 
-      <select class="sort-select" id="sortSelect">
+      <select class="sort-select" id="sortSelect" aria-label="Sort products">
         <option value="relevance">Most Relevant</option>
         <option value="newest">Newest First</option>
         <option value="price_asc">Price: Low to High</option>
@@ -78,19 +210,19 @@
     </div>
 
     <!-- Active Filters -->
-    <div class="active-filters" id="activeFilters"></div>
+    <div class="active-filters" id="activeFilters" role="status" aria-live="polite"></div>
 
     <!-- Main Layout -->
     <div class="browse-layout">
       
       <!-- Filters Sidebar -->
-      <aside class="filters-sidebar" id="filtersSidebar">
+      <aside class="filters-sidebar" id="filtersSidebar" role="complementary" aria-label="Product filters">
         <div class="filters-header">
           <h2 class="filters-title">Filters</h2>
           <div style="display: flex; gap: 8px; align-items: center;">
-            <button class="clear-filters-btn" id="clearAllFilters">Clear All</button>
+            <button class="clear-filters-btn" id="clearAllFilters" aria-label="Clear all filters">Clear All</button>
             <button class="mobile-close-filters" id="mobileCloseFilters" aria-label="Close Filters">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
@@ -100,9 +232,9 @@
 
         <!-- Price Range Filter -->
         <div class="filter-group">
-          <div class="filter-group-title" data-filter="price">
+          <div class="filter-group-title" data-filter="price" role="button" tabindex="0" aria-expanded="true">
             <span>Price Range</span>
-            <span class="filter-toggle-icon">▼</span>
+            <span class="filter-toggle-icon" aria-hidden="true">▼</span>
           </div>
           <div class="filter-options price-range-container">
             <div class="price-display">
@@ -120,6 +252,7 @@
                 max="100" 
                 value="0"
                 step="1"
+                aria-label="Minimum price"
               >
               <input 
                 type="range" 
@@ -129,6 +262,7 @@
                 max="100" 
                 value="100"
                 step="1"
+                aria-label="Maximum price"
               >
             </div>
           </div>
@@ -136,76 +270,76 @@
 
         <!-- Category Filter -->
         <div class="filter-group">
-          <div class="filter-group-title" data-filter="category">
+          <div class="filter-group-title" data-filter="category" role="button" tabindex="0" aria-expanded="false">
             <span>Category</span>
-            <span class="filter-toggle-icon">▼</span>
+            <span class="filter-toggle-icon" aria-hidden="true">▼</span>
           </div>
           <div class="filter-options" id="categoryFilters"></div>
         </div>
 
         <!-- Brand Filter -->
         <div class="filter-group">
-          <div class="filter-group-title" data-filter="brand">
+          <div class="filter-group-title" data-filter="brand" role="button" tabindex="0" aria-expanded="false">
             <span>Brand</span>
-            <span class="filter-toggle-icon">▼</span>
+            <span class="filter-toggle-icon" aria-hidden="true">▼</span>
           </div>
           <div class="filter-options" id="brandFilters"></div>
         </div>
 
         <!-- Color Filter -->
         <div class="filter-group">
-          <div class="filter-group-title" data-filter="color">
+          <div class="filter-group-title" data-filter="color" role="button" tabindex="0" aria-expanded="false">
             <span>Color</span>
-            <span class="filter-toggle-icon">▼</span>
+            <span class="filter-toggle-icon" aria-hidden="true">▼</span>
           </div>
           <div class="filter-options" id="colorFilters"></div>
         </div>
 
         <!-- Size Filter -->
         <div class="filter-group">
-          <div class="filter-group-title" data-filter="size">
+          <div class="filter-group-title" data-filter="size" role="button" tabindex="0" aria-expanded="false">
             <span>Size</span>
-            <span class="filter-toggle-icon">▼</span>
+            <span class="filter-toggle-icon" aria-hidden="true">▼</span>
           </div>
           <div class="filter-options" id="sizeFilters"></div>
         </div>
 
         <!-- Tag Filter -->
         <div class="filter-group">
-          <div class="filter-group-title" data-filter="tag">
+          <div class="filter-group-title" data-filter="tag" role="button" tabindex="0" aria-expanded="false">
             <span>Collections</span>
-            <span class="filter-toggle-icon">▼</span>
+            <span class="filter-toggle-icon" aria-hidden="true">▼</span>
           </div>
           <div class="filter-options" id="tagFilters"></div>
         </div>
 
         <!-- Rating Filter -->
         <div class="filter-group">
-          <div class="filter-group-title" data-filter="rating">
+          <div class="filter-group-title" data-filter="rating" role="button" tabindex="0" aria-expanded="false">
             <span>Rating</span>
-            <span class="filter-toggle-icon">▼</span>
+            <span class="filter-toggle-icon" aria-hidden="true">▼</span>
           </div>
           <div class="filter-options" id="ratingFilters"></div>
         </div>
       </aside>
 
       <!-- Products Section -->
-      <section class="products-section">
+      <section class="products-section" aria-label="Product list">
         <div class="products-header">
-          <div class="results-count">
+          <div class="results-count" role="status" aria-live="polite">
             Showing <span id="resultsCount">0</span> products
           </div>
-          <div class="view-toggle">
-            <button class="view-btn active" data-view="grid" title="Grid View">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <div class="view-toggle" role="group" aria-label="View options">
+            <button class="view-btn active" data-view="grid" title="Grid View" aria-label="Grid view" aria-pressed="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <rect x="3" y="3" width="7" height="7"></rect>
                 <rect x="14" y="3" width="7" height="7"></rect>
                 <rect x="14" y="14" width="7" height="7"></rect>
                 <rect x="3" y="14" width="7" height="7"></rect>
               </svg>
             </button>
-            <button class="view-btn" data-view="list" title="List View">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button class="view-btn" data-view="list" title="List View" aria-label="List view" aria-pressed="false">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <line x1="8" y1="6" x2="21" y2="6"></line>
                 <line x1="8" y1="12" x2="21" y2="12"></line>
                 <line x1="8" y1="18" x2="21" y2="18"></line>
@@ -218,29 +352,29 @@
         </div>
 
         <!-- Loading State -->
-        <div class="loading-container" id="loadingContainer">
+        <div class="loading-container" id="loadingContainer" role="status" aria-live="polite" aria-label="Loading products">
           <div class="loader"></div>
         </div>
 
         <!-- Products Grid -->
-        <div class="products-grid" id="productsGrid"></div>
+        <div class="products-grid" id="productsGrid" role="list"></div>
 
         <!-- Empty State -->
-        <div class="empty-state" id="emptyState">
-          <div class="empty-icon">🔍</div>
+        <div class="empty-state" id="emptyState" role="status">
+          <div class="empty-icon" aria-hidden="true">🔍</div>
           <h3 class="empty-title">No Products Found</h3>
           <p class="empty-subtitle">Try adjusting your filters or search terms</p>
           <button class="btn-clear-filters" onclick="BrowseApp.clearAllFilters()">Clear All Filters</button>
         </div>
 
         <!-- Pagination -->
-        <div class="pagination" id="pagination"></div>
+        <nav class="pagination" id="pagination" role="navigation" aria-label="Pagination"></nav>
       </section>
     </div>
   </div>
 
   <!-- Filter Overlay (Mobile) -->
-  <div class="filter-overlay" id="filterOverlay"></div>
+  <div class="filter-overlay" id="filterOverlay" role="presentation"></div>
 
   <!-- Scroll to Top Button -->
   <button id="scrollToTop" class="scroll-to-top" aria-label="Scroll to top">↑</button>
@@ -248,6 +382,6 @@
   {% include 'customer/footer.html' %}
 
   <!-- Custom Scripts -->
-  <script src="{{ url_for('static', filename='customer/js/browse.js') }}"></script>
+  <script src="{{ url_for('static', filename='customer/js/browse.js') }}" defer></script>
 </body>
 </html>
