@@ -1,1322 +1,403 @@
-<!-- templates/customer/product_detail.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>{{ product.name }} — Details</title>
-  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" >
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
-
-  <style>
-    :root{
-      --primary: #ff7f66; /* peach */
-      --muted: #7b7b7b;
-      --bg: #ffffff;
-      --panel-border: #efe6e3;
-      --card-radius: 10px;
-      --accent: #f5b39f;
-      --shadow: rgba(2,6,23,0.06);
-      --font-family: "Helvetica Neue", Arial, sans-serif;
-      --danger: #d9534f; /* red for in-cart button */
-      --danger-dark: #c43d3d;
-    }
-    body { background: #fff; font-family: var(--font-family); color: #222; }
-
-    .container { max-width: 1260px; }
-    .mt-4 {
-    margin-top: 2.5rem !important;
-    }
-    /* Layout */
-    .prod-row { display: flex; gap: 30px; align-items:flex-start; }
-
-    /* LEFT: thumbs + image */
-    .left-panel { width: 62%; display:flex; gap:18px; align-items:flex-start; }
-    .thumb-column {
-      width: 78px;
-      display:flex;
-      flex-direction:column;
-      gap:18px;
-      align-items:center;
-      justify-content:flex-start;
-      padding-top: 12px;
-      overflow:auto;
-    }
-    .thumb-column img {
-      width: 72px;
-      height: 92px;
-      object-fit: cover;
-      border-radius: 4px;
-      border: 2px solid transparent;
-      box-shadow: 0 6px 14px rgba(0,0,0,0.06);
-      cursor: pointer;
-      transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-    }
-    .thumb-column img.selected {
-      border-color: rgba(255,127,102,0.9);
-      transform: translateY(-6px);
-      box-shadow: 0 18px 34px rgba(2,6,23,0.12);
-    }
-
-    .image-wrap {
-      flex: 1;
-      position: relative;
-      border-radius: 12px;
-      overflow: hidden;
-      background: #faf7f6;
-      min-height: 640px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .main-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display:block;
-      transition: transform .2s ease, opacity .18s ease;
-      cursor: zoom-in;
-    }
-    .main-image.hidden { opacity: 0; transform: scale(.995); }
-
-    .image-nav {
-      position: absolute;
-      top: 50%;
-      left: 0;
-      right: 0;
-      transform: translateY(-50%);
-      display:flex;
-      justify-content:space-between;
-      padding: 0 10px;
-      pointer-events:none;
-      z-index: 6;
-    }
-    .image-nav button {
-      pointer-events:auto;
-      background: rgba(255,255,255,0.95);
-      border: 0;
-      width: 52px;
-      height: 52px;
-      border-radius: 8px;
-      box-shadow: 0 10px 28px rgba(2,6,23,0.06);
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      font-size: 22px;
-      cursor: pointer;
-      transition: transform .12s ease, background .12s ease;
-    }
-    .image-nav button:hover { transform: translateY(-4px); background: #fff; }
-
-    /* RIGHT: product info */
-    .right-panel { width: 38%; }
-
-    .product-top { display:flex; flex-direction:column; gap:8px; padding: 6px 0 10px 0; }
-
-    .product-title {
-      font-weight: 700;
-      font-size: 20px;
-      margin: 0;
-      line-height: 1.05;
-      letter-spacing: -0.2px;
-    }
-    .product-sub {
-      color: var(--muted);
-      font-size: 13px;
-      margin-top:2px;
-    }
-    .variant-list { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:12px; }
-    .variant-btn { display:flex; align-items:center; gap:10px; padding:8px 14px; border-radius:999px; border:1px solid #e9ecef; background:#fff; cursor:pointer; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease; min-height:56px; }
-    .variant-btn:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(2,6,23,0.06); }
-    .variant-btn.active { border-color: var(--primary); background: linear-gradient(90deg,#f0f6ff,#ffffff); box-shadow:0 18px 40px rgba(13,110,253,0.08); }
-    .variant-thumb { width:56px; height:56px; object-fit:cover; border-radius:50%; border:2px solid #fff; box-shadow:0 6px 12px rgba(2,6,23,0.06); }
-
-
-    /* small size/color row under title */
-    .variant-meta { display:flex; gap:10px; align-items:center; font-size:13px; color:var(--muted); margin-top:6px; }
-    .variant-swatch { display:inline-block; width:14px; height:14px; border-radius:3px; border:1px solid #e9ecef; vertical-align:middle; margin-left:6px; }
-
-    .price-and-rating { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top: 8px; }
-    .price { font-size: 26px; font-weight:900; color:#111; }
-    .rating-summary { display:flex; gap:10px; align-items:center; color:var(--muted); font-weight:600; font-size:13px; }
-
-    .action-row { display:flex; gap:12px; margin-top: 12px; align-items:center; }
-    .btn-add {
-      background: var(--primary);
-      color: #fff;
-      border-radius: 6px;
-      padding: 12px 22px;
-      font-weight:800;
-      border: none;
-      letter-spacing: 1px;
-      box-shadow: 0 12px 30px rgba(255,127,102,0.12);
-      cursor: pointer;
-    }
-    .btn-wish {
-      background: transparent;
-      border: 1px solid #e9e3e2;
-      padding: 10px 18px;
-      border-radius: 6px;
-      font-weight:700;
-      color: #6b6b6b;
-      cursor: pointer;
-    }
-
-    .divider { height:1px; background: linear-gradient(90deg, transparent, #f0ebe9, transparent); margin:12px 0; border-radius:2px; }
-
-    .pincode-row { display:flex; gap:8px; align-items:center; margin-top: 6px; }
-    .pincode-row input { width: 160px; max-width: 46%; }
-    .pincode-row button { background: transparent; border: none; font-weight:700; color: #111; }
-
-    .detail-block { margin-top: 12px; }
-    .detail-block h6 { font-size: 13px; letter-spacing: 1px; margin-bottom:6px; font-weight:800; color:#444; text-transform: none; }
-    .detail-block p, .detail-block .muted { color:var(--muted); font-size: 13px; line-height:1.45; margin:0; }
-
-    .spec-grid { display:block; margin-top:8px; color:var(--muted); font-size:13px; }
-    .spec-grid .spec-row { display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom: 1px solid #f3eeee; }
-    .spec-grid .spec-row:last-child { border-bottom: none; }
-    .spec-grid .spec-left { font-weight:700; color:#333; font-size:13px; }
-
-    .accordion .accordion-button {
-      background: #fff;
-      border: 1px solid #efe6e3;
-      box-shadow: none;
-      color: #5f5f5f;
-      font-weight:700;
-      padding: 12px;
-      font-size: 13px;
-    }
-    .accordion .accordion-body { padding: 12px; background:#fff; border:1px solid #f6f2f1; font-size:13px; color:var(--muted); }
-
-    @media (max-width: 991px) {
-      .prod-row { flex-direction: column; }
-      .left-panel { width: 100%; order: 1; display:block;}
-      .right-panel { width: 100%; order: 2; }
-      .image-wrap { min-height: 420px; }
-      .thumb-column { flex-direction:row; width:100%; height:auto; padding: 8px; gap:12px; justify-content:flex-start; }
-      .thumb-column img { width: 72px; height: 92px; }
-      .main-image { object-fit: contain; }
-    }
-
-    .reviews-card { border-radius:12px; padding:14px; background:#fff; box-shadow:0 8px 24px rgba(2,6,23,0.04); border:1px solid #eef3fb; margin-top: 28px; }
-    .star { color:#f6c84c; }
-
-    .qty-input { width:110px; }
-    .qty-input input { text-align:center; }
-
-    /* NEW: qty control UI (restyled to match ADD TO CART size and become a red button) */
-    .cart-qty-controls {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      border-radius:6px;
-      padding:8px 12px;
-      background: rgb(245, 158, 11);
-      color: #fff;
-      min-height: 44px;
-      box-shadow: 0 12px 28px rgba(196, 57, 57, 0.14);
-      border: none;
-      transition: transform 180ms cubic-bezier(.2,.9,.3,1), box-shadow 180ms;
-      font-weight:800;
-      min-width: 180px; /* ensure roughly same width as ADD button */
-    }
-    .cart-qty-controls:focus { outline: none; box-shadow: 0 14px 36px rgba(196,57,57,0.18); transform: translateY(-2px); }
-
-    .cart-qty-controls .qty-btn {
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:44px;
-      height:36px;
-      min-width:44px;
-      border-radius:6px;
-      border: 1px solid rgb(245, 158, 11);
-      background: rgb(245, 158, 11);
-      color: #fff;
-      font-size:20px;
-      line-height:1;
-      cursor:pointer;
-      transition: transform 120ms, background 120ms, box-shadow 120ms;
-    }
-    .cart-qty-controls .qty-btn:active { transform: scale(.96); }
-    .cart-qty-controls .qty-amount {
-      min-width:56px;
-      text-align:center;
-      font-weight:900;
-      font-size:1rem;
-      padding:6px 10px;
-      border-radius:6px;
-      background: rgb(245, 158, 11);
-      border: 1px solid rgb(245, 158, 11);
-    }
-
-    /* pop animation when it appears or updates */
-    .cart-qty-controls.pop {
-      transform: scale(1.04);
-      box-shadow: 0 22px 48px rgba(196,57,57,0.18);
-    }
-
-    /* smaller devices: keep comfortable sizing */
-    @media (max-width: 576px) {
-      .cart-qty-controls { min-width: 150px; padding:6px 10px; }
-      .cart-qty-controls .qty-btn { width:38px; height:34px; }
-      .cart-qty-controls .qty-amount { min-width:44px; padding:6px 8px; }
-    }
-
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ product.name }} - Champalal & Sons</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='customer/product_detail.css') }}">
 </head>
 <body>
   {% include 'customer/layout.html' %}
 
-  <!-- FLASH MESSAGES -->
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="container mt-3">
-        {% for category, message in messages %}
-          {% set alert_class = 'info' %}
-          {% if category in ['success','warning','danger','info'] %}
-            {% set alert_class = category %}
+  <main class="product-detail-container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="separator">›</span>
+      <a href="/browse">Products</a>
+      <span class="separator">›</span>
+      {% if product.category %}
+      <a href="/browse?category={{ product.category }}">{{ product.category }}</a>
+      <span class="separator">›</span>
+      {% endif %}
+      <span class="current">{{ product.name }}</span>
+    </nav>
+
+    <div class="product-layout">
+      <!-- Left: Image Gallery -->
+      <div class="gallery-section">
+        <!-- Main Image Display -->
+        <div class="main-image-container">
+          <img 
+            id="mainImage" 
+            src="{{ (variant_images[initial_variant_id][0].path if initial_variant_id and initial_variant_id in variant_images and variant_images[initial_variant_id] else (product_images[0].path if product_images else product.image_path)) or url_for('static', filename='images/placeholder.png') }}" 
+            alt="{{ product.name }}"
+            class="main-image"
+          >
+          
+          <!-- Zoom Lens -->
+          <div class="zoom-lens" id="zoomLens"></div>
+          
+          <!-- Wishlist Button -->
+          <button class="wishlist-fab" id="wishlistBtn" data-product-id="{{ product.product_id }}" data-variant-id="{{ variants[0].variant_id if variants else '' }}" aria-label="Add to wishlist">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+            </svg>
+          </button>
+
+          <!-- Image Navigation Arrows -->
+          <button class="img-nav-btn prev-btn" id="prevImageBtn" aria-label="Previous image">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+          <button class="img-nav-btn next-btn" id="nextImageBtn" aria-label="Next image">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Thumbnail Strip -->
+        <div class="thumbnail-strip" id="thumbnailStrip">
+          <!-- Thumbnails will be dynamically populated -->
+        </div>
+      </div>
+
+      <!-- Right: Product Details -->
+      <div class="details-section">
+        <!-- Brand & Title -->
+        {% if product.brand %}
+        <div class="brand-badge">{{ product.brand }}</div>
+        {% endif %}
+        
+        <h1 class="product-title">{{ product.name }}</h1>
+
+        <!-- Rating Summary -->
+        <div class="rating-summary">
+          <div class="stars" data-rating="{{ avg_rating }}">
+            {% for i in range(1, 6) %}
+            <svg class="star {% if i <= avg_rating|round %}filled{% endif %}" width="20" height="20" viewBox="0 0 24 24">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            {% endfor %}
+          </div>
+          <span class="rating-text">{{ avg_rating }} ({{ total_reviews }} reviews)</span>
+        </div>
+
+        <!-- Price -->
+        <div class="price-section">
+          <span class="current-price" id="currentPrice">₹{{ variants[0].price if variants else '0.00' }}</span>
+          {% if product.get('original_price') and product.original_price > (variants[0].price if variants else 0) %}
+          <span class="original-price">₹{{ product.original_price }}</span>
+          <span class="discount-badge">{{ ((product.original_price - variants[0].price) / product.original_price * 100)|round|int }}% OFF</span>
           {% endif %}
-          <div class="alert alert-{{ alert_class }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
-
-  <div class="container mt-4">
-    <div class="prod-row">
-
-      <!-- LEFT -->
-      <div class="left-panel">
-        <div class="thumb-column" aria-hidden="true">
-          <div id="thumbStrip"></div>
         </div>
 
-        <div class="image-wrap">
-          {# Use public URL from DB directly (product_images[].path or product.image_path). Fallback to static placeholder. #}
-          {% set main_src = (product_images[0].path if product_images and product_images[0].path else (product.image_path or None)) %}
-          <img id="mainImage" class="main-image"
-               src="{{ main_src if main_src else url_for('static', filename='uploads/placeholder.png') }}"
-               alt="{{ product.name }}">
-          <div class="image-nav" aria-hidden="true">
-            <button id="imgPrev" type="button" title="Previous image" aria-label="Previous image">‹</button>
-            <button id="imgNext" type="button" title="Next image" aria-label="Next image">›</button>
-          </div>
-        </div>
-      </div>
+        <!-- Short Description -->
+        {% if product.short_description %}
+        <p class="short-description">{{ product.short_description }}</p>
+        {% endif %}
 
-      <!-- RIGHT -->
-      <div class="right-panel">
-        <div class="product-top">
-          <div>
-            <h2 class="product-title">{{ product.name }}</h2>
-            <div class="product-sub">{{ product.brand or '—' }} • {{ product.category or '—' }}</div>
-
-            <!-- Variant size & color line (shows selected variant info) -->
-            <div class="variant-meta">
-              <div>Size: <span id="variantSize">—</span></div>
-              <div>Color: <span id="variantColor">—</span>
-                <span id="variantSwatch" class="variant-swatch" style="display:none;"></span>
-              </div>
-            </div>
-          </div>
-
-          <div class="price-and-rating">
-            <div>
-              <div class="price" id="topPrice">₹—</div>
-            </div>
-            <div class="rating-summary">
-              <div style="font-weight:800; font-size:16px;" id="avgRating">{{ avg_rating }}</div>
-              <div id="avgStars" style="font-size:14px;">
-                {% for i in range(1,6) %}
-                  {% if i <= avg_rating|round(0,'floor') %}
-                    <span class="star">★</span>
-                  {% else %}
-                    <span class="star" style="color:#e9e9e9">★</span>
-                  {% endif %}
-                {% endfor %}
-              </div>
-              <div class="small text-muted" id="totalReviews">{{ total_reviews }} review{{ 's' if total_reviews!=1 }}</div>
-            </div>
-          </div>
-
-          <div class="action-row">
-            <div class="qty-input">
-              <label for="topQty" class="small text-muted mb-0">Qty</label>
-              <input id="topQty" type="number" min="1" value="1" class="form-control form-control-sm" aria-label="Quantity" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); document.getElementById('topAddBtn').click(); }">
-            </div>
-
-            <!-- Add to cart form (unchanged action) -->
-            <form id="topAddToCartForm" method="POST" action="{{ url_for('main.cart_add') }}" style="display:inline;">
-              <input type="hidden" name="product_id" value="{{ product.product_id }}">
-              <input type="hidden" name="variant_id" id="topVariantId" value="{{ variants.variant_id }}">
-              <input type="hidden" name="qty" id="topHiddenQty" value="1">
-
-              <!-- ADD button (default) -->
-              <button id="topAddBtn" type="submit" class="btn-add"> <span style="margin-right:10px;">👜</span> ADD TO CART</button>
-            </form>
-
-            <!-- Qty controls container (hidden by default). JS swaps between add button and this control -->
-            <div id="cartQtyContainer" style="display:none; ">
-              <div class="cart-qty-controls" id="cartQtyControls" role="group" aria-label="Cart quantity controls" >
-                <button class="qty-btn" id="decreaseQtyBtn" type="button" title="Decrease quantity" aria-label="Decrease quantity">−</button>
-                <div id="cartItemQtyDisplay" class="qty-amount">1</div>
-                <button class="qty-btn" id="increaseQtyBtn" type="button" title="Increase quantity" aria-label="Increase quantity">+</button>
-              </div>
-            </div>
-
-            <!-- WISHLIST button: reflects current variant wish state and toggles via AJAX -->
-            <button id="wishBtn" class="btn-wish" type="button" aria-pressed="false" data-wished="false" style="display:inline-flex;align-items:center;gap:8px;">
-              <span id="wishIcon" aria-hidden="true" style="font-size: larger;">♡</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- pincode -->
-        <div class="pincode-row">
-          <div style="font-weight:700; color:var(--muted); letter-spacing: 1px;">DELIVERY DATE CHECK:</div>
-          <input id="pincodeInput" class="form-control form-control-sm" placeholder="Enter Pincode" aria-label="Enter Pincode" onkeydown="if(event.key === 'Enter'){ event.preventDefault(); document.getElementById('pincodeCheckBtn').click(); }">
-          <button id="pincodeCheckBtn" class="btn btn-sm">Check</button>
-          <div id="pincodeMsg" class="small text-muted" aria-live="polite"></div>
-        </div>
-
-        <!-- Explore other variants (moved to directly below delivery pincode) -->
-        <div class="divider"></div>
-        <div style="font-size:1.12rem;font-weight:700;">Explore other variants</div>
-        <div class="small text-muted">Tap a variant to switch. Variant previews show a small image and basic info.</div>
-
-        <div id="variantList" class="variant-list mt-3" style="margin-top:12px;">
-          {% for v in variants %}
-            <div class="variant-btn {% if v.is_default %}active{% endif %}" role="button" tabindex="0"
-                 data-variant-id="{{ v.variant_id }}"
-                 data-sku="{{ v.sku or '' }}"
-                 data-price="{{ '%.2f'|format(v.price) }}"
-                 data-stock="{{ v.stock_count }}"
-                 data-size="{{ v.size or '' }}"
-                 data-color="{{ v.color or '' }}"
-                 data-color-hex="{{ v.color_hex or '' }}"
-                 data-thumb="{{ v.thumb }}">
-              <img class="variant-thumb" src="{{ v.thumb }}" alt="thumb">
-              <div>
-                <!-- Removed SKU display here as requested.
-                     Display only size and color with emphasized styling. -->
-                <div style="font-weight:700;font-size:.98rem;">{{ v.size or 'N/A' }}</div>
-                <div class="small text-muted" style="font-weight:700;">{{ v.color or 'N/A' }}</div>
-              </div>
-            </div>
-          {% endfor %}
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- Product Details: include short description (full description removed from here per request) -->
-        <div class="detail-block">
-          <h6>Product Details</h6>
-          <p class="muted" style=" color:#333; margin-bottom:6px;">{{ product.short_description or '—' }}</p>
-          <!-- full description intentionally removed from this block (moved into Product Specifications) -->
-        </div>
-
-        <!-- concise Size & Fit, Material & Care, Product Code blocks (compact) -->
-        <div class="detail-block">
-          <h6>Size & Fit</h6>
-          <div class="muted">{{ product.saree_length or 'N/A' }}{% if product.blouse_length %} ; Blouse: {{ product.blouse_length }}{% endif %}</div>
-        </div>
-
-        <div class="detail-block">
-          <h6>Material & Care</h6>
-          <div class="muted">{{ product.material or 'N/A' }}<br>{{ product.care_instructions or 'N/A' }}</div>
-        </div>
-
-        <div class="detail-block">
-          <h6>Product Code</h6>
-          <div class="muted" id="topSku">{{ product.sku or product.product_code or '—' }}</div>
-        </div>
-
-        <div class="divider"></div>
-
-        <!-- Product Specifications (include requested fields and moved description) -->
-        <div class="accordion" id="productAccordion">
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="headingSpecs">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSpecs" aria-expanded="false" aria-controls="collapseSpecs">
-                PRODUCT SPECIFICATIONS
+        <!-- Variant Selectors -->
+        <div class="variant-selectors">
+          <!-- Color Selector -->
+          {% set colors = variants|groupby('color')|list %}
+          {% if colors|length > 1 %}
+          <div class="selector-group">
+            <label class="selector-label">
+              Color: <span id="selectedColorName">{{ variants[0].color if variants else 'Select' }}</span>
+            </label>
+            <div class="color-options" id="colorOptions">
+              {% for color_name, color_variants in colors %}
+              {% set color_hex = color_variants[0].color_hex or '#cccccc' %}
+              <button 
+                class="color-swatch {% if loop.first %}selected{% endif %}" 
+                data-color="{{ color_name }}"
+                data-hex="{{ color_hex }}"
+                style="background-color: {{ color_hex }};"
+                title="{{ color_name }}"
+                aria-label="{{ color_name }}">
+                {% if loop.first %}
+                <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                {% endif %}
               </button>
-            </h2>
-            <div id="collapseSpecs" class="accordion-collapse collapse" aria-labelledby="headingSpecs" data-bs-parent="#productAccordion">
-              <div class="accordion-body">
-                <dl class="spec-grid">
-                  <!-- Moved full description into specifications as requested -->
-                  <div class="spec-row"><div class="spec-left">Description</div><div>{{ product.description_html | safe }}</div></div>
-
-                  <div class="spec-row"><div class="spec-left">Category</div><div>{{ product.category or 'N/A' }}</div></div>
-                  <div class="spec-row"><div class="spec-left">Brand</div><div>{{ product.brand or 'N/A' }}</div></div>
-                  <div class="spec-row"><div class="spec-left">Fit</div><div>{{ product.fit or 'N/A' }}</div></div>
-                  <div class="spec-row"><div class="spec-left">Occasion</div><div>{{ product.occasion or 'N/A' }}</div></div>
-                  <div class="spec-row"><div class="spec-left">Season</div><div>{{ product.season or 'N/A' }}</div></div>
-                  <div class="spec-row"><div class="spec-left">Sustainability</div><div>{{ product.sustainability or 'N/A' }}</div></div>
-
-                  <!-- Size & Color should reflect the currently selected variant.
-                       Provide server-side fallback when there are no variants,
-                       and JS will update #specSize and #specColor when a variant is selected. -->
-                  <div class="spec-row"><div class="spec-left">Size</div>
-                    <div id="specSize">{% if variants and variants|length %}—{% else %}{{ product.size or 'N/A' }}{% endif %}</div>
-                  </div>
-                  <div class="spec-row"><div class="spec-left">Color</div>
-                    <div id="specColor">{% if variants and variants|length %}—{% else %}{{ product.color or 'N/A' }}{% endif %}</div>
-                  </div>
-                </dl>
-              </div>
+              {% endfor %}
             </div>
           </div>
+          {% endif %}
 
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="headingShip">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseShip" aria-expanded="false" aria-controls="collapseShip">
-                SHIPPING INFORMATION
+          <!-- Size Selector -->
+          {% set sizes = variants|groupby('size')|list %}
+          {% if sizes|length > 1 %}
+          <div class="selector-group">
+            <label class="selector-label">
+              Size: <span id="selectedSizeName">{{ variants[0].size if variants else 'Select' }}</span>
+            </label>
+            <div class="size-options" id="sizeOptions">
+              {% for size_name, size_variants in sizes %}
+              <button 
+                class="size-button {% if loop.first %}selected{% endif %}" 
+                data-size="{{ size_name }}"
+                aria-label="{{ size_name }}">
+                {{ size_name }}
               </button>
-            </h2>
-            <div id="collapseShip" class="accordion-collapse collapse" aria-labelledby="headingShip" data-bs-parent="#productAccordion">
-              <div class="accordion-body">
-                <p class="muted">Shipping & delivery information tailored to your location. Free shipping on orders above X. Delivery times vary by pincode.</p>
-              </div>
+              {% endfor %}
             </div>
           </div>
+          {% endif %}
 
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="headingMore">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseMore" aria-expanded="false" aria-controls="collapseMore">
-                MORE INFORMATION
-              </button>
-            </h2>
-            <div id="collapseMore" class="accordion-collapse collapse" aria-labelledby="headingMore" data-bs-parent="#productAccordion">
-              <div class="accordion-body">
-                <p class="muted">Additional product information, measurements, styling tips and return policy details.</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="accordion-item">
-            <h2 class="accordion-header" id="headingHelp">
-              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseHelp" aria-expanded="false" aria-controls="collapseHelp">
-                NEED HELP
-              </button>
-            </h2>
-            <div id="collapseHelp" class="accordion-collapse collapse" aria-labelledby="headingHelp" data-bs-parent="#productAccordion">
-              <div class="accordion-body">
-                <p class="muted">Contact customer support for assistance or sizing advice.</p>
-              </div>
-            </div>
+          <!-- Stock Status -->
+          <div class="stock-status" id="stockStatus">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span id="stockText">In Stock ({{ variants[0].stock_count if variants else 0 }} available)</span>
           </div>
         </div>
 
-        <div style="height:12px;"></div>
+        <!-- Quantity Selector & Add to Cart -->
+        <div class="action-section">
+          <div class="quantity-selector">
+            <button class="qty-btn minus" id="qtyMinus" aria-label="Decrease quantity">−</button>
+            <input type="number" class="qty-input" id="qtyInput" value="1" min="1" max="{{ variants[0].stock_count if variants else 1 }}" aria-label="Quantity">
+            <button class="qty-btn plus" id="qtyPlus" aria-label="Increase quantity">+</button>
+          </div>
+
+          <button class="add-to-cart-btn" id="addToCartBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="9" cy="21" r="1"></circle>
+              <circle cx="20" cy="21" r="1"></circle>
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+            </svg>
+            <span>Add to Cart</span>
+          </button>
+        </div>
+
+        <!-- Product Meta -->
+        <div class="product-meta">
+          {% if product.sku %}
+          <div class="meta-item">
+            <span class="meta-label">SKU:</span>
+            <span class="meta-value" id="currentSKU">{{ product.sku }}</span>
+          </div>
+          {% endif %}
+          
+          {% if product.category %}
+          <div class="meta-item">
+            <span class="meta-label">Category:</span>
+            <span class="meta-value">{{ product.category }}</span>
+          </div>
+          {% endif %}
+
+          {% if product.material %}
+          <div class="meta-item">
+            <span class="meta-label">Material:</span>
+            <span class="meta-value">{{ product.material }}</span>
+          </div>
+          {% endif %}
+
+          {% if product.pattern %}
+          <div class="meta-item">
+            <span class="meta-label">Pattern:</span>
+            <span class="meta-value">{{ product.pattern }}</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Trust Badges -->
+        <div class="trust-badges">
+          <div class="badge-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <span>Authentic Products</span>
+          </div>
+          <div class="badge-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span>Fast Delivery</span>
+          </div>
+          <div class="badge-item">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+              <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span>Easy Returns</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Reviews (unchanged behaviour) -->
-    <div class="row mt-4">
-      <div class="col-12">
-        <div id="reviewsCard" class="reviews-card">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <div class="d-flex align-items-center gap-3">
-              <div class="avg-rating">
-                <div style="font-size:1.6rem;font-weight:800;" id="avgRating">{{ avg_rating }}</div>
-                <div>
-                  <div id="avgStars">
-                    {% for i in range(1,6) %}
-                      {% if i <= avg_rating|round(0,'floor') %}
-                        <span class="star">★</span>
-                      {% else %}
-                        <span class="star" style="color:#e9e9e9">★</span>
-                      {% endif %}
-                    {% endfor %}
-                  </div>
-                  <div class="small text-muted" id="totalReviews">{{ total_reviews }} review{{ 's' if total_reviews!=1 }}</div>
-                </div>
-              </div>
-            </div>
+    <!-- Tabs Section -->
+    <div class="tabs-section">
+      <div class="tab-headers">
+        <button class="tab-header active" data-tab="description">Description</button>
+        <button class="tab-header" data-tab="details">Specifications</button>
+        <button class="tab-header" data-tab="reviews">Reviews ({{ total_reviews }})</button>
+      </div>
 
-            <div class="d-flex gap-2 align-items-center">
-              <label class="small text-muted mb-0">Sort</label>
-              <select id="reviewSort" class="form-select form-select-sm">
-                <option value="latest">Latest</option>
-                <option value="oldest">Oldest</option>
-                <option value="highest">Highest</option>
-                <option value="lowest">Lowest</option>
-              </select>
-              <button id="loadMoreReviews" class="btn btn-outline-primary btn-sm">See more reviews</button>
-            </div>
+      <div class="tab-contents">
+        <!-- Description Tab -->
+        <div class="tab-content active" id="descriptionTab">
+          <div class="description-content">
+            {{ product.description_html|safe }}
           </div>
+        </div>
 
-          <hr>
+        <!-- Details Tab -->
+        <div class="tab-content" id="detailsTab">
+          <div class="details-grid">
+            {% if product.material %}
+            <div class="detail-item">
+              <span class="detail-label">Material</span>
+              <span class="detail-value">{{ product.material }}</span>
+            </div>
+            {% endif %}
+            
+            {% if product.fit %}
+            <div class="detail-item">
+              <span class="detail-label">Fit</span>
+              <span class="detail-value">{{ product.fit }}</span>
+            </div>
+            {% endif %}
 
-          <div id="reviewsList">
-            {% if top_reviews %}
-              {% for r in top_reviews %}
-                <div class="review-item d-flex gap-3" data-review-id="{{ r.review_id }}">
-                  <div style="width:56px;flex-shrink:0;">
-                    <div style="width:48px;height:48px;border-radius:50%;background:#f1f3f5;display:flex;align-items:center;justify-content:center;font-weight:700;color:#111;">
-                      {{ r.customer_name[:1]|upper }}
-                    </div>
-                  </div>
-                  <div style="flex:1;">
-                    <div class="d-flex justify-content-between align-items-start">
-                      <div>
-                        <strong>{{ r.customer_name }}</strong>
-                        <div class="review-meta">
-                          {% for i in range(1,6) %}
-                            {% if i <= r.rating %}
-                              <span class="star">★</span>
-                            {% else %}
-                              <span style="color:#e9e9e9" class="star">★</span>
-                            {% endif %}
-                          {% endfor %}
-                          <span class="ms-2 small text-muted">{{ r.created_at_str or '' }}</span>
-                        </div>
-                      </div>
-                      <div>
-                        {% if r.is_verified_purchase %}
-                          <div class="verified-badge">Verified</div>
-                        {% endif %}
-                      </div>
-                    </div>
-                    {% if r.title %}
-                      <div class="mt-2"><strong>{{ r.title }}</strong></div>
-                    {% endif %}
-                    <div class="mt-1 text-muted">{{ r.body or '' }}</div>
-                  </div>
-                </div>
-              {% endfor %}
-            {% else %}
-              <div class="text-muted">No reviews yet — be the first to review this product.</div>
+            {% if product.pattern %}
+            <div class="detail-item">
+              <span class="detail-label">Pattern</span>
+              <span class="detail-value">{{ product.pattern }}</span>
+            </div>
+            {% endif %}
+
+            {% if product.occasion %}
+            <div class="detail-item">
+              <span class="detail-label">Occasion</span>
+              <span class="detail-value">{{ product.occasion }}</span>
+            </div>
+            {% endif %}
+
+            {% if product.season %}
+            <div class="detail-item">
+              <span class="detail-label">Season</span>
+              <span class="detail-value">{{ product.season }}</span>
+            </div>
+            {% endif %}
+
+            {% if product.care_instructions %}
+            <div class="detail-item full-width">
+              <span class="detail-label">Care Instructions</span>
+              <span class="detail-value">{{ product.care_instructions }}</span>
+            </div>
+            {% endif %}
+
+            {% if product.weight %}
+            <div class="detail-item">
+              <span class="detail-label">Weight</span>
+              <span class="detail-value">{{ product.weight }}</span>
+            </div>
+            {% endif %}
+
+            {% if product.sustainability %}
+            <div class="detail-item full-width">
+              <span class="detail-label">Sustainability</span>
+              <span class="detail-value">{{ product.sustainability }}</span>
+            </div>
             {% endif %}
           </div>
+        </div>
 
-          <div id="reviewsLoading" class="text-center py-3" style="display:none;">
-            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+        <!-- Reviews Tab -->
+        <div class="tab-content" id="reviewsTab">
+          <div class="reviews-header">
+            <div class="reviews-summary">
+              <div class="avg-rating-big">{{ avg_rating }}</div>
+              <div class="stars-big">
+                {% for i in range(1, 6) %}
+                <svg class="star {% if i <= avg_rating|round %}filled{% endif %}" width="24" height="24" viewBox="0 0 24 24">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                {% endfor %}
+              </div>
+              <p class="total-reviews-text">Based on {{ total_reviews }} reviews</p>
+            </div>
+
+            <div class="reviews-actions">
+              <select class="review-sort" id="reviewSort">
+                <option value="latest">Latest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="highest">Highest Rated</option>
+                <option value="lowest">Lowest Rated</option>
+              </select>
+            </div>
           </div>
+
+          <div class="reviews-list" id="reviewsList">
+            {% for review in top_reviews %}
+            <div class="review-card">
+              <div class="review-header">
+                <div class="reviewer-info">
+                  <div class="reviewer-avatar">{{ review.customer_name[0].upper() }}</div>
+                  <div>
+                    <div class="reviewer-name">{{ review.customer_name }}</div>
+                    <div class="review-date">{{ review.created_at_str }}</div>
+                  </div>
+                </div>
+                <div class="review-rating">
+                  {% for i in range(1, 6) %}
+                  <svg class="star {% if i <= review.rating %}filled{% endif %}" width="16" height="16" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                  {% endfor %}
+                </div>
+              </div>
+              {% if review.title %}
+              <h4 class="review-title">{{ review.title }}</h4>
+              {% endif %}
+              {% if review.body %}
+              <p class="review-body">{{ review.body }}</p>
+              {% endif %}
+            </div>
+            {% endfor %}
+          </div>
+
+          {% if total_reviews > 5 %}
+          <button class="load-more-btn" id="loadMoreReviews">Load More Reviews</button>
+          {% endif %}
         </div>
       </div>
     </div>
+  </main>
 
-  </div>
-
-  <!-- Add-to-cart overlay (restored) -->
-  <div id="addCartOverlay" role="status" aria-live="polite" aria-hidden="true" style="display:none; align-items:center; justify-content:center;">
-    <div class="overlay-box" role="dialog" aria-label="Cart status" style="background:#fff;padding:18px;border-radius:12px;box-shadow:0 20px 40px rgba(2,6,23,0.18);display:flex;gap:14px;align-items:center;min-width:300px;">
-      <div class="status-left" aria-hidden="true" style="width:76px;display:flex;align-items:center;justify-content:center;">
-        <div class="cart-icon" id="cartIcon" aria-hidden="true" style="width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#fff,#f8fbff);box-shadow:0 8px 20px rgba(2,6,23,0.08);position:relative;overflow:visible;">
-          <svg class="cart-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="width:36px;height:36px;">
-            <path d="M6 6h15l-1.5 9h-11L6 6z" fill="#495057" opacity="0.12"></path>
-            <path d="M7 6h11l-1.2 7.2a1 1 0 0 1-.98.8H9.18a1 1 0 0 1-.98-.8L7 6z" fill="#0d6efd"></path>
-            <circle cx="10" cy="20" r="1.5" fill="#111"></circle>
-            <circle cx="18" cy="20" r="1.5" fill="#111"></circle>
-          </svg>
-          <div class="cart-check" id="cartCheck" aria-hidden="true" style="position:absolute;right:-6px;bottom:-6px;width:28px;height:28px;border-radius:999px;background:#28a745;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;transform:scale(0);transition:transform 240ms;">✓</div>
-        </div>
-      </div>
-
-      <div class="status-right" id="overlayStatusRight" style="flex:1;">
-        <h5 id="overlayTitle" style="margin:0 0 6px 0;">Adding to cart…</h5>
-        <p id="overlayMessage" style="margin:0;color:var(--muted);">We're reserving your item so you don't miss out — this will only take a moment.</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- fullscreen modal for image -->
-  <div class="modal fade" id="imageFullscreenModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen">
-      <div class="modal-content bg-dark">
-        <div class="modal-body d-flex align-items-center justify-content-center p-0" style="position:relative;">
-          <button type="button" class="btn btn-light position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close">Close</button>
-          <img id="fullscreenImage" class="img-fullscreen" src="" alt="Full image">
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- Hidden data for JavaScript -->
+  <script id="variantsData" type="application/json">
+    {{ variants|tojson|safe }}
+  </script>
+  <script id="productImagesData" type="application/json">
+    {{ product_images|tojson|safe }}
+  </script>
+  <script id="variantImagesData" type="application/json">
+    {{ variant_images|tojson|safe }}
+  </script>
+  <script>
+    window.PRODUCT_ID = {{ product.product_id }};
+    window.INITIAL_VARIANT_ID = {{ initial_variant_id or 'null' }};
+    window.TOTAL_REVIEWS = {{ total_reviews }};
+  </script>
 
   {% include 'customer/footer.html' %}
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-  <script>
-    /* All JS is preserved and wired to the IDs present above.
-       Changes made:
-       - Replace the Add-to-cart form submit handler so it calls /cart/add (via doAddToCartAjax)
-       - Ensure cart_item_status check is used when selecting a variant and on init
-       No UI/markup changes were made.
-    */
-
-    document.addEventListener('DOMContentLoaded', function(){
-      const productImages = [
-        {% for img in product_images %}
-          "{{ img.path }}",
-        {% endfor %}
-      ].filter(Boolean);
-
-      const variantImages = {};
-      {% for vid, imgs in variant_images.items() %}
-        variantImages[{{ vid }}] = [
-          {% for img in imgs %}
-            "{{ img.path }}",
-          {% endfor %}
-        ].filter(Boolean);
-      {% endfor %}
-
-      const thumbStrip = document.getElementById('thumbStrip');
-      const mainImg = document.getElementById('mainImage');
-      const prevBtn = document.getElementById('imgPrev');
-      const nextBtn = document.getElementById('imgNext');
-
-      const variantButtons = Array.from(document.querySelectorAll('#variantList .variant-btn'));
-
-      // add-to-cart controls
-      const topQty = document.getElementById('topQty');
-      const topHiddenQty = document.getElementById('topHiddenQty');
-      const topVariantIdInput = document.getElementById('topVariantId');
-      const topAddBtn = document.getElementById('topAddBtn');
-      const topPriceEl = document.getElementById('topPrice');
-      const topSkuEl = document.getElementById('topSku');
-
-      // NEW: cart qty controls
-      const cartQtyContainer = document.getElementById('cartQtyContainer');
-      const cartQtyControls = document.getElementById('cartQtyControls');
-      const decreaseQtyBtn = document.getElementById('decreaseQtyBtn');
-      const increaseQtyBtn = document.getElementById('increaseQtyBtn');
-      const cartItemQtyDisplay = document.getElementById('cartItemQtyDisplay');
-      const topForm = document.getElementById('topAddToCartForm');
-
-      // variant top display
-      const variantSizeEl = document.getElementById('variantSize');
-      const variantColorEl = document.getElementById('variantColor');
-      const variantSwatchEl = document.getElementById('variantSwatch');
-
-      // spec size/color elements (new: kept in sync with selected variant)
-      const specSizeEl = document.getElementById('specSize');
-      const specColorEl = document.getElementById('specColor');
-
-      // overlay
-      const addCartOverlay = document.getElementById('addCartOverlay');
-      const overlayTitle = document.getElementById('overlayTitle');
-      const overlayMessage = document.getElementById('overlayMessage');
-      const cartIcon = document.getElementById('cartIcon');
-      const cartCheck = document.getElementById('cartCheck');
-
-      // reviews
-      const reviewsList = document.getElementById('reviewsList');
-      const reviewSortEl = document.getElementById('reviewSort');
-      const loadMoreBtn = document.getElementById('loadMoreReviews');
-      const reviewsLoading = document.getElementById('reviewsLoading');
-      let reviewsOffset = {{ top_reviews|length }};
-      const productId = {{ product.product_id }};
-      let reviewsSort = 'latest';
-
-      let currentList = [];
-      let currentIndex = 0;
-      let selectedVariantId = null;
-
-      // helper: swap Add <-> Qty controls with animation
-      function showQtyControls(qty) {
-        if (!cartQtyContainer || !topAddBtn || !cartQtyControls) return;
-        topAddBtn.style.display = 'none';
-        cartQtyContainer.style.display = 'inline-block';
-        cartItemQtyDisplay.textContent = String(qty || 1);
-        // add pop animation
-        cartQtyControls.classList.remove('pop');
-        // small timeout to force reflow so animation runs each time
-        void cartQtyControls.offsetWidth;
-        cartQtyControls.classList.add('pop');
-        // remove pop after a short duration to allow repeated triggers
-        setTimeout(()=> cartQtyControls.classList.remove('pop'), 350);
-      }
-      function showAddButton() {
-        if (!cartQtyContainer || !topAddBtn || !cartQtyControls) return;
-        cartQtyContainer.style.display = 'none';
-        topAddBtn.style.display = '';
-        cartQtyControls.classList.remove('pop');
-      }
-
-      function renderThumbs(list) {
-        thumbStrip.innerHTML = '';
-        if (!list || list.length === 0) {
-          const imgEl = document.createElement('img');
-          imgEl.src = "{{ url_for('static', filename='uploads/placeholder.png') }}";
-          imgEl.className = 'selected';
-          thumbStrip.appendChild(imgEl);
-          return;
-        }
-        list.forEach((src, i) => {
-          const imgEl = document.createElement('img');
-          imgEl.src = src;
-          imgEl.dataset.index = i;
-          if (i === 0) imgEl.classList.add('selected');
-          imgEl.addEventListener('click', ()=> { showImageAt(Number(imgEl.dataset.index)); });
-          thumbStrip.appendChild(imgEl);
-        });
-      }
-
-      function showImageAt(i) {
-        if (!currentList || currentList.length === 0) {
-          mainImg.src = "{{ url_for('static', filename='uploads/placeholder.png') }}";
-          return;
-        }
-        const newIndex = ((i % currentList.length) + currentList.length) % currentList.length;
-        mainImg.classList.add('hidden');
-        setTimeout(()=> {
-          mainImg.src = currentList[newIndex];
-          mainImg.classList.remove('hidden');
-        }, 120);
-        Array.from(thumbStrip.querySelectorAll('img')).forEach((t, j) => t.classList.toggle('selected', j === newIndex));
-        currentIndex = newIndex;
-      }
-
-      prevBtn && prevBtn.addEventListener('click', ()=> showImageAt(currentIndex - 1));
-      nextBtn && nextBtn.addEventListener('click', ()=> showImageAt(currentIndex + 1));
-
-      function updateTopForVariant(vid, btnEl) {
-        const price = btnEl.getAttribute('data-price') || '';
-        const sku = btnEl.getAttribute('data-sku') || '';
-        const stock = parseInt(btnEl.getAttribute('data-stock') || '0', 10);
-        const size = btnEl.getAttribute('data-size') || '';
-        const color = btnEl.getAttribute('data-color') || '';
-        const colorHex = btnEl.getAttribute('data-color-hex') || '';
-
-        topVariantIdInput.value = vid;
-        topPriceEl.textContent = price ? '₹' + price : '₹—';
-        if (topSkuEl) topSkuEl.textContent = sku || (product && product.sku) || 'N/A';
-
-        if (variantSizeEl) variantSizeEl.textContent = size || 'N/A';
-        if (variantColorEl) variantColorEl.textContent = color || 'N/A';
-        if (variantSwatchEl) {
-          if (colorHex && colorHex.trim() !== '') {
-            variantSwatchEl.style.display = 'inline-block';
-            variantSwatchEl.style.background = colorHex;
-          } else {
-            variantSwatchEl.style.display = 'none';
-          }
-        }
-
-        // Keep specification Size/Color in sync with top variant display
-        if (specSizeEl) specSizeEl.textContent = size || 'N/A';
-        if (specColorEl) specColorEl.textContent = color || 'N/A';
-
-        // If variant is out of stock, disable add button
-        if (stock <= 0) {
-          topAddBtn.disabled = true;
-        } else {
-          topAddBtn.disabled = false;
-        }
-      }
-
-      function setImageListForVariant(vid) {
-        const vImgs = variantImages[vid] && variantImages[vid].length ? variantImages[vid].slice() : [];
-        currentList = vImgs.length ? vImgs : (productImages.length ? productImages.slice() : ["{{ url_for('static', filename='uploads/placeholder.png') }}"]);
-        currentIndex = 0;
-        renderThumbs(currentList);
-        showImageAt(0);
-      }
-
-      function selectVariant(btnEl) {
-        const vid = btnEl.getAttribute('data-variant-id');
-        variantButtons.forEach(b => b.classList.toggle('active', b === btnEl));
-        selectedVariantId = vid;
-        setImageListForVariant(vid);
-        updateTopForVariant(vid, btnEl);
-        // update URL params (no reload)
-        try {
-          const u = new URL(window.location.href);
-          u.searchParams.set('variant_id', String(vid));
-          const sku = btnEl.getAttribute('data-sku');
-          if (sku) u.searchParams.set('variant_sku', sku);
-          history.replaceState(null, '', u.toString());
-        } catch(e){}
-        // When variant changes, check if this variant already in cart (update UI)
-        checkCartItemStatus(String(vid));
-        checkWishlistStatus(String(vid)); // ensure wishlist state updates on variant change
-      }
-
-      const initialVariantId = {{ initial_variant_id|tojson }};
-      let initialButton = variantButtons.find(b => b.classList.contains('active')) || variantButtons[0];
-      if (initialVariantId) {
-        const forced = variantButtons.find(b => b.getAttribute('data-variant-id') === String(initialVariantId));
-        if (forced) initialButton = forced;
-      }
-      if (initialButton) {
-        selectVariant(initialButton);
-      } else {
-        currentList = productImages.length ? productImages.slice() : ["{{ url_for('static', filename='uploads/placeholder.png') }}"];
-        renderThumbs(currentList);
-        showImageAt(0);
-        topVariantIdInput.value = '';
-        topPriceEl.textContent = '₹—';
-      }
-
-      variantButtons.forEach(btn => {
-        btn.addEventListener('click', ()=> selectVariant(btn));
-        btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectVariant(btn); }});
-      });
-
-      const imgModal = new bootstrap.Modal(document.getElementById('imageFullscreenModal'));
-      const fullscreenImg = document.getElementById('fullscreenImage');
-      mainImg.addEventListener('click', function(){
-        fullscreenImg.src = mainImg.src;
-        imgModal.show();
-      });
-
-      topQty && topQty.addEventListener('input', ()=> {
-        const raw = topQty.value;
-        if (raw === '' || raw === null) {
-          topHiddenQty.value = '';
-          return;
-        }
-        let v = parseInt(raw, 10);
-        if (isNaN(v) || v < 1) v = 1;
-        topQty.value = v;
-        topHiddenQty.value = v;
-      });
-      topQty && topQty.addEventListener('blur', ()=> {
-        if (topQty.value === '' || topQty.value === null) {
-          topQty.value = 1;
-          topHiddenQty.value = 1;
-        }
-      });
-
-      function showOverlay(state, info) {
-        if (!addCartOverlay) return;
-        addCartOverlay.style.display = 'flex';
-        addCartOverlay.setAttribute('aria-hidden', 'false');
-        cartCheck.classList.remove('show');
-        cartIcon.classList.remove('cart-pop');
-        overlayTitle.classList.remove('text-danger','text-success');
-
-        if (state === 'processing') {
-          overlayTitle.textContent = 'Adding to cart…';
-          overlayMessage.textContent = info && info.message ? info.message : "We are adding this item for you — momentarily.";
-        } else if (state === 'success') {
-          overlayTitle.textContent = info && info.title ? info.title : 'Added to cart';
-          overlayMessage.textContent = info && info.message ? info.message : 'Your item was added to the cart.';
-          overlayTitle.classList.add('text-success');
-          setTimeout(()=> {
-            cartIcon.classList.add('cart-pop');
-            cartCheck.classList.add('show');
-          }, 80);
-        } else if (state === 'error') {
-          overlayTitle.textContent = info && info.title ? info.title : 'Could not add item';
-          overlayMessage.textContent = info && info.message ? info.message : 'Something went wrong.';
-          overlayTitle.classList.add('text-danger');
-        }
-      }
-
-      function hideOverlay() {
-        if (!addCartOverlay) return;
-        addCartOverlay.style.display = 'none';
-        addCartOverlay.setAttribute('aria-hidden', 'true');
-        cartCheck.classList.remove('show');
-        cartIcon.classList.remove('cart-pop');
-      }
-
-      function updateCartCount(newCount) {
-        try {
-          const el = document.getElementById('cartCount');
-          if (el) {
-            el.textContent = (typeof newCount === 'number') ? newCount : newCount;
-          }
-        } catch(e){}
-      }
-
-      async function doAddToCartAjax(payload) {
-        showOverlay('processing', { message: "Quickly reserving stock — please wait." });
-
-        try {
-          const headers = { 'X-Requested-With': 'XMLHttpRequest' };
-          const resp = await fetch(payload.url, {
-            method: 'POST',
-            body: payload.formData,
-            credentials: 'same-origin',
-            headers,
-            redirect: 'follow'
-          });
-
-          const contentType = (resp.headers.get('content-type') || '').toLowerCase();
-
-          if (contentType.indexOf('application/json') !== -1) {
-            const data = await resp.json();
-            if (resp.ok && data && data.ok) {
-              if (data.cart_count !== undefined) updateCartCount(Number(data.cart_count));
-              // show qty controls if server returns cart_item_qty
-              if (data.cart_item_qty !== undefined) {
-                showQtyControls(Number(data.cart_item_qty));
-              }
-              showOverlay('success', { title: data.title || 'Added to cart', message: data.message || 'Item added.' });
-              setTimeout(()=> { hideOverlay(); }, 700);
-            } else {
-              // special-case login redirect returned by server in JSON (401) with redirect_url
-              if (resp.status === 401 && data && data.redirect_url) {
-                hideOverlay();
-                window.location.href = data.redirect_url;
-                return;
-              }
-              const msg = data && data.message ? data.message : 'Could not add item to cart.';
-              showOverlay('error', { title: 'Could not add item', message: msg });
-              setTimeout(()=> { hideOverlay(); }, 1200);
-            }
-            return;
-          }
-
-          if (resp.redirected || contentType.indexOf('text/html') !== -1) {
-            const finalUrl = resp.url || null;
-            showOverlay('success', { title: 'Processing', message: 'Redirecting…' });
-            setTimeout(()=> {
-              if (finalUrl) {
-                window.location.href = finalUrl;
-              } else {
-                payload.originalForm.submit();
-              }
-            }, 600);
-            return;
-          }
-
-          showOverlay('error', { title: 'Unexpected server response', message: 'Falling back to normal submission.' });
-          setTimeout(()=> { payload.originalForm.submit(); }, 700);
-        } catch (err) {
-          console.error(err);
-          showOverlay('error', { title: 'Network error', message: 'A network error occurred. Try again.' });
-          setTimeout(()=> { hideOverlay(); }, 1200);
-        }
-      }
-
-      // --- REPLACED submit handler: call /cart/add via AJAX helper (doAddToCartAjax) ---
-      topForm && topForm.addEventListener('submit', function(e){
-        e.preventDefault();
-
-        const vid = (topVariantIdInput && topVariantIdInput.value) || '';
-        if (!vid) {
-          alert('Please select a variant first.');
-          return;
-        }
-
-        // Ensure qty is set
-        if (!topHiddenQty.value || topHiddenQty.value === '') {
-          const raw = topQty.value;
-          topHiddenQty.value = String((raw === '' || raw === null) ? 1 : (parseInt(raw,10)||1));
-          topQty.value = topHiddenQty.value;
-        }
-
-        const btnEl = variantButtons.find(b => b.getAttribute('data-variant-id') === String(vid));
-        const stock = btnEl ? parseInt(btnEl.getAttribute('data-stock') || '0', 10) : 0;
-        const qty = parseInt(topHiddenQty.value, 10) || 1;
-        if (stock <= 0) { alert('Selected variant is out of stock.'); return; }
-        if (qty > stock) { alert('Requested quantity exceeds available stock.'); return; }
-
-        // Build FormData from the form and call the add-to-cart AJAX helper
-        const formData = new FormData(topForm);
-        formData.set('variant_id', String(vid));
-        formData.set('qty', String(qty));
-        if (!formData.get('product_id')) formData.set('product_id', String(productId));
-
-        doAddToCartAjax({
-          url: topForm.action,
-          formData,
-          originalForm: topForm
-        });
-      });
-      // --- end replaced submit handler ---
-
-      // NEW: check current cart item status for selected variant on load / variant change
-      async function checkCartItemStatus(variantId) {
-        if (!variantId) { showAddButton(); return; }
-        try {
-          const q = new URLSearchParams({ product_id: String(productId), variant_id: String(variantId) });
-          const res = await fetch('/cart/item_status?' + q.toString(), { credentials: 'same-origin' });
-          if (!res.ok) { showAddButton(); return; }
-          const data = await res.json();
-          if (data && data.ok && data.cart_item_qty && Number(data.cart_item_qty) > 0) {
-            showQtyControls(Number(data.cart_item_qty));
-            if (data.cart_count !== undefined) updateCartCount(Number(data.cart_count));
-          } else {
-            showAddButton();
-          }
-        } catch (e) {
-          console.warn('Could not fetch cart item status', e);
-          showAddButton();
-        }
-      }
-
-      // NEW: Increase / decrease handlers call /cart/update_qty
-      async function updateCartQtyOnServer(newQty) {
-        const vid = (topVariantIdInput && topVariantIdInput.value) || '';
-        if (!vid) { alert('Please select a variant first.'); return null; }
-
-        const formData = new FormData();
-        formData.append('product_id', String(productId));
-        formData.append('variant_id', String(vid));
-        formData.append('qty', String(newQty));
-
-        try {
-          const resp = await fetch('/cart/update_qty', {
-            method: 'POST',
-            body: formData,
-            credentials: 'same-origin',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-          });
-
-          const data = await resp.json();
-          if (!resp.ok || !data || !data.ok) {
-            const msg = data && data.message ? data.message : 'Unable to update quantity';
-            alert(msg);
-            return null;
-          }
-          if (data.cart_count !== undefined) updateCartCount(Number(data.cart_count));
-          return data;
-        } catch (err) {
-          console.error(err);
-          alert('Network error updating cart.');
-          return null;
-        }
-      }
-
-      decreaseQtyBtn && decreaseQtyBtn.addEventListener('click', async function(){
-        const cur = parseInt(cartItemQtyDisplay.textContent || '0', 10) || 0;
-        if (cur <= 0) return;
-        const newQty = cur - 1;
-        const data = await updateCartQtyOnServer(newQty);
-        if (!data) return;
-        const itemQty = Number(data.cart_item_qty || 0);
-        if (itemQty > 0) {
-          cartItemQtyDisplay.textContent = String(itemQty);
-          // small pulse animation on change
-          cartQtyControls.classList.add('pop');
-          setTimeout(()=> cartQtyControls.classList.remove('pop'), 260);
-        } else {
-          // removed from cart -> show add button
-          showAddButton();
-        }
-      });
-
-      increaseQtyBtn && increaseQtyBtn.addEventListener('click', async function(){
-        const cur = parseInt(cartItemQtyDisplay.textContent || '0', 10) || 0;
-        const newQty = cur + 1;
-        const data = await updateCartQtyOnServer(newQty);
-        if (!data) return;
-        const itemQty = Number(data.cart_item_qty || 0);
-        cartItemQtyDisplay.textContent = String(itemQty);
-        // small pulse animation on change
-        cartQtyControls.classList.add('pop');
-        setTimeout(()=> cartQtyControls.classList.remove('pop'), 260);
-      });
-
-      // initial check for selected variant
-      if (topVariantIdInput && topVariantIdInput.value) {
-        checkCartItemStatus(topVariantIdInput.value);
-        checkWishlistStatus(topVariantIdInput.value);
-      } else if (initialVariantId) {
-        checkCartItemStatus(String(initialVariantId));
-        checkWishlistStatus(String(initialVariantId));
-      }
-
-      reviewSortEl && (reviewSortEl.value = 'latest');
-      reviewSortEl && reviewSortEl.addEventListener('change', async function(){
-        reviewsSort = reviewSortEl.value;
-        reviewsLoading.style.display = 'block';
-        try {
-          const q = new URLSearchParams({ offset:0, limit:5, sort:reviewsSort });
-          const res = await fetch(`/prod/${productId}/reviews_ajax?` + q.toString(), { credentials: 'same-origin' });
-          const data = await res.json();
-          if (!data.ok) return;
-          document.getElementById('avgRating').textContent = data.avg_rating;
-          document.getElementById('totalReviews').textContent = data.total_reviews + ' review' + (data.total_reviews !== 1 ? 's' : '');
-          reviewsList.innerHTML = '';
-          if (data.reviews && data.reviews.length) {
-            data.reviews.forEach(r => {
-              const node = document.createElement('div');
-              node.className = 'review-item d-flex gap-3';
-              node.innerHTML = `
-                <div style="width:56px;flex-shrink:0;">
-                  <div style="width:48px;height:48px;border-radius:50%;background:#f1f3f5;display:flex;align-items:center;justify-content:center;font-weight:700;color:#111;">
-                    ${ (r.customer_name || 'A').charAt(0).toUpperCase() }
-                  </div>
-                </div>
-                <div style="flex:1;">
-                  <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                      <strong>${ r.customer_name || 'Anonymous' }</strong>
-                      <div class="review-meta">
-                        ${ Array.from({length:5}).map((_,i) => i < r.rating ? '<span class="star">★</span>' : '<span class="star" style="color:#e9e9e9">★</span>').join('') }
-                        <span class="ms-2 small text-muted">${ r.created_at_str || '' }</span>
-                      </div>
-                    </div>
-                    <div>${ r.is_verified_purchase ? '<div class="verified-badge">Verified</div>' : '' }</div>
-                  </div>
-                  ${ r.title ? `<div class="mt-2"><strong>${ r.title }</strong></div>` : ''}
-                  <div class="mt-1 text-muted">${ r.body || '' }</div>
-                </div>
-              `;
-              reviewsList.appendChild(node);
-            });
-          } else {
-            reviewsList.innerHTML = '<div class="text-muted">No reviews yet.</div>';
-          }
-          reviewsOffset = data.reviews ? data.reviews.length : 0;
-        } finally {
-          reviewsLoading.style.display = 'none';
-        }
-      });
-
-      loadMoreBtn && loadMoreBtn.addEventListener('click', async function(){
-        reviewsLoading.style.display = 'block';
-        try {
-          const q = new URLSearchParams({ offset: reviewsOffset, limit:5, sort: reviewsSort });
-          const res = await fetch(`/prod/${productId}/reviews_ajax?` + q.toString(), { credentials: 'same-origin' });
-          const data = await res.json();
-          if (!data.ok) return;
-          if (!data.reviews || data.reviews.length === 0) {
-            loadMoreBtn.disabled = true;
-            loadMoreBtn.textContent = 'No more reviews';
-            return;
-          }
-          data.reviews.forEach(r => {
-            const node = document.createElement('div');
-            node.className = 'review-item d-flex gap-3';
-            node.innerHTML = `
-              <div style="width:56px;flex-shrink:0;">
-                <div style="width:48px;height:48px;border-radius:50%;background:#f1f3f5;display:flex;align-items:center;justify-content:center;font-weight:700;color:#111;">
-                  ${ (r.customer_name || 'A').charAt(0).toUpperCase() }
-                </div>
-              </div>
-              <div style="flex:1;">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <strong>${ r.customer_name || 'Anonymous' }</strong>
-                    <div class="review-meta">
-                      ${ Array.from({length:5}).map((_,i) => i < r.rating ? '<span class="star">★</span>' : '<span class="star" style="color:#e9e9e9">★</span>').join('') }
-                      <span class="ms-2 small text-muted">${ r.created_at_str || '' }</span>
-                    </div>
-                  </div>
-                  <div>${ r.is_verified_purchase ? '<div class="verified-badge">Verified</div>' : '' }</div>
-                </div>
-                ${ r.title ? `<div class="mt-2"><strong>${ r.title }</strong></div>` : ''}
-                <div class="mt-1 text-muted">${ r.body || '' }</div>
-              </div>
-            `;
-            reviewsList.appendChild(node);
-          });
-          reviewsOffset += data.reviews.length;
-          if (reviewsOffset >= data.total_reviews) {
-            loadMoreBtn.disabled = true;
-            loadMoreBtn.textContent = 'No more reviews';
-          }
-        } finally {
-          reviewsLoading.style.display = 'none';
-        }
-      });
-
-      const pincodeInput = document.getElementById('pincodeInput');
-      const pincodeCheckBtn = document.getElementById('pincodeCheckBtn');
-      const pincodeMsg = document.getElementById('pincodeMsg');
-      pincodeCheckBtn && pincodeCheckBtn.addEventListener('click', function(){
-        const val = (pincodeInput && pincodeInput.value || '').trim();
-        if (!val) { pincodeMsg.textContent = 'Enter a pincode to check delivery.'; pincodeMsg.style.color = ''; return; }
-        pincodeMsg.textContent = 'Checking…';
-        setTimeout(()=> {
-          if (/^[1-9][0-9]{5}$/.test(val)) {
-            pincodeMsg.textContent = 'Deliverable to this pincode.';
-            pincodeMsg.style.color = 'green';
-          } else {
-            pincodeMsg.textContent = 'Sorry — delivery not available to this pincode.';
-            pincodeMsg.style.color = 'crimson';
-          }
-        }, 420);
-      });
-
-      // ------- Wishlist logic (toggle + status) -------
-      const wishBtn = document.getElementById('wishBtn');
-      const wishIcon = document.getElementById('wishIcon');
-      const wishText = document.getElementById('wishText');
-
-      async function setWishButtonState(isWished) {
-        if (!wishBtn) return;
-        wishBtn.setAttribute('aria-pressed', isWished ? 'true' : 'false');
-        wishBtn.dataset.wished = isWished ? 'true' : 'false';
-        wishIcon.textContent = isWished ? '♥' : '♡';
-        // small visual cue
-        if (isWished) {
-          wishBtn.style.borderColor = 'rgba(255,127,102,0.9)';
-          wishBtn.style.color = '#d43d3d';
-        } else {
-          wishBtn.style.borderColor = '#e9e3e2';
-          wishBtn.style.color = '#6b6b6b';
-        }
-      }
-
-      // Check wishlist status for a variant (used when variant changes)
-      async function checkWishlistStatus(variantId) {
-        if (!variantId) { setWishButtonState(false); return; }
-        try {
-          const res = await fetch(`/wishlist/status?variant_id=${encodeURIComponent(variantId)}`, { credentials: 'same-origin' });
-          if (!res.ok) { setWishButtonState(false); return; }
-          const data = await res.json();
-          setWishButtonState(Boolean(data && data.wished));
-        } catch (e) {
-          console.warn('wishlist status check failed', e);
-          setWishButtonState(false);
-        }
-      }
-
-      // Toggle wishlist on click (adds/removes)
-      if (wishBtn) {
-        wishBtn.addEventListener('click', async function(){
-          const vid = (topVariantIdInput && topVariantIdInput.value) || selectedVariantId || '';
-          if (!vid) { alert('Please select a variant first.'); return; }
-
-          // create payload
-          const fd = new FormData();
-          fd.append('variant_id', String(vid));
-          fd.append('product_id', String(productId));
-
-          try {
-            const resp = await fetch('/wishlist/toggle', {
-              method: 'POST',
-              body: fd,
-              credentials: 'same-origin',
-              headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            });
-
-            if (resp.status === 401) {
-              // not logged in: redirect to login (server may send login_url)
-              const txt = await resp.text();
-              // fallback: reload to login page or open login modal as your app uses
-              window.location.href = '/login?next=' + encodeURIComponent(window.location.pathname + window.location.search);
-              return;
-            }
-
-            const data = await resp.json();
-            if (!resp.ok || !data || !data.ok) {
-              alert(data && data.message ? data.message : 'Could not update wishlist. Please try again.');
-              return;
-            }
-
-            // update button and wishlist count (if provided)
-            setWishButtonState(data.action === 'added');
-            if (typeof data.wishlist_count !== 'undefined') {
-              const el = document.getElementById('wishlistCount');
-              if (el) el.textContent = String(Number(data.wishlist_count) || 0);
-            }
-          } catch (err) {
-            console.error('Error toggling wishlist', err);
-            alert('Network error while updating wishlist.');
-          }
-        });
-      }
-
-      // When page first loads, if a variant is selected, check wishlist status
-      // (already handled above in initial checks)
-
-    });
-  </script>
+  <!-- Custom Scripts -->
+  <script src="{{ url_for('static', filename='customer/js/product_detail.js') }}"></script>
 </body>
 </html>

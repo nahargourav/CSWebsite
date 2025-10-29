@@ -2011,7 +2011,7 @@ def view_prod_detail(product_id):
         cursor.close()
         conn.close()
         flash("Product not found", "danger")
-        return redirect(url_for('main.view_products'))
+        return redirect(url_for('main.browse_page'))
 
     # Normalize a few fields
     if product.get('image_path'):
