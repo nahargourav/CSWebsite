@@ -742,8 +742,8 @@
     <nav class="links" aria-label="Main navigation">
       <a href="/" {% if request.endpoint == 'main.home' %}class="active"{% endif %}>HOME</a>
       <a href="/browse" {% if request.endpoint == 'main.browse_page' %}class="active"{% endif %}>PRODUCTS</a>
+      <a href="/collections/bestsellers" {% if request.endpoint == 'main.bestsellers' %}class="active"{% endif %}>BESTSELLERS</a>
       <a href="/orders" {% if request.endpoint == 'main.orders' %}class="active"{% endif %}>ORDERS</a>
-      <a href="/contact" {% if request.endpoint == 'main.contact' %}class="active"{% endif %}>CONTACT</a>
     </nav>
 
     <!-- Desktop Auth -->
@@ -839,9 +839,9 @@
     <nav class="mobile-links">
       <a href="/" {% if request.endpoint == 'main.home' %}class="active"{% endif %}>Home</a>
       <a href="/browse" {% if request.endpoint == 'main.browse_page' %}class="active"{% endif %}>Products</a>
+      <a href="/collections/bestsellers" {% if request.endpoint == 'main.bestsellers' %}class="active"{% endif %}>Bestsellers</a>
       <a href="/orders" {% if request.endpoint == 'main.orders' %}class="active"{% endif %}>My Orders</a>
-      <a href="/contact" {% if request.endpoint == 'main.contact' %}class="active"{% endif %}>Contact</a>
-      <a href="/about" {% if request.endpoint == 'main.about' %}class="active"{% endif %}>About</a>
+      <a href="/about" {% if request.endpoint == 'main.about' %}class="active"{% endif %}>About Us</a>
     </nav>
 
     <div class="mobile-quick">

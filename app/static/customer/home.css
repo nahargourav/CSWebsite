@@ -372,7 +372,7 @@
 
     @media (max-width: 768px) {
       .hero-section {
-        height: 70vh;
+        height: 85vh;
         min-height: 500px;
       }
       
@@ -1299,3 +1299,320 @@
         display: none !important;
       }
     }
+    /* In styles_premium.css - Update the categories grid section */
+
+/* ========== CATEGORIES GRID ========== */
+.categories-section {
+  padding: var(--section-padding);
+  background: var(--soft-beige);
+}
+
+.categories-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.category-card {
+  background: white;
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  transition: all 0.4s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.category-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--shadow-lifted);
+}
+
+.category-image {
+  height: 240px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+.category-image::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 80px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
+}
+
+.category-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 20px;
+  z-index: 1;
+  color: white;
+}
+
+.category-name {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.category-subtitle {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.category-icon {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  z-index: 2;
+}
+
+@media (max-width: 768px) {
+  .categories-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  
+  .category-image {
+    height: 180px;
+  }
+}
+/* Make sure only active slide content is interactive */
+.hero-slide {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1.2s ease-in-out;
+  pointer-events: none; /* THIS IS KEY - disables interaction on hidden slides */
+}
+
+.hero-slide.active {
+  opacity: 1;
+  pointer-events: auto; /* Re-enable interaction on active slide */
+}
+/* ========== HERO SECTION ========== */
+.hero-section {
+  position: relative;
+  height: 85vh;
+  min-height: 600px;
+  max-height: 900px;
+  margin-bottom: 80px;
+  overflow: hidden;
+  cursor: grab; /* Show grab cursor by default */
+}
+
+.hero-section:active {
+  cursor: grabbing; /* Show grabbing when clicking */
+}
+
+.hero-slide {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1.2s ease-in-out;
+  pointer-events: none; /* CRITICAL: Disables all interaction on hidden slides */
+}
+
+.hero-slide.active {
+  opacity: 1;
+  pointer-events: auto; /* CRITICAL: Re-enables interaction on visible slide */
+  z-index: 1; /* Ensure active slide is on top */
+}
+
+.hero-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none; /* Image doesn't need to be clickable */
+}
+
+.hero-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--gradient-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 24px;
+  pointer-events: none; /* Overlay doesn't need interaction */
+}
+
+.hero-content {
+  max-width: 900px;
+  color: white;
+  animation: fadeInUp 1s ease-out;
+  pointer-events: auto; /* But content DOES need interaction for buttons */
+  position: relative;
+  z-index: 10; /* Ensure content is above everything */
+}
+
+/* Make sure buttons are always clickable */
+.hero-content .btn {
+  pointer-events: auto;
+  position: relative;
+  z-index: 20; /* Buttons get highest z-index */
+  cursor: pointer !important; /* Force pointer cursor on buttons */
+}
+
+.hero-content .btn:hover {
+  cursor: pointer !important;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-badge {
+  display: inline-block;
+  padding: 8px 20px;
+  background: rgba(212, 175, 55, 0.25);
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  border-radius: 50px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 24px;
+  backdrop-filter: blur(10px);
+}
+
+.hero-title {
+  font-size: 72px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  line-height: 1.1;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.hero-subtitle {
+  font-size: 20px;
+  font-weight: 300;
+  margin-bottom: 40px;
+  opacity: 0.95;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-cta {
+  display: inline-flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn {
+  padding: 16px 36px;
+  border-radius: 50px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer !important; /* Force pointer */
+  transition: all 0.3s ease;
+  border: none;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  position: relative;
+  z-index: 100; /* Very high z-index */
+}
+
+.btn-primary {
+  background: var(--gradient-royal);
+  color: white;
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(212, 175, 55, 0.4);
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: white;
+}
+
+.hero-nav-dots {
+  position: absolute;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 12px;
+  z-index: 10;
+  pointer-events: auto; /* Dots need to be clickable */
+}
+
+.hero-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  pointer-events: auto;
+}
+
+.hero-dot.active {
+  width: 36px;
+  border-radius: 6px;
+  background: white;
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    height: 85vh;
+    min-height: 500px;
+  }
+  
+  .hero-title {
+    font-size: 42px;
+  }
+  
+  .hero-subtitle {
+    font-size: 16px;
+  }
+  
+  .btn {
+    padding: 14px 28px;
+    font-size: 14px;
+  }
+}
