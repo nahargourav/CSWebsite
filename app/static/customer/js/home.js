@@ -1,8 +1,8 @@
 const categories = [
   { id: 'sarees', name: 'Sarees', subtitle: 'Handloom silks & blends', image: 'https://pub-7c7bd23b07634721bd3abfebbc76c007.r2.dev/Category/category-sarees.jpg'},
   { id: 'suiting', name: 'Suiting & Shirting', subtitle: 'Fine worsted & blends', image: 'https://pub-7c7bd23b07634721bd3abfebbc76c007.r2.dev/Category/category-suiting.jpg'},
-  { id: 'kurta', name: 'Kurta', subtitle: 'Cool breathable weaves', image: 'https://pub-7c7bd23b07634721bd3abfebbc76c007.r2.dev/Category/category-kurta-men.jpg'},
-  { id: 'salwar', name: 'Salwar Suit', subtitle: 'Traditional & modern', image: 'https://pub-7c7bd23b07634721bd3abfebbc76c007.r2.dev/Category/category-salwar-suit.jpg'},
+  { id: "men's kurta", name: 'Kurta', subtitle: 'Cool breathable weaves', image: 'https://pub-7c7bd23b07634721bd3abfebbc76c007.r2.dev/Category/category-kurta-men.jpg'},
+  { id: 'suit', name: 'Salwar Suit', subtitle: 'Traditional & modern', image: 'https://pub-7c7bd23b07634721bd3abfebbc76c007.r2.dev/Category/category-salwar-suit.jpg'},
   { id: 'shawls', name: 'Shawls & Stoles', subtitle: 'Soft woolens & handwoven', image: 'https://pub-7c7bd23b07634721bd3abfebbc76c007.r2.dev/Category/category-shawls-stoles.jpg' },
   { id: 'bedsheets', name: 'Bedsheets', subtitle: 'Premium linens & cottons', image: 'https://pub-7c7bd23b07634721bd3abfebbc76c007.r2.dev/Category/category-bedsheets.jpg' }
 ];
