@@ -2,508 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Contact — Champalal & Sons</title>
-  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" >
-  <meta name="description" content="Contact Champalal & Sons for enquiries, orders, custom sourcing and support. Phone, email, store address and opening hours." />
-
-  <!-- Fonts and core site variables (keeps visuals consistent with the rest of the site) -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  
+  <!-- Primary Meta Tags -->
+  <title>Contact Us - Champalal & Sons | Get in Touch for Orders & Enquiries</title>
+  <meta name="title" content="Contact Us - Champalal & Sons | Get in Touch for Orders & Enquiries">
+  <meta name="description" content="Contact Champalal & Sons for enquiries, orders, custom sourcing and support. Visit our store in Purnia, Bihar or reach us via email. We respond within 24 hours. Est. 1930." />
+  <meta name="keywords" content="contact Champalal Sons, fabric shop Purnia, email enquiry, store location Bihar, visit fabric store, customer support, bulk orders, wholesale fabrics, Purnia address, contact details">
+  <meta name="author" content="Champalal & Sons">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow">
+  <meta name="revisit-after" content="monthly">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://champalalandsons.in/contact">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/android-chrome-192x192.png') }}">
+  <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='images/android-chrome-512x512.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://champalalandsons.in/contact">
+  <meta property="og:title" content="Contact Us - Champalal & Sons">
+  <meta property="og:description" content="Get in touch with Champalal & Sons for enquiries, orders, and support. Visit our store in Purnia, Bihar or reach us via email.">
+  <meta property="og:image" content="{{ url_for('static', filename='images/og-home.jpg', _external=True) }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="Champalal & Sons">
+  <meta property="og:locale" content="en_IN">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://champalalandsons.in/contact">
+  <meta name="twitter:title" content="Contact Us - Champalal & Sons">
+  <meta name="twitter:description" content="Get in touch with Champalal & Sons for enquiries, orders, and support. Visit our store in Purnia, Bihar.">
+  <meta name="twitter:image" content="{{ url_for('static', filename='images/og-home.jpg', _external=True) }}">
+  <meta name="twitter:creator" content="@champalalsons">
+  <meta name="twitter:site" content="@champalalsons">
+  
+  <!-- Additional SEO Meta Tags -->
+  <meta name="theme-color" content="#D4AF37">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Champalal & Sons">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="geo.region" content="IN-BR">
+  <meta name="geo.placename" content="Purnia, Bihar, India">
+  <meta name="geo.position" content="25.782883;87.461814">
+  <meta name="ICBM" content="25.782883, 87.461814">
+  
+  <!-- Preconnect to External Resources -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://www.google.com">
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <style>
-    :root{
-      --bg:#fff5ee;
-      --muted:#6b7280;
-      --accent:#f59e0b;
-      --accent-contrast:#111827;
-      --card:#ffffff;
-      --shadow:0 6px 18px rgba(17,24,39,0.06);
-      --max:1200px;
-      --radius:12px;
-      --focus: 3px solid rgba(245,158,11,0.12);
-      font-family: 'Poppins', Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--accent-contrast);-webkit-font-smoothing:antialiased}
-    /* prevent accidental horizontal scroll from any element */
-    body{overflow-x:hidden}
-    .container{max-width:var(--max);margin:0 auto;padding:28px}
-
-    /* Page-specific layout */
-    .contact-hero{display:flex;gap:28px;align-items:center;justify-content:space-between;margin:18px 0}
-    .contact-intro{max-width:720px}
-    .cta-row{display:flex;gap:12px;flex-wrap:wrap}
-    .cta-row a.btn{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
-
-    .contact-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;overflow:hidden}
-    .h1{font-size:22px;margin:0 0 8px}
-    .lead{color:var(--muted);margin:0 0 16px}
-
-    .grid-2{display:grid;grid-template-columns:1fr 420px;gap:20px}
-    .row{display:flex;gap:12px}
-    .row > div { min-width: 0; } /* allow flex children to shrink */
-
-    /* contact form */
-    form.contact-form{display:grid;gap:12px}
-    label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
-    input[type=text], input[type=email], input[type=tel], select, textarea{width:100%;padding:10px;border:1px solid #e6e7ea;border-radius:8px;font-size:15px;box-sizing:border-box}
-    textarea{min-height:140px;resize:vertical}
-    .btn{padding:10px 16px;border-radius:999px;border:none;cursor:pointer;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
-    .btn.primary{background:var(--accent);color:white}
-    .muted{color:var(--muted)}
-    .inline-note{font-size:13px;color:var(--muted)}
-
-    /* Contact details */
-    .details{display:flex;flex-direction:column;gap:12px}
-    .details .item{display:flex;gap:12px;align-items:flex-start}
-    .details .item .meta{font-weight:700;color:var(--accent)}
-    .details .item div:last-child{overflow-wrap:break-word;word-break:break-word}
-    .hours{background:linear-gradient(180deg,#fff7ed,#fffbf7);padding:12px;border-radius:10px}
-
-    /* small helpers */
-    .card-title{font-size:16px;margin:0 0 8px}
-    .social-row{display:flex;gap:8px}
-    .social{display:inline-flex;width:36px;height:36px;align-items:center;justify-content:center;border-radius:8px;border:1px solid rgba(17,24,39,0.04);background:white;color:var(--muted);text-decoration:none}
-    .social svg{display:block}
-
-    /* map */
-    .map{width:100%;height:260px;border-radius:10px;overflow:hidden;border:1px solid #e9eef2}
-    .map iframe{width:100%;height:100%;border:0;display:block}
-
-    /* anchor navigation / quick links */
-    .toc{position:sticky;top:94px}
-    .toc a{display:block;padding:8px 10px;border-radius:8px;text-decoration:none;color:var(--accent-contrast);background:transparent}
-    .toc a:hover{background:rgba(17,24,39,0.03)}
-
-    /* small form note */
-    .note{font-size:13px;color:var(--muted)}
-
-    /* Accessibility focus states */
-    a:focus, button:focus, input:focus, textarea:focus{outline:none;box-shadow:var(--focus);border-color:var(--accent)}
-
-    /* small toast/copy UI */
-    .mini-toast{position:fixed;right:16px;bottom:16px;background:#111827;color:white;padding:10px 14px;border-radius:10px;box-shadow:0 8px 30px rgba(17,24,39,0.18);z-index:9999;display:flex;gap:10px;align-items:center}
-    .mini-toast button{background:transparent;border:1px solid rgba(255,255,255,0.16);color:white;padding:6px 8px;border-radius:8px;cursor:pointer}
-
-    /* Desktop -> tablet breakpoint */
-    @media (max-width: 900px) {
-      .contact-hero{flex-direction:column;align-items:stretch}
-      .grid-2{grid-template-columns:1fr}
-      .toc{position:static;top:auto}
-      /* allow right-column wrapper not to force a min width when stacked */
-      .contact-hero > div { min-width: 0 !important; }
-    }
-
-    /* Mobile-specific overrides - do not change desktop visuals */
-    @media (max-width: 640px) {
-      .container{padding:16px}
-      .contact-card{padding:16px}
-      .h1{font-size:20px}
-      .lead{font-size:15px}
-      .cta-row{flex-direction:column}
-      .cta-row a.btn{width:100%;justify-content:center}
-      .cta-row a.btn + a.btn{margin-top:8px}
-      .grid-2{grid-template-columns:1fr}
-      .row{flex-direction:column}
-      .row > div{width:100% !important}
-      input[type=text], input[type=email], input[type=tel], select, textarea{font-size:15px;padding:12px}
-      .btn{padding:12px 14px}
-      .toc{position:static;top:auto}
-      .map{height:220px}
-      .social{width:44px;height:44px}
-      .social svg{width:18px;height:18px}
-      .card-title{font-size:15px}
-      .muted, .note{font-size:13px}
-      .contact-hero{gap:14px}
-      .contact-intro{padding-bottom:6px}
-      /* override any inline min-width on the right column */
-      .contact-hero > div { min-width: 0 !important; }
-      /* ensure frequently asked block doesn't overflow */
-    }
-
-    /* Very small devices - keep readable */
-    @media (max-width: 360px) {
-      .h1{font-size:18px}
-      .container{padding:12px}
-      .map{height:200px}
-      .social{width:40px;height:40px}
-    }
-  </style>
-</head>
-<body>
-
-  {# include header / nav from your layout partial so header remains single-source #}
-  {% include 'customer/layout.html' %}
-
-  <main class="container">
-
-    <section class="contact-hero">
-      <div class="contact-intro">
-        <h1 class="h1">Get in touch — we’re here to help</h1>
-        <p class="lead">Whether you have a product question, need help with an order, want to request bulk sourcing or prefer to visit the store — choose the contact method that suits you. We aim to respond within 24 business hours.</p>
-
-        <div class="cta-row" style="margin-top:14px">
-          <a href="tel:+917070606600" class="btn primary" aria-label="Call Champalal & Sons">Call us: +91 7070606600</a>
-
-          <!-- Email button: still uses mailto but we also attach JS fallback to help laptops without a default mail client -->
-          <a id="emailBtn" href="mailto:champalalandsons@gmail.com" class="btn" style="background:white;border:1px solid #e6e7ea;border-radius:999px" aria-label="Email us">Email us</a>
-        </div>
-      </div>
-
-      <div style="min-width:260px">
-        <div class="contact-card">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div style="width:52px;height:52px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#ff7f66);display:flex;align-items:center;justify-content:center;color:white;font-weight:800">C&amp;S</div>
-            <div>
-              <div style="font-weight:700">Champalal & Sons</div>
-              <div class="muted">Since 1930 — Cloth merchants</div>
-            </div>
-          </div>
-          <hr style="margin:12px 0;border:none;border-top:1px dashed rgba(17,24,39,0.04)" />
-          <div class="muted" style="font-size:14px">Store hours</div>
-          <div class="hours" style="margin-top:8px;">
-            <div style="display:flex;justify-content:space-between"><strong>Sun — Sat</strong><span>10:00 — 21:00</span></div>
-            <div style="margin-top:8px;font-size:13px;color:var(--muted)">Closed on major public holidays. For urgent requests please call.</div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="grid-2" aria-labelledby="contact-heading">
-      <div>
-        <div class="contact-card">
-          <h2 class="card-title" id="contact-heading">Contact form</h2>
-          <p class="muted">Use this form for general enquiries, order support and bulk requests. We'll never sell your personal data.</p>
-
-          <form id="contactForm" class="contact-form" method="post" action="/contact/submit" novalidate>
-            <div class="row">
-              <div style="flex:1">
-                <label for="name">Full name</label>
-                <input id="name" name="name" type="text" placeholder="Your name" required aria-required="true" />
-              </div>
-              <div style="width:220px">
-                <label for="phone">Phone</label>
-                <input id="phone" name="phone" type="tel" placeholder="+91 " inputmode="tel" />
-              </div>
-            </div>
-
-            <div class="row">
-              <div style="flex:1">
-                <label for="email">Email</label>
-                <input id="email" name="email" type="email" placeholder="you@email.com" required aria-required="true" />
-              </div>
-              <div style="width:220px">
-                <label for="subject">Subject</label>
-                <select id="subject" name="subject">
-                  <option value="order">Order / Shipping</option>
-                  <option value="product">Product question</option>
-                  <option value="wholesale">Wholesale / Bulk</option>
-                  <option value="returns">Returns / Refunds</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label for="message">Message</label>
-              <textarea id="message" name="message" placeholder="Tell us about your request..." required aria-required="true"></textarea>
-            </div>
-
-            <div style="display:flex;align-items:center;gap:10px">
-              <input id="consent" name="consent" type="checkbox" required aria-required="true" />
-              <label for="consent" class="note">I agree to the processing of my personal data in accordance with the <a href="/privacy" style="color:var(--accent)">Privacy Policy</a>.</label>
-            </div>
-
-            <input type="hidden" name="source" value="contact-page" />
-
-            <div style="display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap">
-              <button type="submit" class="btn primary">Send message</button>
-              <div class="inline-note">Or email us at <a id="inlineEmailLink" href="mailto:champalalandsons@gmail.com">champalalandsons@gmail.com</a></div>
-            </div>
-
-            <div id="contactFeedback" role="status" aria-live="polite" style="margin-top:10px"></div>
-          </form>
-        </div>
-
-        <div class="contact-card" style="margin-top:18px">
-          <h3 class="card-title">Frequently asked</h3>
-          <div style="display:grid;gap:8px">
-            <div><strong>Order status</strong> — Email champalalandsons@gmail.com with your order ID.</div>
-            <div><strong>Bulk orders</strong> — Use subject "Wholesale / Bulk" above and include estimated quantities.</div>
-            <div><strong>Returns</strong> — We accept returns within 3 days. See our <a href="/help/returns">returns policy</a>.</div>
-          </div>
-        </div>
-      </div>
-
-      <aside>
-        <div class="contact-card toc">
-          <h4 class="card-title">Contact details</h4>
-          <div class="details">
-            <div class="item"><div class="meta">Phone</div><div><a href="tel:+917070606600">+91 7070606600</a></div></div>
-            <div class="item"><div class="meta">Email</div><div><a id="detailsEmailLink" href="mailto:champalalandsons@gmail.com">champalalandsons@gmail.com</a></div></div>
-            <div class="item"><div class="meta">Address</div><div>Beside Madhubani PO, Madhubani Bazar, Purnia, Bihar · 854301</div></div>
-            <div class="item"><div class="meta">Opening hours</div><div>Sun–Sat: 10:00–21:00</div></div>
-          </div>
-
-          <hr style="margin:12px 0;border:none;border-top:1px dashed rgba(17,24,39,0.04)" />
-
-          <div class="card-title">Visit the store</div>
-          <div class="muted" style="font-size:14px;margin-bottom:8px">We welcome walk-ins. For guaranteed help, call ahead to book an appointment.</div>
-
-          <div class="map" aria-hidden="false">
-            <!-- Replace src with your Google Maps embed url or other map provider as needed -->
-            <iframe title="C&S location map"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3592.626927353988!2d87.4599079751839!3d25.782883477338583!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eff97f665e04d3%3A0x6c8935ef0b326d57!2sChampalal%20and%20Sons!5e0!3m2!1sen!2sin!4v1761312241686!5m2!1sen!2sin"
-                    allowfullscreen="" loading="lazy" aria-hidden="false"></iframe>
-          </div>
-
-          <hr style="margin:12px 0;border:none;border-top:1px dashed rgba(17,24,39,0.04)" />
-
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-            <div>
-              <div style="font-weight:700">Social</div>
-              <div class="social-row" style="margin-top:8px">
-                <a class="social" href="#" aria-label="Instagram" title="Instagram">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="3" width="18" height="18" rx="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8"></path></svg>
-                </a>
-                <a class="social" href="#" aria-label="Facebook" title="Facebook">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M18 2h-3a4 4 0 0 0-4 4v3H8v4h3v8h4v-8h3l1-4h-4V6a1 1 0 0 1 1-1h3z"></path></svg>
-                </a>
-
-                <!-- Polished X glyph (rounded strokes) -->
-                <a class="social" href="https://x.com/yourhandle" target="_blank" rel="noopener noreferrer" aria-label="X" title="X">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"stroke-width="1.4" aria-hidden="true">
-                    <path  opacity="0.8" d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"></path>
-                    </svg>
-                </a>
-              </div>
-            </div>
-
-            <div style="text-align:right">
-              <div style="font-weight:700">Customer Care</div>
-              <div class="muted" style="font-size:13px">champalalandsons@gmail.com</div>
-            </div>
-          </div>
-
-        </div>
-      </aside>
-    </section>
-
-    <section style="margin-top:20px" class="contact-card">
-      <h3 class="card-title">What happens next?</h3>
-      <ol style="margin:8px 0 0 20px" class="muted">
-        <li>We acknowledge receipt of your message via email.</li>
-        <li>Our team reviews and replies within 24 business hours (usually sooner).</li>
-        <li>If your request is urgent we will call the number you provided.</li>
-      </ol>
-    </section>
-
-  </main>
-
-  {% include 'customer/footer.html' %}
-
-  <!-- Minimal JS: mail fallback + AJAX client submit + nice UX without changing server behaviour -->
-  <script>
-    (function(){
-      /* Helper to create/remove a small toast used for the email fallback */
-      function showMiniToast(text, actions) {
-        // actions: [{label:'Copy', onClick:fn}, ...]
-        var existing = document.getElementById('miniToast');
-        if (existing) {
-          existing.remove();
-          if (window._miniToastTimer) { clearTimeout(window._miniToastTimer); window._miniToastTimer = null; }
-        }
-        var t = document.createElement('div');
-        t.id = 'miniToast';
-        t.className = 'mini-toast';
-        var span = document.createElement('div');
-        span.textContent = text;
-        t.appendChild(span);
-        if (Array.isArray(actions)) {
-          actions.forEach(function(a){
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.textContent = a.label;
-            btn.addEventListener('click', function(ev){
-              ev.preventDefault();
-              try { a.onClick && a.onClick(); } catch(e){ /* swallow errors from handlers */ }
-              // clear auto-dismiss timer and remove toast immediately after action
-              if (window._miniToastTimer) { clearTimeout(window._miniToastTimer); window._miniToastTimer = null; }
-              t.remove();
-            });
-            t.appendChild(btn);
-          });
-        }
-        var close = document.createElement('button');
-        close.type = 'button';
-        close.textContent = '✕';
-        close.style.marginLeft = '6px';
-        close.addEventListener('click', function(){
-          if (window._miniToastTimer) { clearTimeout(window._miniToastTimer); window._miniToastTimer = null; }
-          t.remove();
-        });
-        t.appendChild(close);
-        document.body.appendChild(t);
-
-        // Auto-dismiss after 2 seconds. Store timer globally so subsequent toasts can clear it.
-        if (window._miniToastTimer) { clearTimeout(window._miniToastTimer); window._miniToastTimer = null; }
-        window._miniToastTimer = setTimeout(function(){
-          window._miniToastTimer = null;
-          var el = document.getElementById('miniToast');
-          if (el) el.remove();
-        }, 2000);
-      }
-
-      // Email link fallback (helps laptop/Chrome when no default mail client is registered)
-      var EMAIL = 'champalalandsons@gmail.com';
-      var emailBtn = document.getElementById('emailBtn');
-      var inlineEmailLink = document.getElementById('inlineEmailLink');
-      var detailsEmailLink = document.getElementById('detailsEmailLink');
-
-      // A function to copy the email to clipboard with user feedback
-      function copyEmailToClipboard(){
-        if (navigator.clipboard && navigator.clipboard.writeText){
-          navigator.clipboard.writeText(EMAIL).then(function(){
-            showMiniToast('Email copied to clipboard', [{label:'OK', onClick:function(){document.getElementById('miniToast') && document.getElementById('miniToast').remove();}}]);
-          }).catch(function(){
-            // fallback for older browsers: select a temporary textarea
-            var ta = document.createElement('textarea'); ta.value = EMAIL; document.body.appendChild(ta); ta.select();
-            try { document.execCommand('copy'); showMiniToast('Email copied to clipboard'); } catch(e){ showMiniToast('Please copy: ' + EMAIL); }
-            ta.remove();
-          });
-        } else {
-          // fallback
-          var ta = document.createElement('textarea'); ta.value = EMAIL; document.body.appendChild(ta); ta.select();
-          try { document.execCommand('copy'); showMiniToast('Email copied to clipboard'); } catch(e){ showMiniToast('Please copy: ' + EMAIL); }
-          ta.remove();
-        }
-      }
-
-      // Attach handler to the email button(s): attempt mailto then show fallback toast that allows copy
-      function bindEmailButton(el) {
-        if (!el) return;
-        el.addEventListener('click', function(ev){
-          // If user directly clicked the mailto link, the default anchor behavior will try to open mail client.
-          // We still attempt to open via window.location for stronger effect and show fallback after a short delay.
-          ev.preventDefault();
-          // Try opening mail client
-          try {
-            window.location.href = 'mailto:' + EMAIL;
-            // also open in new tab (some browsers handle better)
-            try { window.open('mailto:' + EMAIL); } catch(e){}
-          } catch(e){ /* ignore */ }
-
-          // After a short timeout, show helpful copy option (can't reliably detect whether the client opened)
-          setTimeout(function(){
-            showMiniToast('', [
-              { label: 'Copy email', onClick: copyEmailToClipboard },
-              { label: 'Open mail', onClick: function(){ window.location.href = 'mailto:' + EMAIL; } }
-            ]);
-          }, 450);
-        });
-      }
-
-      bindEmailButton(emailBtn);
-      bindEmailButton(inlineEmailLink);
-      bindEmailButton(detailsEmailLink);
-
-      /* --- Form AJAX submission with progressive enhancement fallback --- */
-      var form = document.getElementById('contactForm');
-      var feedback = document.getElementById('contactFeedback');
-
-      function showMessage(msg, ok) {
-        feedback.textContent = msg;
-        feedback.style.color = ok ? 'green' : 'crimson';
-      }
-
-      if (form) {
-        form.addEventListener('submit', function(ev){
-          ev.preventDefault();
-
-          var name = form.name.value.trim();
-          var email = form.email.value.trim();
-          var message = form.message.value.trim();
-          var consent = form.consent.checked;
-
-          if (!name || !email || !message) {
-            showMessage('Please fill name, email and message.', false);
-            return;
-          }
-          if (!consent) {
-            showMessage('Please agree to the privacy policy to continue.', false);
-            return;
-          }
-
-          showMessage('Sending…', true);
-
-          // prepare FormData
-          var fd = new FormData(form);
-
-          // Attempt AJAX POST to the action URL. Add the X-Requested-With header so server can detect AJAX.
-          fetch(form.action, {
-            method: 'POST',
-            body: fd,
-            headers: {
-              'X-Requested-With': 'XMLHttpRequest'
-            },
-            credentials: 'same-origin'
-          }).then(function(res){
-            // If server redirected (res.redirected), allow default navigation
-            if (res.redirected) {
-              window.location.href = res.url;
-              return;
-            }
-            if (!res.ok) {
-              // not OK -> fallback to native submit (server might expect a normal POST)
-              throw new Error('Network response was not ok');
-            }
-            // Try parse JSON
-            return res.json().catch(function(){ throw new Error('Invalid JSON'); });
-          }).then(function(json){
-            if (json && (json.ok === true || json.success === true)) {
-              showMessage(json.message || 'Thanks — we received your message.', true);
-              // Clear form fields (gentle)
-              form.reset();
-            } else if (json && json.message) {
-              showMessage(json.message, false);
-            } else {
-              // Unexpected JSON shape: show message, but keep page usable
-              showMessage('Thank you — your message was submitted.', true);
-              form.reset();
-            }
-          }).catch(function(err){
-            // AJAX failed — gracefully fallback to normal form submit so server-side handling still happens.
-            console.warn('AJAX submit failed, falling back to native submit:', err);
-            // Small delay to allow user to read message
-            setTimeout(function(){
-              // remove this handler (to prevent recursion) and perform native submit
-              form.removeEventListener('submit', arguments.callee);
-              form.submit();
-            }, 250);
-          });
-        });
-      }
-
-      // smooth internal anchor scroll
-      document.querySelectorAll('a[href^="#"]').forEach(function(a){
-        a.addEventListener('click', function(e){
-          var tgt = document.querySelector(this.getAttribute('href'));
-          if (tgt){ e.preventDefault(); tgt.scrollIntoView({behavior:'smooth',block:'start'}); }
-        });
-      });
-    })();
-  </script>
-  <!-- Structured data for contact/organization (update values to real ones) -->
+  <!-- JSON-LD Structured Data - Organization -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "LocalBusiness",
+    "@type": "Organization",
     "name": "Champalal & Sons",
-    "url": "https://www.champalalandsons.in",
-    "telephone": "+91 7070606600",
-    "email": "champalalandsons@gmail.com",
+    "alternateName": "Champalal and Sons Fabrics",
+    "url": "https://champalalandsons.in/",
+    "logo": "{{ url_for('static', filename='images/logo.png', _external=True) }}",
+    "description": "Premium heritage fabrics since 1930. Handloom sarees, suiting, kurta cloths, shawls & bedsheets.",
+    "foundingDate": "1930",
     "address": {
       "@type": "PostalAddress",
       "streetAddress": "Beside Madhubani PO, Madhubani Bazar",
@@ -512,9 +87,1305 @@
       "postalCode": "854301",
       "addressCountry": "IN"
     },
-    "openingHours": ["Mo-Sa 10:00-21:00","Su 10:00-20:00"]
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "25.782883",
+      "longitude": "87.461814"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Customer Service",
+      "email": "champalalandsons.official@gmail.com",
+      "availableLanguage": ["en", "hi"],
+      "hoursAvailable": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        "opens": "10:00",
+        "closes": "21:00"
+      }
+    },
+    "sameAs": [
+      "https://www.facebook.com/champalalsons",
+      "https://www.instagram.com/champalalsons",
+      "https://twitter.com/champalalsons"
+    ]
+  }
+  </script>
+  
+  <!-- JSON-LD Structured Data - LocalBusiness -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Champalal & Sons",
+    "image": "{{ url_for('static', filename='images/store.jpg', _external=True) }}",
+    "@id": "https://champalalandsons.in/",
+    "url": "https://champalalandsons.in/",
+    "telephone": "+917070606600",
+    "email": "champalalandsons.official@gmail.com",
+    "priceRange": "₹₹-₹₹₹₹",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Beside Madhubani PO, Madhubani Bazar",
+      "addressLocality": "Purnia",
+      "addressRegion": "Bihar",
+      "postalCode": "854301",
+      "addressCountry": "IN"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": "25.782883",
+      "longitude": "87.461814"
+    },
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+      "opens": "10:00",
+      "closes": "21:00"
+    }
+  }
+  </script>
+  
+  <!-- JSON-LD Structured Data - WebPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "Contact Us",
+    "url": "https://champalalandsons.in/contact",
+    "description": "Contact Champalal & Sons for enquiries, orders, custom sourcing and support. Visit our store in Purnia, Bihar or reach us via email.",
+    "datePublished": "2025-01-01",
+    "dateModified": "2025-11-14",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Champalal & Sons",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ url_for('static', filename='images/logo.png', _external=True) }}"
+      }
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://champalalandsons.in/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Contact",
+          "item": "https://champalalandsons.in/contact"
+        }
+      ]
+    }
+  }
+  </script>
+  
+  <!-- JSON-LD Structured Data - BreadcrumbList -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://champalalandsons.in/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Contact",
+        "item": "https://champalalandsons.in/contact"
+      }
+    ]
   }
   </script>
 
+  <style>
+    :root {
+      --royal-gold: #D4AF37;
+      --deep-navy: #1a1f3a;
+      --charcoal: #2d2d2d;
+      --ivory: #FFFFF0;
+      --warm-cream: #FFF8E7;
+      --soft-beige: #F5F1E8;
+      --muted-gold: #C9A961;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      
+      --font-heading: 'Cormorant Garamond', serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+      
+      --max-width: 1280px;
+      --radius: 16px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--ivory);
+      color: var(--charcoal);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    a {
+      color: var(--royal-gold);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    a:hover {
+      color: var(--muted-gold);
+    }
+
+    /* Override for buttons */
+    a.btn,
+    a.btn:hover,
+    .btn,
+    .btn:hover {
+      text-decoration: none !important;
+    }
+
+    /* Container */
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* Hero Section */
+    .hero-section {
+      background: linear-gradient(135deg, var(--deep-navy) 0%, #2d3748 100%);
+      padding: 80px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .hero-left {
+      color: white;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 8px 20px;
+      background: rgba(212, 175, 55, 0.2);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .hero-title {
+      font-size: 56px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: white;
+    }
+
+    .hero-subtitle {
+      font-size: 18px;
+      opacity: 0.9;
+      margin-bottom: 32px;
+      line-height: 1.7;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 16px 28px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none !important;
+      font-family: var(--font-body);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--royal-gold), var(--muted-gold));
+      color: white;
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+      color: white !important;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
+      color: white !important;
+    }
+
+    /* Info Card */
+    .info-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 32px;
+      color: white;
+    }
+
+    .brand-box {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .brand-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--royal-gold), var(--muted-gold));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 28px;
+      font-weight: 800;
+      font-family: var(--font-heading);
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    }
+
+    .brand-info h3 {
+      font-size: 22px;
+      margin-bottom: 4px;
+      color: white;
+    }
+
+    .brand-info p {
+      opacity: 0.8;
+      font-size: 14px;
+    }
+
+    .hours-box {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+    }
+
+    .hours-box h4 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      opacity: 0.8;
+    }
+
+    .hours-time {
+      display: flex;
+      justify-content: space-between;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .hours-note {
+      font-size: 13px;
+      opacity: 0.7;
+      margin-top: 12px;
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 80px 0;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 40px;
+      align-items: start;
+    }
+
+    .content-card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 40px;
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-size: 28px;
+      color: var(--deep-navy);
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+
+    .section-subtitle {
+      font-size: 16px;
+      color: rgba(45, 45, 45, 0.7);
+      margin-bottom: 32px;
+      line-height: 1.6;
+    }
+
+    /* Form Styles */
+    .contact-form {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--deep-navy);
+      margin-bottom: 8px;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      padding: 14px 16px;
+      border: 2px solid rgba(212, 175, 55, 0.2);
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: var(--font-body);
+      transition: var(--transition);
+      background: white;
+      color: var(--charcoal);
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--royal-gold);
+      box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+    }
+
+    .form-textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      margin-top: 4px;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .checkbox-group label {
+      font-size: 14px;
+      color: rgba(45, 45, 45, 0.7);
+      line-height: 1.6;
+      cursor: pointer;
+    }
+
+    .form-footer {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .form-note {
+      font-size: 14px;
+      color: rgba(45, 45, 45, 0.7);
+    }
+
+    .form-feedback {
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      display: none;
+    }
+
+    .form-feedback.success {
+      background: #d1fae5;
+      color: #065f46;
+      border-left: 4px solid var(--success);
+      display: block;
+    }
+
+    .form-feedback.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border-left: 4px solid var(--error);
+      display: block;
+    }
+
+    /* FAQ Box */
+    .faq-box {
+      background: var(--warm-cream);
+      border-left: 4px solid var(--royal-gold);
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 32px;
+    }
+
+    .faq-box h3 {
+      font-size: 20px;
+      color: var(--deep-navy);
+      margin-bottom: 16px;
+    }
+
+    .faq-item {
+      margin-bottom: 16px;
+    }
+
+    .faq-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .faq-item strong {
+      display: block;
+      color: var(--deep-navy);
+      margin-bottom: 4px;
+    }
+
+    .faq-item p {
+      font-size: 14px;
+      color: rgba(45, 45, 45, 0.7);
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: sticky;
+      top: 100px;
+    }
+
+    .sidebar-card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 32px;
+      margin-bottom: 24px;
+    }
+
+    .sidebar-title {
+      font-size: 22px;
+      color: var(--deep-navy);
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    .contact-details {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .detail-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .detail-icon {
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--warm-cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--royal-gold);
+    }
+
+    .detail-content {
+      flex: 1;
+    }
+
+    .detail-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--royal-gold);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .detail-value {
+      font-size: 15px;
+      color: var(--charcoal);
+      line-height: 1.6;
+    }
+
+    .detail-value a {
+      color: var(--charcoal);
+    }
+
+    .detail-value a:hover {
+      color: var(--royal-gold);
+    }
+
+    /* Map */
+    .map-container {
+      margin-top: 24px;
+      border-radius: 12px;
+      overflow: hidden;
+      height: 300px;
+      border: 2px solid rgba(212, 175, 55, 0.2);
+    }
+
+    .map-container iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    /* Social Links */
+    .social-section {
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(212, 175, 55, 0.2);
+    }
+
+    .social-links {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .social-link {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--warm-cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--royal-gold);
+      transition: var(--transition);
+    }
+
+    .social-link:hover {
+      background: var(--royal-gold);
+      color: white;
+      transform: translateY(-4px);
+    }
+
+    /* Next Steps Box */
+    .next-steps {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
+      border-radius: var(--radius);
+      padding: 32px;
+      margin-top: 32px;
+    }
+
+    .next-steps h3 {
+      font-size: 24px;
+      color: var(--deep-navy);
+      margin-bottom: 20px;
+    }
+
+    .next-steps ol {
+      margin-left: 24px;
+      color: rgba(45, 45, 45, 0.7);
+    }
+
+    .next-steps li {
+      margin-bottom: 12px;
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--deep-navy);
+      color: white;
+      padding: 16px 24px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      display: none;
+      align-items: center;
+      gap: 12px;
+      z-index: 9999;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .toast.show {
+      display: flex;
+    }
+
+    .toast-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--success);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .toast-close {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: var(--transition);
+    }
+
+    .toast-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .hero-content {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        top: 0;
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 20px;
+      }
+
+      .hero-section {
+        padding: 60px 0;
+      }
+
+      .hero-title {
+        font-size: 40px;
+      }
+
+      .hero-subtitle {
+        font-size: 16px;
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .main-content {
+        padding: 60px 0;
+      }
+
+      .content-card {
+        padding: 24px;
+      }
+
+      .section-title {
+        font-size: 24px;
+      }
+
+      .sidebar-card {
+        padding: 24px;
+      }
+
+      .map-container {
+        height: 250px;
+      }
+
+      .toast {
+        left: 20px;
+        right: 20px;
+        bottom: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: 32px;
+      }
+
+      .hero-subtitle {
+        font-size: 15px;
+      }
+
+      .brand-icon {
+        width: 56px;
+        height: 56px;
+        font-size: 24px;
+      }
+
+      .info-card {
+        padding: 24px;
+      }
+
+      .form-row {
+        gap: 16px;
+      }
+
+      .social-link {
+        width: 44px;
+        height: 44px;
+      }
+    }
+  </style>
+</head>
+<body>
+  {% include 'customer/layout.html' %}
+
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-left">
+          <span class="hero-badge">We're Here to Help</span>
+          <h1 class="hero-title">Get in Touch</h1>
+          <p class="hero-subtitle">
+            Whether you have a product question, need help with an order, want to request bulk sourcing, or prefer to visit the store — we're here for you. We aim to respond within 24 business hours.
+          </p>
+
+          <div class="cta-buttons">
+            <a href="mailto:champalalandsons.official@gmail.com" class="btn btn-primary" id="emailBtn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              Email Us
+            </a>
+            <a href="#contact-form" class="btn btn-secondary">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              Send Message
+            </a>
+          </div>
+        </div>
+
+        <div class="info-card">
+          <div class="brand-box">
+            <div class="brand-icon">C&S</div>
+            <div class="brand-info">
+              <h3>Champalal & Sons</h3>
+              <p>Since 1930 — Cloth Merchants</p>
+            </div>
+          </div>
+
+          <div class="hours-box">
+            <h4>Store Hours</h4>
+            <div class="hours-time">
+              <strong>Sun — Sat</strong>
+              <span>10:00 — 21:00</span>
+            </div>
+            <p class="hours-note">Closed on major public holidays. For urgent requests please email us.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <div class="content-grid">
+        <!-- Left Column -->
+        <div>
+          <div class="content-card" id="contact-form">
+            <h2 class="section-title">Contact Form</h2>
+            <p class="section-subtitle">Use this form for general enquiries, order support and bulk requests. We'll never sell your personal data.</p>
+
+            <form id="contactForm" class="contact-form" method="post" action="/contact/submit" novalidate>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="name" class="form-label">Full Name *</label>
+                  <input 
+                    id="name" 
+                    name="name" 
+                    type="text" 
+                    class="form-input" 
+                    placeholder="Your name" 
+                    required 
+                    aria-required="true"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="phone" class="form-label">Phone</label>
+                  <input 
+                    id="phone" 
+                    name="phone" 
+                    type="tel" 
+                    class="form-input" 
+                    placeholder="+91 " 
+                    inputmode="tel"
+                  />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="email" class="form-label">Email *</label>
+                  <input 
+                    id="email" 
+                    name="email" 
+                    type="email" 
+                    class="form-input" 
+                    placeholder="you@email.com" 
+                    required 
+                    aria-required="true"
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="subject" class="form-label">Subject</label>
+                  <select id="subject" name="subject" class="form-select">
+                    <option value="order">Order / Shipping</option>
+                    <option value="product">Product Question</option>
+                    <option value="wholesale">Wholesale / Bulk</option>
+                    <option value="returns">Returns / Refunds</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="message" class="form-label">Message *</label>
+                <textarea 
+                  id="message" 
+                  name="message" 
+                  class="form-textarea" 
+                  placeholder="Tell us about your request..." 
+                  required 
+                  aria-required="true"
+                ></textarea>
+              </div>
+
+              <div class="checkbox-group">
+                <input 
+                  id="consent" 
+                  name="consent" 
+                  type="checkbox" 
+                  required 
+                  aria-required="true"
+                />
+                <label for="consent">
+                  I agree to the processing of my personal data in accordance with the <a href="https://champalalandsons.in/privacy">Privacy Policy</a>.
+                </label>
+              </div>
+
+              <input type="hidden" name="source" value="contact-page" />
+
+              <div class="form-footer">
+                <button type="submit" class="btn btn-primary">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                  Send Message
+                </button>
+                <span class="form-note">Or email us at <a href="mailto:champalalandsons.official@gmail.com" id="inlineEmailLink">champalalandsons.official@gmail.com</a></span>
+              </div>
+
+              <div id="contactFeedback" class="form-feedback" role="status" aria-live="polite"></div>
+            </form>
+          </div>
+
+          <div class="faq-box">
+            <h3>Frequently Asked</h3>
+            <div class="faq-item">
+              <strong>Order Status</strong>
+              <p>Email champalalandsons.official@gmail.com with your order ID.</p>
+            </div>
+            <div class="faq-item">
+              <strong>Bulk Orders</strong>
+              <p>Use subject "Wholesale / Bulk" above and include estimated quantities.</p>
+            </div>
+            <div class="faq-item">
+              <strong>Returns</strong>
+              <p>We accept returns within 3 days. See our <a href="https://champalalandsons.in/help/returns">returns policy</a>.</p>
+            </div>
+          </div>
+
+          <div class="next-steps">
+            <h3>What Happens Next?</h3>
+            <ol>
+              <li>We acknowledge receipt of your message via email.</li>
+              <li>Our team reviews and replies within 24 business hours (usually sooner).</li>
+              <li>If your request is urgent we will contact you using the details provided.</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar">
+          <div class="sidebar-card">
+            <h3 class="sidebar-title">Contact Details</h3>
+            
+            <div class="contact-details">
+              <div class="detail-item">
+                <div class="detail-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                </div>
+                <div class="detail-content">
+                  <div class="detail-label">Email</div>
+                  <div class="detail-value">
+                    <a href="mailto:champalalandsons.official@gmail.com" id="detailsEmailLink">champalalandsons.official@gmail.com</a>
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <div class="detail-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                </div>
+                <div class="detail-content">
+                  <div class="detail-label">Address</div>
+                  <div class="detail-value">Beside Madhubani PO, Madhubani Bazar, Purnia, Bihar · 854301</div>
+                </div>
+              </div>
+
+              <div class="detail-item">
+                <div class="detail-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                </div>
+                <div class="detail-content">
+                  <div class="detail-label">Opening Hours</div>
+                  <div class="detail-value">Sun–Sat: 10:00–21:00 IST</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="social-section">
+              <strong style="display: block; margin-bottom: 8px; color: var(--deep-navy);">Follow Us</strong>
+              <div class="social-links">
+                <a class="social-link" href="https://www.instagram.com/champalalsons" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                  </svg>
+                </a>
+                <a class="social-link" href="https://www.facebook.com/champalalsons" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                  </svg>
+                </a>
+                <a class="social-link" href="https://twitter.com/champalalsons" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932ZM17.61 20.644h2.039L6.486 3.24H4.298Z"></path>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-card">
+            <h3 class="sidebar-title">Visit the Store</h3>
+            <p style="font-size: 14px; color: rgba(45, 45, 45, 0.7); margin-bottom: 20px;">
+              We welcome walk-ins. For guaranteed help, email ahead to schedule an appointment.
+            </p>
+
+            <div class="map-container">
+              <iframe 
+                title="Champalal & Sons location map"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3592.626927353988!2d87.4599079751839!3d25.782883477338583!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eff97f665e04d3%3A0x6c8935ef0b326d57!2sChampalal%20and%20Sons!5e0!3m2!1sen!2sin!4v1761312241686!5m2!1sen!2sin"
+                allowfullscreen="" 
+                loading="lazy"
+              ></iframe>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">
+    <div class="toast-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+    <span id="toastMessage">Email copied to clipboard!</span>
+    <button class="toast-close" id="toastClose">✕</button>
+  </div>
+
+  {% include 'customer/footer.html' %}
+
+  <script>
+    (function() {
+      'use strict';
+
+      const EMAIL = 'champalalandsons.official@gmail.com';
+
+      // Toast notification
+      function showToast(message) {
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        toastMessage.textContent = message;
+        toast.classList.add('show');
+      }
+
+      function hideToast() {
+        const toast = document.getElementById('toast');
+        toast.classList.remove('show');
+      }
+
+      document.getElementById('toastClose').addEventListener('click', hideToast);
+
+      // Auto-hide toast after 3 seconds
+      let toastTimeout;
+      function showToastWithTimeout(message) {
+        clearTimeout(toastTimeout);
+        showToast(message);
+        toastTimeout = setTimeout(hideToast, 3000);
+      }
+
+      // Copy to clipboard
+      function copyToClipboard(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          return navigator.clipboard.writeText(text)
+            .then(() => true)
+            .catch(() => fallbackCopy(text));
+        }
+        return Promise.resolve(fallbackCopy(text));
+      }
+
+      function fallbackCopy(text) {
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = text;
+          textarea.style.position = 'fixed';
+          textarea.style.left = '-9999px';
+          document.body.appendChild(textarea);
+          textarea.select();
+          const success = document.execCommand('copy');
+          textarea.remove();
+          return success;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      // Email button handlers
+      function setupEmailButton(id) {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          copyToClipboard(EMAIL).then((success) => {
+            if (success) {
+              showToastWithTimeout(`Email copied: ${EMAIL}`);
+            }
+            setTimeout(() => {
+              window.location.href = `mailto:${EMAIL}`;
+            }, 200);
+          });
+        });
+      }
+
+      setupEmailButton('emailBtn');
+      setupEmailButton('inlineEmailLink');
+      setupEmailButton('detailsEmailLink');
+
+      // Form submission
+      const form = document.getElementById('contactForm');
+      const feedback = document.getElementById('contactFeedback');
+
+      function showFeedback(msg, success) {
+        feedback.textContent = msg;
+        feedback.className = 'form-feedback ' + (success ? 'success' : 'error');
+        feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      if (form) {
+        form.addEventListener('submit', function(ev) {
+          ev.preventDefault();
+
+          const name = form.name.value.trim();
+          const email = form.email.value.trim();
+          const message = form.message.value.trim();
+          const consent = form.consent.checked;
+
+          if (!name || !email || !message) {
+            showFeedback('Please fill in name, email and message.', false);
+            return;
+          }
+          if (!consent) {
+            showFeedback('Please agree to the privacy policy to continue.', false);
+            return;
+          }
+
+          showFeedback('Sending…', true);
+
+          const fd = new FormData(form);
+
+          fetch(form.action, {
+            method: 'POST',
+            body: fd,
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+          }).then(function(res) {
+            if (res.redirected) {
+              window.location.href = res.url;
+              return;
+            }
+            if (!res.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return res.json().catch(function() { 
+              throw new Error('Invalid JSON'); 
+            });
+          }).then(function(json) {
+            if (json && (json.ok === true || json.success === true)) {
+              showFeedback(json.message || 'Thanks — we received your message.', true);
+              form.reset();
+            } else if (json && json.message) {
+              showFeedback(json.message, false);
+            } else {
+              showFeedback('Thank you — your message was submitted.', true);
+              form.reset();
+            }
+          }).catch(function(err) {
+            console.warn('AJAX submit failed, falling back to native submit:', err);
+            setTimeout(function() {
+              form.removeEventListener('submit', arguments.callee);
+              form.submit();
+            }, 250);
+          });
+        });
+      }
+
+      // Smooth scroll for anchor links
+      document.querySelectorAll('a[href^="#"]').forEach(function(a) {
+        a.addEventListener('click', function(e) {
+          const tgt = document.querySelector(this.getAttribute('href'));
+          if (tgt) { 
+            e.preventDefault(); 
+            tgt.scrollIntoView({ behavior: 'smooth', block: 'start' }); 
+          }
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

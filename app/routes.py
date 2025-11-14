@@ -2584,12 +2584,12 @@ def cart_add():
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return jsonify({
                         'ok': False,
-                        'message': f"Cannot add more — already at maximum available stock ({max_avail}).",
+                        'message': f"Cannot add more — already at maximum available stock .",
                         'cart_count': sum(int(i.get('qty', 0)) for i in cart),
                         'cart_item_qty': existing_qty
                     }), 409
                 # non-AJAX fallback
-                flash(f"Cannot add more — already at maximum available stock ({max_avail}).", "warning")
+                flash(f"Cannot add more — already at maximum available stock).", "warning")
                 return redirect(request.referrer or url_for('main.view_prod_detail', product_id=product_id, variant_id=variant_id))
 
             # compute new quantity

@@ -2,308 +2,1433 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Careers — Champalal &amp; Sons</title>
-  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}" >
-  <meta name="description" content="Work with Champalal & Sons — view current openings, learn about our culture & benefits, and apply online. Opportunities in retail, operations, sales, and design." />
-
-  <!-- Fonts & core variables -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  
+  <!-- Primary Meta Tags -->
+  <title>Careers - Champalal & Sons | Join Our Heritage Textile Team</title>
+  <meta name="title" content="Careers - Champalal & Sons | Join Our Heritage Textile Team">
+  <meta name="description" content="Work with Champalal & Sons - view current openings, learn about our culture & benefits, and apply online. Opportunities in retail, operations, sales, and design. Join a heritage business since 1930." />
+  <meta name="keywords" content="Champalal Sons careers, fabric shop jobs Purnia, textile jobs Bihar, retail jobs, sales jobs, heritage business careers, apply online, job openings Purnia, work with us">
+  <meta name="author" content="Champalal & Sons">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+  <meta name="googlebot" content="index, follow">
+  <meta name="revisit-after" content="monthly">
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://champalalandsons.in/careers">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/favicon-16x16.png') }}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/favicon-32x32.png') }}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='images/android-chrome-192x192.png') }}">
+  <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='images/android-chrome-512x512.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='images/site.webmanifest') }}">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://champalalandsons.in/careers">
+  <meta property="og:title" content="Careers - Champalal & Sons | Join Our Heritage Textile Team">
+  <meta property="og:description" content="Work with Champalal & Sons - view current openings, learn about our culture & benefits, and apply online. Join a heritage business since 1930.">
+  <meta property="og:image" content="{{ url_for('static', filename='images/og-home.jpg', _external=True) }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:site_name" content="Champalal & Sons">
+  <meta property="og:locale" content="en_IN">
+  
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://champalalandsons.in/careers">
+  <meta name="twitter:title" content="Careers - Champalal & Sons | Join Our Heritage Textile Team">
+  <meta name="twitter:description" content="Work with Champalal & Sons - view current openings and apply online. Join a heritage business since 1930.">
+  <meta name="twitter:image" content="{{ url_for('static', filename='images/og-home.jpg', _external=True) }}">
+  <meta name="twitter:creator" content="@champalalsons">
+  <meta name="twitter:site" content="@champalalsons">
+  
+  <!-- Additional SEO Meta Tags -->
+  <meta name="theme-color" content="#D4AF37">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Champalal & Sons">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="geo.region" content="IN-BR">
+  <meta name="geo.placename" content="Purnia, Bihar, India">
+  
+  <!-- Preconnect to External Resources -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- JSON-LD Structured Data - Organization -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Champalal & Sons",
+    "alternateName": "Champalal and Sons Fabrics",
+    "url": "https://champalalandsons.in/",
+    "logo": "{{ url_for('static', filename='images/logo.png', _external=True) }}",
+    "description": "Premium heritage fabrics since 1930. Handloom sarees, suiting, kurta cloths, shawls & bedsheets.",
+    "foundingDate": "1930",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Beside Madhubani PO, Madhubani Bazar",
+      "addressLocality": "Purnia",
+      "addressRegion": "Bihar",
+      "postalCode": "854301",
+      "addressCountry": "IN"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "Customer Service",
+      "email": "champalalandsons.official@gmail.com",
+      "availableLanguage": ["en", "hi"]
+    },
+    "sameAs": [
+      "https://www.facebook.com/champalalsons",
+      "https://www.instagram.com/champalalsons",
+      "https://twitter.com/champalalsons"
+    ]
+  }
+  </script>
+  
+  <!-- JSON-LD Structured Data - WebPage -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "Careers",
+    "url": "https://champalalandsons.in/careers",
+    "description": "Work with Champalal & Sons - view current openings, learn about our culture & benefits, and apply online. Join a heritage business since 1930.",
+    "datePublished": "2025-01-01",
+    "dateModified": "2025-11-14",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Champalal & Sons",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "{{ url_for('static', filename='images/logo.png', _external=True) }}"
+      }
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://champalalandsons.in/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Careers",
+          "item": "https://champalalandsons.in/careers"
+        }
+      ]
+    }
+  }
+  </script>
+  
+  <!-- JSON-LD Structured Data - BreadcrumbList -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": "https://champalalandsons.in/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Careers",
+        "item": "https://champalalandsons.in/careers"
+      }
+    ]
+  }
+  </script>
+
+  <!-- JSON-LD Structured Data - JobPosting -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    "title": "Multiple roles at Champalal & Sons",
+    "description": "Multiple openings across retail, operations and digital. Join a heritage textile store focused on quality and service.",
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": "Champalal & Sons",
+      "sameAs": "https://champalalandsons.in/",
+      "logo": "{{ url_for('static', filename='images/logo.png', _external=True) }}"
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Purnia",
+        "addressRegion": "Bihar",
+        "postalCode": "854301",
+        "addressCountry": "IN"
+      }
+    },
+    "datePosted": "2025-11-14",
+    "employmentType": "FULL_TIME"
+  }
+  </script>
 
   <style>
-    :root{
-      --bg:#fff5ee;
-      --muted:#6b7280;
-      --accent:#f59e0b;
-      --accent-contrast:#111827;
-      --card:#ffffff;
-      --shadow:0 8px 30px rgba(17,24,39,0.06);
-      --max:1200px;
-      --radius:12px;
-      --focus: 3px solid rgba(245,158,11,0.12);
-      font-family: 'Poppins', Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    :root {
+      --royal-gold: #D4AF37;
+      --deep-navy: #1a1f3a;
+      --charcoal: #2d2d2d;
+      --ivory: #FFFFF0;
+      --warm-cream: #FFF8E7;
+      --soft-beige: #F5F1E8;
+      --muted-gold: #C9A961;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #f59e0b;
+      
+      --font-heading: 'Cormorant Garamond', serif;
+      --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+      
+      --max-width: 1280px;
+      --radius: 16px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--accent-contrast);-webkit-font-smoothing:antialiased}
-    .container{max-width:var(--max);margin:0 auto;padding:28px}
 
-    /* Page header hero */
-    .hero {
-      display:flex;
-      gap:20px;
-      align-items:center;
-      justify-content:space-between;
-      margin-bottom:18px;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-    .hero .intro { flex:1; max-width:760px }
-    .hero h1 { margin:0;font-size:28px;line-height:1.05 }
-    .hero p.lead { margin:8px 0 0;color:var(--muted);max-width:720px }
 
-    /* Page layout */
-    .jobs-layout { display:grid; grid-template-columns: 1fr 320px; gap:22px; align-items:start; }
-    .list-panel { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px; }
-    .filter-row { display:flex; gap:12px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
-    .select, .input { padding:10px;border-radius:8px;border:1px solid #e6e7ea; font-size:14px; background:white; }
+    html {
+      scroll-behavior: smooth;
+    }
 
-    /* Jobs list */
-    .jobs-list { display:grid; gap:12px; }
-    .job-card { display:flex; gap:12px; align-items:flex-start; padding:14px; border-radius:12px; background:#fff; border:1px solid rgba(15,23,42,0.03); transition:transform .18s,box-shadow .18s; cursor:pointer; }
-    .job-card:hover { transform:translateY(-4px); box-shadow:0 12px 30px rgba(15,23,42,0.06); }
-    .job-left { flex:1; min-width:0 }
-    .job-title { margin:0;font-size:16px;font-weight:700 }
-    .job-meta { color:var(--muted); font-size:13px; margin-top:6px }
-    .job-actions { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap }
-    .btn { padding:10px 14px; border-radius:999px; border:none; cursor:pointer; font-weight:700; background:var(--accent); color:#fff; display:inline-flex; align-items:center; gap:8px; }
-    .btn.ghost { background:white; color:var(--accent-contrast); border:1px solid #e6e7ea; }
-    .badge { display:inline-block; padding:6px 10px; border-radius:999px; background:#fff7ed; color:var(--accent); font-weight:600; font-size:13px }
+    body {
+      font-family: var(--font-body);
+      background: var(--ivory);
+      color: var(--charcoal);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    a {
+      color: var(--royal-gold);
+      text-decoration: none;
+      transition: var(--transition);
+    }
+
+    a:hover {
+      color: var(--muted-gold);
+    }
+
+    a.btn,
+    a.btn:hover,
+    .btn,
+    .btn:hover {
+      text-decoration: none !important;
+    }
+
+    .visually-hidden {
+      position: absolute !important;
+      height: 1px;
+      width: 1px;
+      overflow: hidden;
+      clip: rect(1px, 1px, 1px, 1px);
+      white-space: nowrap;
+    }
+
+    .container {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    /* Hero Section */
+    .hero-section {
+      background: linear-gradient(135deg, var(--deep-navy) 0%, #2d3748 100%);
+      padding: 80px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-section::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+
+    .hero-left {
+      color: white;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      padding: 8px 20px;
+      background: rgba(212, 175, 55, 0.2);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .hero-title {
+      font-size: 56px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: white;
+    }
+
+    .hero-subtitle {
+      font-size: 18px;
+      opacity: 0.9;
+      margin-bottom: 32px;
+      line-height: 1.7;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 16px 28px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none !important;
+      font-family: var(--font-body);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--royal-gold), var(--muted-gold));
+      color: white;
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+      color: white !important;
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.25);
+      border-color: rgba(255, 255, 255, 0.5);
+      color: white !important;
+    }
+
+    .btn-ghost {
+      background: white;
+      color: var(--charcoal);
+      border: 2px solid rgba(212, 175, 55, 0.3);
+    }
+
+    .btn-ghost:hover {
+      background: var(--warm-cream);
+      border-color: var(--royal-gold);
+      color: var(--charcoal) !important;
+    }
+
+    .stats-card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 32px;
+      color: white;
+      text-align: center;
+    }
+
+    .stats-number {
+      font-size: 64px;
+      font-weight: 700;
+      color: var(--royal-gold);
+      font-family: var(--font-heading);
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+
+    .stats-label {
+      font-size: 18px;
+      opacity: 0.9;
+      font-weight: 600;
+    }
+
+    .stats-note {
+      font-size: 14px;
+      opacity: 0.7;
+      margin-top: 8px;
+    }
+
+    /* Main Content */
+    .main-content {
+      padding: 80px 0;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 40px;
+      align-items: start;
+    }
+
+    .content-card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 40px;
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-size: 28px;
+      color: var(--deep-navy);
+      margin-bottom: 20px;
+      font-weight: 600;
+    }
+
+    /* Filter Row */
+    .filter-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+
+    .filter-select,
+    .filter-input {
+      flex: 1;
+      min-width: 200px;
+      padding: 14px 16px;
+      border: 2px solid rgba(212, 175, 55, 0.2);
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: var(--font-body);
+      transition: var(--transition);
+      background: white;
+    }
+
+    .filter-select:focus,
+    .filter-input:focus {
+      outline: none;
+      border-color: var(--royal-gold);
+      box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+    }
+
+    /* Job Cards */
+    .jobs-list {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .job-card {
+      background: white;
+      border: 2px solid rgba(212, 175, 55, 0.2);
+      border-radius: 16px;
+      padding: 32px;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .job-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--royal-gold);
+    }
+
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 16px;
+    }
+
+    .job-title {
+      font-size: 24px;
+      color: var(--deep-navy);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .job-meta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 14px;
+      color: rgba(45, 45, 45, 0.7);
+    }
+
+    .job-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .job-id {
+      font-size: 13px;
+      color: rgba(45, 45, 45, 0.5);
+      font-weight: 600;
+    }
+
+    .job-description {
+      color: rgba(45, 45, 45, 0.7);
+      line-height: 1.7;
+      margin: 16px 0;
+    }
+
+    .job-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 600;
+      background: var(--warm-cream);
+      color: var(--royal-gold);
+    }
+
+    .salary-badge {
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.1));
+      color: var(--royal-gold);
+      font-weight: 700;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: rgba(45, 45, 45, 0.6);
+    }
+
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      opacity: 0.3;
+    }
 
     /* Sidebar */
-    .sidebar { display:flex; flex-direction:column; gap:12px; position:relative; }
-    .quick { background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px; }
-    .benefits { display:grid; gap:10px; }
-    .benefit { display:flex; gap:10px; align-items:flex-start; }
-
-    /* Job detail / expanded panel */
-    .job-detail { margin-top:12px; background:#fff; border-radius:10px; padding:14px; border:1px solid rgba(15,23,42,0.04); }
-    .job-detail h4 { margin:0 0 8px }
-
-    /* Detail modal */
-    .modal-backdrop { position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,0.45); z-index:120; }
-    .modal-backdrop.show { display:flex; }
-    .modal { width: min(760px, 96%); background:var(--card); border-radius:12px; padding:18px; box-shadow:0 40px 100px rgba(2,6,23,0.4); max-height:92vh; overflow:auto; }
-    .modal .row { display:flex; gap:12px; }
-    .close-x { border-radius:8px; width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; background:white; border:1px solid rgba(15,23,42,0.06); cursor:pointer; }
-    .visually-hidden{ position:absolute !important; height:1px; width:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap; }
-
-    /* small helpers */
-    .muted{ color:var(--muted) }
-    .job-count { font-weight:700; color:var(--muted); font-size:14px }
-    .empty { text-align:center; color:var(--muted); padding:24px }
-
-    /* focus states */
-    a:focus, button:focus, input:focus, textarea:focus, select:focus { outline:none; box-shadow:var(--focus); border-color:var(--accent) }
-
-    /* Desktop -> tablet */
-    @media (max-width: 980px) {
-      .jobs-layout { grid-template-columns: 1fr; }
-      .sidebar { order: 2; position:static; }
-      .list-panel { order:1; }
-      .hero { flex-direction:column; align-items:stretch; gap:10px }
+    .sidebar {
+      position: sticky;
+      top: 100px;
     }
 
-    /* Mobile-specific overrides */
-    @media (max-width: 640px) {
-      .container { padding:16px; }
-      .hero h1 { font-size:20px; }
-      .job-card { flex-direction:column; }
-      .job-actions { justify-content:space-between; width:100%; }
-      .btn { width:100%; justify-content:center; padding:12px 14px; }
-      .job-meta { font-size:13px }
-      .modal { padding:14px; width: 96%; }
-      .close-x { width:40px; height:40px }
-      .sidebar { position:static }
-      .benefit { gap:8px }
+    .sidebar-card {
+      background: white;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 32px;
+      margin-bottom: 24px;
     }
 
-    /* very small screens */
-    @media (max-width: 360px) {
-      .job-title { font-size:15px }
-      .hero p.lead { font-size:14px }
+    .sidebar-title {
+      font-size: 22px;
+      color: var(--deep-navy);
+      margin-bottom: 20px;
+      font-weight: 600;
     }
 
-    /* tiny status */
-    .status { font-size:14px; color:var(--muted); margin-top:8px }
+    .benefits-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
 
-    /* small utility for salary badge */
-    .salary { font-weight:700; color:var(--accent); margin-left:6px; }
+    .benefit-item {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .benefit-icon {
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--warm-cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--royal-gold);
+    }
+
+    .benefit-content strong {
+      display: block;
+      color: var(--deep-navy);
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .benefit-content p {
+      font-size: 14px;
+      color: rgba(45, 45, 45, 0.7);
+      margin: 0;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 9999;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal {
+      width: min(760px, 96%);
+      max-height: 92vh;
+      background: white;
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: var(--shadow-lg);
+      overflow-y: auto;
+      animation: modalSlide 0.3s ease;
+    }
+
+    @keyframes modalSlide {
+      from {
+        opacity: 0;
+        transform: translateY(40px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .modal-title {
+      font-size: 32px;
+      color: var(--deep-navy);
+      margin-bottom: 12px;
+    }
+
+    .close-modal {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--warm-cream);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition);
+      flex-shrink: 0;
+    }
+
+    .close-modal:hover {
+      background: var(--royal-gold);
+      color: white;
+      transform: rotate(90deg);
+    }
+
+    /* Form */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--deep-navy);
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      padding: 14px 16px;
+      border: 2px solid rgba(212, 175, 55, 0.2);
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: var(--font-body);
+      transition: var(--transition);
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--royal-gold);
+      box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+    }
+
+    .form-textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .form-feedback {
+      padding: 16px 20px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      display: none;
+      margin-top: 20px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-feedback.show {
+      display: block;
+    }
+
+    .form-feedback.success {
+      background: #d1fae5;
+      color: #065f46;
+      border-left: 4px solid var(--success);
+    }
+
+    .form-feedback.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border-left: 4px solid var(--error);
+    }
+
+    .form-feedback.info {
+      background: #dbeafe;
+      color: #1e40af;
+      border-left: 4px solid #3b82f6;
+    }
+
+    /* File Upload Styling with Enhanced Drag & Drop */
+    .file-input-wrapper {
+      position: relative;
+    }
+
+    .file-input-label {
+      display: inline-block;
+      padding: 40px 20px;
+      background: var(--warm-cream);
+      border: 3px dashed rgba(212, 175, 55, 0.4);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 100%;
+      text-align: center;
+      color: var(--charcoal);
+      font-size: 15px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .file-input-label::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .file-input-label:hover {
+      border-color: var(--royal-gold);
+      background: rgba(212, 175, 55, 0.08);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
+    }
+
+    .file-input-label:hover::before {
+      opacity: 1;
+    }
+
+    /* Drag over state */
+    .file-input-label.drag-over {
+      border-color: var(--royal-gold);
+      border-style: solid;
+      border-width: 3px;
+      background: linear-gradient(135deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.08));
+      transform: scale(1.02);
+      box-shadow: 0 8px 24px rgba(212, 175, 55, 0.25), inset 0 0 20px rgba(212, 175, 55, 0.1);
+    }
+
+    .file-input-label.drag-over::before {
+      opacity: 1;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 0.3;
+      }
+      50% {
+        opacity: 0.6;
+      }
+    }
+
+    .file-input-label svg {
+      transition: var(--transition);
+    }
+
+    .file-input-label:hover svg {
+      transform: translateY(-4px);
+      color: var(--royal-gold);
+    }
+
+    .file-input-label.drag-over .upload-icon {
+      animation: uploadBounce 0.6s ease-in-out infinite;
+    }
+
+    @keyframes uploadBounce {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+
+    input[type="file"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .file-name {
+      margin-top: 12px;
+      padding: 12px 16px;
+      background: rgba(16, 185, 129, 0.1);
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--success);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      animation: fileAccepted 0.4s ease;
+    }
+
+    @keyframes fileAccepted {
+      0% {
+        opacity: 0;
+        transform: scale(0.8);
+      }
+      50% {
+        transform: scale(1.05);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .file-name::before {
+      content: '✓';
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background: var(--success);
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 20px;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .file-size-note {
+      font-size: 12px;
+      color: rgba(45, 45, 45, 0.6);
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    .upload-icon {
+      display: inline-block;
+      transition: var(--transition);
+    }
+
+    /* FAQ Section */
+    .faq-box {
+      background: var(--warm-cream);
+      border-left: 4px solid var(--royal-gold);
+      border-radius: 12px;
+      padding: 24px;
+      margin-top: 32px;
+    }
+
+    .faq-box h3 {
+      font-size: 20px;
+      color: var(--deep-navy);
+      margin-bottom: 16px;
+    }
+
+    .faq-item {
+      margin-bottom: 16px;
+    }
+
+    .faq-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .faq-item strong {
+      display: block;
+      color: var(--deep-navy);
+      margin-bottom: 4px;
+    }
+
+    .faq-item p {
+      font-size: 14px;
+      color: rgba(45, 45, 45, 0.7);
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    /* Spinning animation */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .hero-content {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .content-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        top: 0;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 0 20px;
+      }
+
+      .hero-section {
+        padding: 60px 0;
+      }
+
+      .hero-title {
+        font-size: 40px;
+      }
+
+      .hero-subtitle {
+        font-size: 16px;
+      }
+
+      .stats-number {
+        font-size: 48px;
+      }
+
+      .cta-buttons {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .main-content {
+        padding: 60px 0;
+      }
+
+      .content-card {
+        padding: 24px;
+      }
+
+      .section-title {
+        font-size: 24px;
+      }
+
+      .filter-row {
+        flex-direction: column;
+      }
+
+      .filter-select,
+      .filter-input {
+        width: 100%;
+      }
+
+      .job-card {
+        padding: 24px;
+      }
+
+      .job-header {
+        flex-direction: column;
+      }
+
+      .job-title {
+        font-size: 20px;
+      }
+
+      .job-actions {
+        flex-direction: column;
+      }
+
+      .sidebar-card {
+        padding: 24px;
+      }
+
+      .modal {
+        padding: 24px;
+        width: 96%;
+      }
+
+      .modal-title {
+        font-size: 24px;
+      }
+
+      .file-input-label {
+        padding: 32px 16px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .hero-title {
+        font-size: 32px;
+      }
+
+      .hero-subtitle {
+        font-size: 15px;
+      }
+
+      .stats-card {
+        padding: 24px;
+      }
+
+      .stats-number {
+        font-size: 40px;
+      }
+
+      .file-input-label {
+        padding: 24px 12px;
+      }
+    }
   </style>
 </head>
 <body>
-
   {% include 'customer/layout.html' %}
 
-  <main class="container" role="main">
-    <section class="hero">
-      <div class="intro">
-        <h1>Careers at Champalal &amp; Sons</h1>
-        <p class="lead">Join a multi-generation textile business focused on craftsmanship, honest pricing, and community. Browse openings below — we hire for both store roles and central functions.</p>
-        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
-          <a class="btn" href="/about">About us</a>
-          <a class="btn ghost" href="/contact">Contact</a>
-        </div>
-      </div>
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="container">
+      <div class="hero-content">
+        <div class="hero-left">
+          <span class="hero-badge">We're Hiring</span>
+          <h1 class="hero-title">Careers at Champalal & Sons</h1>
+          <p class="hero-subtitle">
+            Join a multi-generation textile business focused on craftsmanship, honest pricing, and community. Browse openings below — we hire for both store roles and central functions.
+          </p>
 
-      <div class="job-count" aria-live="polite"><span id="openCount">0</span> open roles</div>
-    </section>
-
-    <section class="jobs-layout" aria-label="Open roles and application sidebar">
-      <div class="list-panel" aria-labelledby="openings">
-        <div class="filter-row">
-          <select id="filterDept" class="select" aria-label="Filter by department">
-            <option value="all">All departments</option>
-          </select>
-
-          <select id="filterLoc" class="select" aria-label="Filter by location">
-            <option value="all">All locations</option>
-          </select>
-
-          <input id="searchJobs" class="input" type="search" placeholder="Search roles, e.g. 'sales' or 'tailor'">
-        </div>
-
-        <div id="jobsList" class="jobs-list" aria-live="polite" aria-busy="false">
-          <!-- job cards rendered by JS -->
-        </div>
-
-        <div id="noJobs" class="empty" style="display:none">No roles match your filters. Try clearing filters or check back soon.</div>
-      </div>
-
-      <aside class="sidebar">
-        <div class="quick">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div style="font-weight:800">Why work with us</div>
-              <div class="muted" style="font-size:13px">A family business with modern values</div>
-            </div>
-            <div class="badge">Hiring</div>
-          </div>
-
-          <div class="benefits" style="margin-top:12px">
-            <div class="benefit"><strong>Competitive pay</strong><div class="muted" style="margin-left:8px">Market-aligned salaries</div></div>
-            <div class="benefit"><strong>Employee discounts</strong><div class="muted" style="margin-left:8px">Store discounts on fabrics</div></div>
-            <div class="benefit"><strong>Learning</strong><div class="muted" style="margin-left:8px">On-the-job training & mentoring</div></div>
-            <div class="benefit"><strong>Culture</strong><div class="muted" style="margin-left:8px">Respectful, honest, long-term</div></div>
-          </div>
-
-          <div style="margin-top:12px">
-            <div style="font-weight:700">Equal Opportunity</div>
-            <div class="muted" style="font-size:13px;margin-top:6px">We celebrate diversity and are committed to creating an inclusive environment for all employees.</div>
+          <div class="cta-buttons">
+            <a href="/about" class="btn btn-primary">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              About Us
+            </a>
+            <a href="/contact" class="btn btn-secondary">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              Contact
+            </a>
           </div>
         </div>
 
-        <div class="quick" style="margin-top:12px">
-          <div style="font-weight:700">How to apply</div>
-          <ol style="margin:8px 0 0 18px;color:var(--muted)">
-            <li>Pick a role and click <em>Apply</em> or <em>View</em>.</li>
-            <li>Complete the short form and upload your CV (PDF/DOC).</li>
-            <li>We’ll review and reach out if your profile is a fit.</li>
-          </ol>
-          <div class="status">Typical response time: 3–7 business days</div>
-        </div>
-      </aside>
-    </section>
-
-    <!-- Detail modal (shows full role description) -->
-    <div id="detailModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
-      <div class="modal" role="document" aria-labelledby="detailTitle">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-          <div style="flex:1">
-            <h3 id="detailTitle" style="margin:0;font-size:18px">Role title</h3>
-            <div class="muted" id="detailMeta" style="margin-top:6px;font-size:13px">Dept • Location • Type</div>
-            <div id="detailSalary" style="margin-top:8px"></div>
-          </div>
-          <div style="display:flex;gap:8px;align-items:flex-start">
-            <button id="closeDetail" class="close-x" aria-label="Close role detail" title="Close">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="6" y1="18" x2="18" y2="6"></line></svg>
-            </button>
-          </div>
-        </div>
-
-        <div id="detailDescription" style="margin-top:12px;color:var(--muted)"></div>
-
-        <div style="display:flex;gap:10px;align-items:center;margin-top:16px">
-          <button id="detailApplyBtn" class="btn">Apply for this role</button>
-          <div id="detailPosted" class="muted" style="margin-left:auto">Posted recently</div>
+        <div class="stats-card">
+          <div class="stats-number" id="openCount">0</div>
+          <div class="stats-label">Open Roles</div>
+          <p class="stats-note">Join our team of passionate professionals</p>
         </div>
       </div>
     </div>
+  </section>
 
-    <!-- Application modal (unchanged) -->
-    <div id="applyModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
-      <div class="modal" role="document" aria-labelledby="applyTitle">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
-          <div>
-            <h3 id="applyTitle" style="margin:0;font-size:18px">Apply for role</h3>
-            <div class="muted" id="applyRoleName" style="margin-top:6px;font-size:13px">Role • Location</div>
-          </div>
-          <button id="closeApply" class="close-x" aria-label="Close application form" title="Close">
-            <!-- simple accessible X -->
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"></line><line x1="6" y1="18" x2="18" y2="6"></line></svg>
-          </button>
-        </div>
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <div class="content-grid">
+        <!-- Left Column -->
+        <div>
+          <div class="content-card">
+            <h2 class="section-title" id="openings">Current Openings</h2>
 
-        <form id="applyForm" method="post" action="/careers/apply" enctype="multipart/form-data" style="margin-top:12px">
-          <input type="hidden" name="role_id" id="role_id" value="">
-          <div class="row" style="margin-bottom:12px">
-            <div style="flex:1">
-              <label for="app_name" class="muted">Full name</label>
-              <input id="app_name" name="name" type="text" class="input" required>
-            </div>
-            <div style="width:180px">
-              <label for="app_phone" class="muted">Phone</label>
-              <input id="app_phone" name="phone" type="tel" class="input" inputmode="tel" placeholder="+91">
-            </div>
-          </div>
-
-          <div class="row" style="margin-bottom:12px">
-            <div style="flex:1">
-              <label for="app_email" class="muted">Email</label>
-              <input id="app_email" name="email" type="email" class="input" required>
-            </div>
-            <div style="width:180px">
-              <label for="app_location" class="muted">Location</label>
-              <select id="app_location" name="location" class="select">
-                <option value="">Preferred location</option>
+            <div class="filter-row">
+              <select id="filterDept" class="filter-select" aria-label="Filter by department">
+                <option value="all">All departments</option>
               </select>
+
+              <select id="filterLoc" class="filter-select" aria-label="Filter by location">
+                <option value="all">All locations</option>
+              </select>
+
+              <input 
+                id="searchJobs" 
+                class="filter-input" 
+                type="search" 
+                placeholder="Search roles, e.g. 'sales' or 'tailor'"
+                aria-label="Search job openings"
+              />
+            </div>
+
+            <div id="jobsList" class="jobs-list" aria-live="polite" aria-busy="false">
+              <!-- Jobs rendered by JS -->
+            </div>
+
+            <div id="noJobs" class="empty-state" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+              <p>No roles match your filters. Try clearing filters or check back soon.</p>
             </div>
           </div>
 
-          <div style="margin-bottom:12px">
-            <label for="app_message" class="muted">Short note / cover (optional)</label>
-            <textarea id="app_message" name="message" class="input" style="min-height:100px"></textarea>
+          <div class="faq-box">
+            <h3>Hiring FAQ</h3>
+            <div class="faq-item">
+              <strong>What happens after I apply?</strong>
+              <p>We review applications and contact candidates we'd like to interview. Response typically within 3–7 days.</p>
+            </div>
+            <div class="faq-item">
+              <strong>Are roles full-time?</strong>
+              <p>Most store roles are full-time. We may also advertise part-time and contract roles.</p>
+            </div>
+            <div class="faq-item">
+              <strong>Do you accept walk-ins?</strong>
+              <p>Yes — but applying online helps us track and respond faster.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar">
+          <div class="sidebar-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <div>
+                <h3 class="sidebar-title" style="margin: 0;">Why Work With Us</h3>
+                <p style="font-size: 14px; color: rgba(45, 45, 45, 0.7); margin-top: 4px;">A family business with modern values</p>
+              </div>
+              <div class="badge">Hiring</div>
+            </div>
+
+            <div class="benefits-list">
+              <div class="benefit-item">
+                <div class="benefit-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"></line>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                  </svg>
+                </div>
+                <div class="benefit-content">
+                  <strong>Competitive Pay</strong>
+                  <p>Market-aligned salaries</p>
+                </div>
+              </div>
+
+              <div class="benefit-item">
+                <div class="benefit-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                  </svg>
+                </div>
+                <div class="benefit-content">
+                  <strong>Employee Discounts</strong>
+                  <p>Store discounts on fabrics</p>
+                </div>
+              </div>
+
+              <div class="benefit-item">
+                <div class="benefit-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                  </svg>
+                </div>
+                <div class="benefit-content">
+                  <strong>Learning</strong>
+                  <p>On-the-job training & mentoring</p>
+                </div>
+              </div>
+
+              <div class="benefit-item">
+                <div class="benefit-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                  </svg>
+                </div>
+                <div class="benefit-content">
+                  <strong>Culture</strong>
+                  <p>Respectful, honest, long-term</p>
+                </div>
+              </div>
+            </div>
+
+            <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(212, 175, 55, 0.2);">
+              <strong style="display: block; color: var(--deep-navy); margin-bottom: 8px;">Equal Opportunity</strong>
+              <p style="font-size: 14px; color: rgba(45, 45, 45, 0.7); line-height: 1.6;">
+                We celebrate diversity and are committed to creating an inclusive environment for all employees.
+              </p>
+            </div>
           </div>
 
-          <div style="margin-bottom:12px">
-            <label class="muted">Resume (PDF, DOC, DOCX) — max 2MB</label>
-            <input id="resume" name="resume" type="file" accept=".pdf,.doc,.docx" style="margin-top:6px">
+          <div class="sidebar-card">
+            <h3 class="sidebar-title">How to Apply</h3>
+            <ol style="margin: 0 0 0 20px; color: rgba(45, 45, 45, 0.7);">
+              <li style="margin-bottom: 12px;">Pick a role and click <em>Apply</em> or <em>View</em>.</li>
+              <li style="margin-bottom: 12px;">Complete the short form and upload your CV (PDF/DOC).</li>
+              <li>We'll review and reach out if your profile is a fit.</li>
+            </ol>
+            <p style="font-size: 14px; color: rgba(45, 45, 45, 0.7); margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(212, 175, 55, 0.2);">
+              <strong>Typical response time:</strong> 3–7 business days
+            </p>
           </div>
-
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-            <button type="submit" class="btn">Submit application</button>
-            <button type="button" class="btn ghost" id="saveDraft">Save draft</button>
-            <div id="applyFeedback" class="muted" aria-live="polite" style="margin-left:6px"></div>
-          </div>
-        </form>
+        </aside>
       </div>
     </div>
-
-    <!-- FAQ about hiring -->
-    <section style="margin-top:20px" class="list-panel">
-      <h3 style="margin:0 0 8px">Hiring FAQ</h3>
-      <div style="display:grid;gap:8px;color:var(--muted)">
-        <div><strong>What happens after I apply?</strong> — We review applications and contact candidates we’d like to interview. Response typically within 3–7 days.</div>
-        <div><strong>Are roles full-time?</strong> — Most store roles are full-time. We may also advertise part-time and contract roles.</div>
-        <div><strong>Do you accept walk-ins?</strong> — Yes — but applying online helps us track and respond faster.</div>
-      </div>
-    </section>
-
   </main>
+
+  <!-- Detail Modal -->
+  <div id="detailModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document">
+      <div class="modal-header">
+        <div style="flex: 1;">
+          <h3 id="detailTitle" class="modal-title">Role Title</h3>
+          <div id="detailMeta" style="font-size: 15px; color: rgba(45, 45, 45, 0.7); margin-top: 8px;">Dept • Location • Type</div>
+          <div id="detailSalary" style="margin-top: 12px;"></div>
+        </div>
+        <button id="closeDetail" class="close-modal" aria-label="Close role detail" title="Close">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div id="detailDescription" style="color: rgba(45, 45, 45, 0.7); line-height: 1.7;"></div>
+
+      <div style="display: flex; gap: 12px; align-items: center; margin-top: 32px; flex-wrap: wrap;">
+        <button id="detailApplyBtn" class="btn btn-primary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+          Apply for this Role
+        </button>
+        <div id="detailPosted" style="color: rgba(45, 45, 45, 0.5); font-size: 14px; margin-left: auto;">Posted recently</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Modal -->
+  <div id="applyModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+    <div class="modal" role="document">
+      <div class="modal-header">
+        <div style="flex: 1;">
+          <h3 id="applyTitle" class="modal-title" style="font-size: 28px;">Apply for Role</h3>
+          <div id="applyRoleName" style="font-size: 15px; color: rgba(45, 45, 45, 0.7); margin-top: 8px;">Role • Location</div>
+        </div>
+        <button id="closeApply" class="close-modal" aria-label="Close application form" title="Close">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <form id="applyForm" method="post" action="/careers/apply" enctype="multipart/form-data">
+        <input type="hidden" name="role_id" id="role_id" value="">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="app_name" class="form-label">Full Name *</label>
+            <input id="app_name" name="name" type="text" class="form-input" required placeholder="John Doe">
+          </div>
+          <div class="form-group">
+            <label for="app_phone" class="form-label">Phone</label>
+            <input id="app_phone" name="phone" type="tel" class="form-input" inputmode="tel" placeholder="+91 98765 43210">
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="app_email" class="form-label">Email *</label>
+            <input id="app_email" name="email" type="email" class="form-input" required placeholder="you@email.com">
+          </div>
+          <div class="form-group">
+            <label for="app_location" class="form-label">Preferred Location</label>
+            <select id="app_location" name="location" class="form-select">
+              <option value="">Select location</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="app_message" class="form-label">Cover Letter / Note (Optional)</label>
+          <textarea id="app_message" name="message" class="form-textarea" placeholder="Tell us why you're interested in this role..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Resume (PDF, DOC, DOCX) *</label>
+          <div class="file-input-wrapper">
+            <label for="resume" class="file-input-label">
+              <span class="upload-icon">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+              </span>
+              <br>
+              <span id="fileLabel" style="display: block; margin-top: 12px; font-weight: 600; font-size: 16px;">Drop your resume here or click to browse</span>
+              <span style="display: block; margin-top: 8px; font-size: 13px; color: rgba(45, 45, 45, 0.6);">Supports: PDF, DOC, DOCX</span>
+            </label>
+            <input id="resume" name="resume" type="file" accept=".pdf,.doc,.docx">
+            <div id="fileName" class="file-name" style="display:none;"></div>
+            <div class="file-size-note">Maximum size: 2MB • Accepted formats: PDF, DOC, DOCX</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 24px;">
+          <button type="submit" class="btn btn-primary" id="submitBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+            Submit Application
+          </button>
+          <button type="button" class="btn btn-ghost" id="saveDraft">Save Draft</button>
+        </div>
+
+        <div id="applyFeedback" class="form-feedback" role="status" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
 
   {% include 'customer/footer.html' %}
 
-  <!-- Client JS: list rendering + modal + AJAX (progressive fallback) -->
   <script>
     (function(){
-      // Server-provided roles rendered into the template
-      // Expect roles to be an array of objects with keys:
-      // id, title, dept, location, type, summary, description, salary (optional)
+      'use strict';
+
       const roles = {{ roles|tojson|safe }};
 
-      // Build sets for filters
       const deptSet = new Set();
       const locSet = new Set();
-      roles.forEach(r => { if(r.dept) deptSet.add(r.dept); if(r.location) locSet.add(r.location); });
+      roles.forEach(r => { 
+        if(r.dept) deptSet.add(r.dept); 
+        if(r.location) locSet.add(r.location); 
+      });
 
       const filterDept = document.getElementById('filterDept');
       const filterLoc = document.getElementById('filterLoc');
@@ -312,7 +1437,6 @@
       const openCount = document.getElementById('openCount');
       const noJobs = document.getElementById('noJobs');
 
-      // Escape helper (keeps rendered HTML safe)
       function escapeHtml(str){
         if (str === null || str === undefined) return '';
         return String(str)
@@ -323,52 +1447,49 @@
           .replace(/'/g,"&#39;");
       }
 
-      // Convert newline text into HTML:
-      //  - double newlines (blank line) -> paragraph separation
-      //  - single newline -> <br>
       function nl2html(raw){
         if (!raw && raw !== 0) return '';
         const s = String(raw);
-        // escape first
         const esc = escapeHtml(s);
-        // split on two-or-more newlines for paragraphs
         const paras = esc.split(/\n{2,}/g).map(p => {
-          // within a paragraph, convert single newlines to <br>
           const inner = p.replace(/\n/g, '<br>');
           return '<p style="margin:0 0 0.75em;line-height:1.6;">' + inner + '</p>';
         });
         return paras.join('');
       }
 
-      // Create a short preview (preserves line breaks)
       function previewText(raw, maxLen){
         if (!raw) return '';
         const t = String(raw).trim();
         if (t.length <= maxLen) return nl2html(t);
-        // truncate preserving words
         let truncated = t.slice(0, maxLen);
-        // step back to last space if possible
         const lastSpace = truncated.lastIndexOf(' ');
         if (lastSpace > Math.floor(maxLen * 0.6)) truncated = truncated.slice(0, lastSpace);
         truncated += '…';
         return nl2html(truncated);
       }
 
-      // Populate filter dropdowns
       function populateFilters(){
         Array.from(deptSet).sort().forEach(d=>{
-          const o = document.createElement('option'); o.value = d; o.textContent = d; filterDept.appendChild(o);
+          const o = document.createElement('option'); 
+          o.value = d; 
+          o.textContent = d; 
+          filterDept.appendChild(o);
         });
         Array.from(locSet).sort().forEach(l=>{
-          const o = document.createElement('option'); o.value = l; o.textContent = l; filterLoc.appendChild(o);
+          const o = document.createElement('option'); 
+          o.value = l; 
+          o.textContent = l; 
+          filterLoc.appendChild(o);
         });
       }
 
-      // Render the job cards (with View and Apply actions)
       function renderList(list){
         jobsList.innerHTML = '';
         if (!list || list.length === 0) {
-          noJobs.style.display = ''; openCount.textContent = 0; return;
+          noJobs.style.display = 'block'; 
+          openCount.textContent = 0; 
+          return;
         }
         noJobs.style.display = 'none';
         openCount.textContent = list.length;
@@ -376,48 +1497,60 @@
         list.forEach(job => {
           const card = document.createElement('article');
           card.className = 'job-card';
-          // set dataset to help handlers
           card.dataset.jobId = job.id;
 
           const salaryText = job.salary ? ('₹' + Number(job.salary).toLocaleString('en-IN')) : '';
-          // prefer summary; fallback to description
           const previewSource = job.summary ? job.summary : (job.description || '');
-          // create a small preview using nl2html with truncation
           const previewHTML = previewText(previewSource, 180);
 
-          // build inner HTML safely (we escape title/dept etc.)
           card.innerHTML = `
-            <div class="job-left" aria-hidden="false">
-              <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-                <div style="min-width:0">
-                  <h3 class="job-title">${escapeHtml(job.title || '')}</h3>
-                  <div class="job-meta">
-                    ${escapeHtml(job.dept || '')} &bull; ${escapeHtml(job.location || '')} &bull;
-                    <span style="font-weight:700">${escapeHtml(job.type || '')}</span>
-                    ${salaryText ? '<span class="salary"> • ' + escapeHtml(salaryText) + '</span>' : ''}
+            <div class="job-header">
+              <div>
+                <h3 class="job-title">${escapeHtml(job.title || '')}</h3>
+                <div class="job-meta">
+                  <div class="job-meta-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M20 7h-9"></path>
+                      <path d="M14 17H5"></path>
+                      <circle cx="17" cy="17" r="3"></circle>
+                      <circle cx="7" cy="7" r="3"></circle>
+                    </svg>
+                    ${escapeHtml(job.dept || '')}
+                  </div>
+                  <div class="job-meta-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                      <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    ${escapeHtml(job.location || '')}
+                  </div>
+                  <div class="job-meta-item">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    ${escapeHtml(job.type || '')}
                   </div>
                 </div>
-                <div style="text-align:right">
-                  <div class="muted" style="font-size:13px">#${escapeHtml(job.id)}</div>
-                </div>
               </div>
-
-              <div class="job-detail" style="margin-top:10px">${previewHTML}</div>
-
-              <div class="job-actions">
-                <button class="btn apply-btn" data-id="${escapeHtml(job.id)}" data-title="${escapeHtml(job.title || '')}" data-location="${escapeHtml(job.location || '')}" aria-label="Apply for ${escapeHtml(job.title || '')}">Apply</button>
-                <button class="btn ghost view-btn" data-id="${escapeHtml(job.id)}" aria-label="View ${escapeHtml(job.title || '')}">View</button>
-                <div style="margin-left:auto" class="muted" aria-hidden="true">Posted recently</div>
+              <div>
+                <div class="job-id">#${escapeHtml(job.id)}</div>
+                ${salaryText ? '<div class="badge salary-badge" style="margin-top:8px">' + escapeHtml(salaryText) + '</div>' : ''}
               </div>
+            </div>
+
+            <div class="job-description">${previewHTML}</div>
+
+            <div class="job-actions">
+              <button class="btn btn-primary apply-btn" data-id="${escapeHtml(job.id)}" data-title="${escapeHtml(job.title || '')}" data-location="${escapeHtml(job.location || '')}">Apply</button>
+              <button class="btn btn-ghost view-btn" data-id="${escapeHtml(job.id)}">View Details</button>
             </div>
           `;
 
-          // clicking the card (except the action buttons) opens the detail modal
           card.addEventListener('click', function(e){
-            if (e.target.closest('.apply-btn') || e.target.closest('.view-btn')) {
-              // click handled by respective handlers
-              return;
-            }
+            if (e.target.closest('.apply-btn') || e.target.closest('.view-btn')) return;
             const jobId = this.dataset.jobId;
             const jobObj = roles.find(r => String(r.id) === String(jobId));
             if (jobObj) openDetailModal(jobObj);
@@ -430,13 +1563,12 @@
       populateFilters();
       renderList(roles);
 
-      // Filtering / search
       function applyFilters(){
         const d = filterDept.value;
         const l = filterLoc.value;
         const q = (searchJobs.value || '').trim().toLowerCase();
         let filtered = roles.filter(r=>{
-          if (d !== 'all' && r.dept !== d) return false;
+                    if (d !== 'all' && r.dept !== d) return false;
           if (l !== 'all' && r.location !== l) return false;
           if (q){
             return (r.title && r.title.toLowerCase().includes(q)) ||
@@ -453,9 +1585,6 @@
       filterLoc.addEventListener('change', applyFilters);
       searchJobs.addEventListener('input', function(){ setTimeout(applyFilters, 150); });
 
-      /* ------------------------------
-         Detail modal (role full details)
-         ------------------------------ */
       const detailModal = document.getElementById('detailModal');
       const closeDetail = document.getElementById('closeDetail');
       const detailTitle = document.getElementById('detailTitle');
@@ -472,7 +1601,6 @@
         if (job.type) metaParts.push(job.type);
         detailMeta.textContent = metaParts.join(' • ');
 
-        // Use nl2html to convert newlines into paragraphs/line-breaks
         if (job.description) {
           detailDescription.innerHTML = nl2html(job.description);
         } else if (job.summary) {
@@ -482,10 +1610,8 @@
         }
 
         if (job.salary) {
-          try {
-            const s = Number(job.salary);
-            detailSalaryEl.innerHTML = '<div style="margin-top:8px"><strong>Salary</strong>: <span class="salary">₹' + s.toLocaleString('en-IN') + '</span></div>';
-          } catch(e){ detailSalaryEl.textContent = ''; }
+          const s = Number(job.salary);
+          detailSalaryEl.innerHTML = '<div class="badge salary-badge" style="padding:10px 20px;font-size:16px">Salary: ₹' + s.toLocaleString('en-IN') + '</div>';
         } else {
           detailSalaryEl.textContent = '';
         }
@@ -493,10 +1619,8 @@
         detailApplyBtn.dataset.jobId = job.id;
         detailApplyBtn.dataset.jobTitle = job.title || '';
         detailApplyBtn.dataset.jobLocation = job.location || '';
-        // show modal
         detailModal.classList.add('show');
         detailModal.setAttribute('aria-hidden','false');
-        // focus for accessibility
         setTimeout(function(){ detailApplyBtn.focus(); }, 160);
       }
 
@@ -514,7 +1638,6 @@
         if (ev.key === 'Escape' && detailModal.classList.contains('show')) closeDetailModal();
       });
 
-      // View button handler (delegated)
       document.addEventListener('click', function(e){
         const viewBtn = e.target.closest('.view-btn');
         if (!viewBtn) return;
@@ -524,7 +1647,6 @@
         if (jobObj) openDetailModal(jobObj);
       });
 
-      // When clicking "Apply" in detail modal: open apply modal and prefill
       detailApplyBtn.addEventListener('click', function(){
         const id = this.dataset.jobId;
         const title = this.dataset.jobTitle || '';
@@ -533,9 +1655,6 @@
         closeDetailModal();
       });
 
-      /* ------------------------------
-         Apply modal behavior (existing)
-         ------------------------------ */
       const applyModal = document.getElementById('applyModal');
       const closeApply = document.getElementById('closeApply');
       const applyForm = document.getElementById('applyForm');
@@ -543,14 +1662,131 @@
       const roleIdInput = document.getElementById('role_id');
       const appLocationSelect = document.getElementById('app_location');
       const applyFeedback = document.getElementById('applyFeedback');
+      const submitBtn = document.getElementById('submitBtn');
+      const resumeInput = document.getElementById('resume');
+      const fileLabel = document.getElementById('fileLabel');
+      const fileName = document.getElementById('fileName');
+      const fileLabelElement = document.querySelector('.file-input-label');
 
-      // populate location options
+      // Enhanced drag and drop functionality with visual feedback
+      let dragCounter = 0;
+
+      ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        fileLabelElement.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+      });
+
+      function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      // Enhanced drag enter with counter to handle nested elements
+      fileLabelElement.addEventListener('dragenter', function(e) {
+        dragCounter++;
+        fileLabelElement.classList.add('drag-over');
+      }, false);
+
+      // Drag over - maintain the visual state
+      fileLabelElement.addEventListener('dragover', function(e) {
+        e.dataTransfer.dropEffect = 'copy'; // Show copy cursor
+        fileLabelElement.classList.add('drag-over');
+      }, false);
+
+      // Enhanced drag leave with counter
+      fileLabelElement.addEventListener('dragleave', function(e) {
+        dragCounter--;
+        if (dragCounter === 0) {
+          fileLabelElement.classList.remove('drag-over');
+        }
+      }, false);
+
+      // Handle drop
+      fileLabelElement.addEventListener('drop', function(e) {
+        dragCounter = 0;
+        fileLabelElement.classList.remove('drag-over');
+        
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+          // Visual feedback for successful drop
+          fileLabelElement.style.background = 'rgba(16, 185, 129, 0.15)';
+          fileLabelElement.style.borderColor = 'var(--success)';
+          fileLabelElement.style.borderStyle = 'solid';
+          
+          setTimeout(() => {
+            fileLabelElement.style.background = '';
+            fileLabelElement.style.borderColor = '';
+            fileLabelElement.style.borderStyle = '';
+          }, 600);
+          
+          // Create a new FileList-like object
+          const dataTransfer = new DataTransfer();
+          dataTransfer.items.add(files[0]);
+          resumeInput.files = dataTransfer.files;
+          
+          // Trigger change event
+          const event = new Event('change', { bubbles: true });
+          resumeInput.dispatchEvent(event);
+        }
+      }, false);
+
+      // Prevent default drag behavior on body to avoid browser file opening
+      document.body.addEventListener('dragover', function(e) {
+        e.preventDefault();
+      }, false);
+
+      document.body.addEventListener('drop', function(e) {
+        e.preventDefault();
+      }, false);
+
+      // File input handling with validation
+      resumeInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          const maxSize = 2 * 1024 * 1024; // 2MB
+          const allowedExts = ['pdf', 'doc', 'docx'];
+          
+          const ext = file.name.split('.').pop().toLowerCase();
+          
+          if (file.size > maxSize) {
+            showFeedback('Resume exceeds maximum allowed size of 2MB.', 'error');
+            resumeInput.value = '';
+            fileName.style.display = 'none';
+            fileLabel.textContent = 'Drop your resume here or click to browse';
+            return;
+          }
+          
+          if (!allowedExts.includes(ext)) {
+            showFeedback('Resume must be PDF, DOC, or DOCX format.', 'error');
+            resumeInput.value = '';
+            fileName.style.display = 'none';
+            fileLabel.textContent = 'Drop your resume here or click to browse';
+            return;
+          }
+          
+          // Clear any previous error
+          hideFeedback();
+          
+          fileName.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+          fileName.style.display = 'block';
+          fileLabel.textContent = 'Change file';
+        } else {
+          fileName.style.display = 'none';
+          fileLabel.textContent = 'Drop your resume here or click to browse';
+        }
+      });
+
       function populateLocationSelect(){
         const existing = new Set();
         Array.from(appLocationSelect.options).forEach(o=>existing.add(o.value));
         Array.from(locSet).sort().forEach(loc=>{
           if (!existing.has(loc)){
-            const opt = document.createElement('option'); opt.value = loc; opt.textContent = loc; appLocationSelect.appendChild(opt);
+            const opt = document.createElement('option'); 
+            opt.value = loc; 
+            opt.textContent = loc; 
+            appLocationSelect.appendChild(opt);
           }
         });
       }
@@ -559,13 +1795,15 @@
       function openApplyModalForRole(id, title, location){
         roleIdInput.value = id || '';
         applyRoleName.textContent = (title || 'Role') + (location ? (' • ' + location) : '');
-        // preselect location if available
         if (location) {
           const opt = Array.from(appLocationSelect.options).find(o=>o.value===location);
           if (opt) opt.selected = true;
         }
         applyModal.classList.add('show');
         applyModal.setAttribute('aria-hidden','false');
+        hideFeedback();
+        // Reset button state
+        resetSubmitButton();
         setTimeout(function(){ document.getElementById('app_name').focus(); }, 160);
       }
 
@@ -573,7 +1811,10 @@
         applyModal.classList.remove('show');
         applyModal.setAttribute('aria-hidden','true');
         applyForm.reset();
-        applyFeedback.textContent = '';
+        hideFeedback();
+        fileName.style.display = 'none';
+        fileLabel.textContent = 'Drop your resume here or click to browse';
+        resetSubmitButton();
       }
 
       closeApply.addEventListener('click', hideApplyModal);
@@ -584,17 +1825,49 @@
         if (ev.key === 'Escape' && applyModal.classList.contains('show')) hideApplyModal();
       });
 
-      // Open apply modal when user clicks the small apply button in the card
       document.addEventListener('click', function(e){
         const btn = e.target.closest('.apply-btn');
         if (!btn) return;
-        // stop propagating so card click doesn't open detail
         e.stopPropagation();
         const id = btn.dataset.id;
         const title = btn.dataset.title;
         const location = btn.dataset.location;
         openApplyModalForRole(id, title, location);
       });
+
+      // Feedback display functions
+      function showFeedback(message, type) {
+        applyFeedback.textContent = message;
+        applyFeedback.className = 'form-feedback show ' + (type || 'info');
+        applyFeedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      function hideFeedback() {
+        applyFeedback.className = 'form-feedback';
+        applyFeedback.textContent = '';
+      }
+
+      function resetSubmitButton() {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+          Submit Application
+        `;
+      }
+
+      function setSubmitButtonLoading() {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;">
+            <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+            <path d="M12 2 A 10 10 0 0 1 22 12" stroke-opacity="1"></path>
+          </svg>
+          Submitting...
+        `;
+      }
 
       // Save draft functionality (localStorage)
       document.getElementById('saveDraft').addEventListener('click', function(){
@@ -605,13 +1878,16 @@
             phone: document.getElementById('app_phone').value,
             message: document.getElementById('app_message').value,
             location: document.getElementById('app_location').value,
-            role_id: document.getElementById('role_id').value
+            role_id: document.getElementById('role_id').value,
+            timestamp: new Date().toISOString()
           };
           localStorage.setItem('careerDraft', JSON.stringify(draft));
-          applyFeedback.textContent = 'Saved locally';
-          setTimeout(()=> applyFeedback.textContent = '', 2200);
+          showFeedback('Draft saved locally on your device', 'success');
+          setTimeout(hideFeedback, 2500);
         } catch(err){
-          console.warn(err); applyFeedback.textContent = 'Could not save draft';
+          console.warn('Draft save failed:', err); 
+          showFeedback('Could not save draft', 'error');
+          setTimeout(hideFeedback, 2500);
         }
       });
 
@@ -621,6 +1897,17 @@
           const d = localStorage.getItem('careerDraft');
           if (!d) return;
           const obj = JSON.parse(d);
+          
+          // Only load if draft is less than 7 days old
+          if (obj.timestamp) {
+            const draftAge = Date.now() - new Date(obj.timestamp).getTime();
+            const sevenDays = 7 * 24 * 60 * 60 * 1000;
+            if (draftAge > sevenDays) {
+              localStorage.removeItem('careerDraft');
+              return;
+            }
+          }
+          
           if (obj.name) document.getElementById('app_name').value = obj.name;
           if (obj.email) document.getElementById('app_email').value = obj.email;
           if (obj.phone) document.getElementById('app_phone').value = obj.phone;
@@ -629,22 +1916,55 @@
             const opt = Array.from(appLocationSelect.options).find(o=>o.value===obj.location);
             if (opt) opt.selected = true;
           }
-        } catch(e){ /* ignore */ }
+        } catch(e){ 
+          console.warn('Draft load failed:', e);
+        }
       })();
 
-      /* Application Submit (AJAX with progressive enhancement fallback) */
+      /* Application Submit - AJAX only with proper error handling */
       applyForm.addEventListener('submit', function(ev){
         ev.preventDefault();
 
+        // Get form values
         const name = applyForm.name.value.trim();
         const email = applyForm.email.value.trim();
+        const resume = resumeInput.files[0];
 
+        // Validation
         if (!name || !email) {
-          applyFeedback.textContent = 'Please enter name and email';
+          showFeedback('Please enter your name and email address.', 'error');
           return;
         }
 
-        applyFeedback.textContent = 'Submitting…';
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          showFeedback('Please enter a valid email address.', 'error');
+          return;
+        }
+
+        // Resume validation
+        if (!resume) {
+          showFeedback('Please upload your resume (PDF, DOC, or DOCX).', 'error');
+          return;
+        }
+
+        const maxSize = 2 * 1024 * 1024; // 2MB
+        if (resume.size > maxSize) {
+          showFeedback('Resume exceeds maximum allowed size of 2MB.', 'error');
+          return;
+        }
+
+        const ext = resume.name.split('.').pop().toLowerCase();
+        const allowedExts = ['pdf', 'doc', 'docx'];
+        if (!allowedExts.includes(ext)) {
+          showFeedback('Resume must be PDF, DOC, or DOCX format.', 'error');
+          return;
+        }
+
+        // Set loading state
+        setSubmitButtonLoading();
+        showFeedback('Uploading your application...', 'info');
 
         const fd = new FormData(applyForm);
 
@@ -655,42 +1975,76 @@
             'X-Requested-With': 'XMLHttpRequest'
           },
           credentials: 'same-origin'
-        }).then(function(res){
-          if (res.redirected) { window.location.href = res.url; return; }
-          if (!res.ok) throw new Error('Network error');
-          return res.json().catch(function(){ throw new Error('Invalid JSON'); });
-        }).then(function(json){
-          if (json && (json.success === true || json.ok === true)) {
-            applyFeedback.textContent = json.message || 'Application received — thank you.';
-            setTimeout(function(){ hideApplyModal(); }, 1200);
-          } else if (json && json.message) {
-            applyFeedback.textContent = json.message;
-          } else {
-            applyFeedback.textContent = 'Application submitted — we will contact you.';
-            setTimeout(function(){ hideApplyModal(); }, 1200);
+        }).then(function(response){
+          // Check if response is ok (status 200-299)
+          if (!response.ok) {
+            // Try to parse JSON error message
+            return response.json().then(function(data) {
+              throw new Error(data.message || 'Server error: ' + response.status);
+            }).catch(function(err) {
+              // If JSON parsing fails, throw generic error
+              if (err.message && !err.message.includes('Unexpected')) {
+                throw err;
+              }
+              throw new Error('Server error: ' + response.status);
+            });
           }
-        }).catch(function(err){
-          console.warn('AJAX failed, falling back to native submit', err);
-          // fallback: unbind and submit normally (let server handle multipart)
-          applyForm.removeEventListener('submit', arguments.callee);
-          applyForm.submit();
+          return response.json();
+        }).then(function(data){
+          // Success response - ALWAYS reset button
+          resetSubmitButton();
+          
+          if (data.success === true || data.ok === true) {
+            showFeedback(data.message || 'Application received successfully! We\'ll be in touch shortly.', 'success');
+            
+            // Clear draft from localStorage
+            try {
+              localStorage.removeItem('careerDraft');
+            } catch(e){}
+            
+            // Reset form and close modal after delay
+            setTimeout(function(){ 
+              applyForm.reset();
+              fileName.style.display = 'none';
+              fileLabel.textContent = 'Drop your resume here or click to browse';
+              hideApplyModal(); 
+            }, 2500);
+          } else {
+            // Server returned success: false
+            showFeedback(data.message || 'Unable to submit application. Please try again.', 'error');
+          }
+        }).catch(function(error){
+          // Network error or server error - ALWAYS reset button
+          resetSubmitButton();
+          
+          console.error('Application submission error:', error);
+          
+          let errorMessage = 'Unable to submit application. ';
+          
+          if (error.message) {
+            // Display specific error message from server
+            if (error.message.includes('Name and email are required')) {
+              errorMessage = 'Name and email are required.';
+            } else if (error.message.includes('exceeds maximum')) {
+              errorMessage = 'Resume exceeds maximum allowed size of 2MB.';
+            } else if (error.message.includes('must be one of')) {
+              errorMessage = 'Resume must be PDF, DOC, or DOCX format.';
+            } else if (error.message.includes('upload failed')) {
+              errorMessage = 'Resume upload failed. Please check your file and try again.';
+            } else if (error.message.includes('Server error')) {
+              errorMessage = 'Server error. Please try again later.';
+            } else {
+              errorMessage += error.message;
+            }
+          } else {
+            errorMessage += 'Please check your connection and try again.';
+          }
+          
+          showFeedback(errorMessage, 'error');
         });
-
       });
 
     })();
-  </script>
-
-  <!-- Optional structured data for Careers page -->
-  <script type="application/ld+json">
-  {
-    "@context":"https://schema.org",
-    "@type":"JobPosting",
-    "title":"Multiple roles at Champalal & Sons",
-    "description":"Multiple openings across retail, operations and digital. Join a heritage textile store focused on quality and service.",
-    "hiringOrganization":{"@type":"Organization","name":"Champalal & Sons","sameAs":"https://www.champalalandsons.in"},
-    "jobLocation":[{"@type":"Place","address":{"@type":"PostalAddress","addressLocality":"Purnia","addressRegion":"Bihar","postalCode":"854301","addressCountry":"IN"}}]
-  }
   </script>
 
 </body>

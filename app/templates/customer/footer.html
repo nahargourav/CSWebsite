@@ -21,8 +21,8 @@
           <ul>
             <li><a href="/browse?q=&sort=newest">New arrivals</a></li>
             <li><a href="/collections/bestsellers">Bestsellers</a></li>
-            <li><a href="/collections/ethnic-wear">Ethnic wear</a></li>
-            <li><a href="/collections/accessories">Accessories</a></li>
+            <li><a href="/browse?q=&sort=newest">Ethnic wear</a></li>
+            <li><a href="/browse?category=Accessories">Accessories</a></li>
           </ul>
         </div>
 
@@ -75,7 +75,7 @@
 
   <style>
     /* Footer styles — self-contained; uses global variables from site where possible */
-    .site-footer{ --footer-bg: linear-gradient(180deg,var(--page-bg),#fff); padding:36px 14px; background:white; color:var(--muted);}
+    .site-footer{ --footer-bg: linear-gradient(180deg,var(--page-bg),#fff); padding:36px 14px; background:white; color:black;line-height: 1.6;}
     .footer-inner{ max-width:1200px; margin:0 auto; }
     .footer-top{ display:flex; gap:28px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
     .footer-brand{ flex:1 1 260px; min-width:220px; }
@@ -83,15 +83,15 @@
     .brand-mark{ width:56px; height:56px; flex-shrink:0; border-radius:8px; box-shadow:var(--card-shadow); }
     .brand-text{ display:flex; flex-direction:column; }
     .brand-name{ font-weight:800; color:#0f1724; font-size:16px; }
-    .brand-tag{ font-size:13px; color:var(--muted); }
-    .brand-desc{ margin-top:12px; color:var(--muted); font-size:14px; max-width:420px; }
+    .brand-tag{ font-size:13px; color:black; }
+    .brand-desc{ margin-top:12px; color:black; font-size:14px; max-width:420px; }
 
     .footer-nav{ display:flex; gap:18px; flex:2 1 520px; justify-content:space-between; flex-wrap:wrap; }
     .footer-col{ min-width:140px; }
-    .footer-col h4{ font-size:14px; margin:0 0 10px; color:#0f1724; font-weight:700; }
+    .footer-col h4{ font-size:20px; margin:0 0 10px; color:#0f1724; font-weight:700;font-family:'Cormorant Garamond', serif; }
     .footer-col ul{ list-style:none; padding:0; margin:0; }
     .footer-col li{ margin:6px 0; }
-    .footer-col a{ color:var(--muted); text-decoration:none; font-size:14px; }
+    .footer-col a{ color:black; text-decoration:none; font-size:14px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;}
     .footer-col a:hover{ color:var(--accent); }
 
     .footer-newsletter{ max-width:320px; }
@@ -101,7 +101,7 @@
     .btn-sub{ padding:10px 14px; border-radius:10px; border:none; font-weight:700; background:linear-gradient(90deg,var(--accent),var(--accent-2)); color:white; }
 
     .social-row{ display:flex; gap:8px; margin-top:12px; }
-    .social{ display:inline-flex; width:36px; height:36px; align-items:center; justify-content:center; border-radius:8px; border:1px solid rgba(15,23,36,0.04); color:var(--muted); text-decoration:none; }
+    .social{ display:inline-flex; width:36px; height:36px; align-items:center; justify-content:center; border-radius:8px; border:1px solid rgba(15,23,36,0.04); color:black; text-decoration:none; }
     .social:hover{ color:var(--accent); transform:translateY(-2px); }
 
     .footer-bottom{ display:flex; gap:12px; align-items:center; justify-content:space-between; margin-top:22px; border-top:1px dashed rgba(15,23,36,0.04); padding-top:16px; }
@@ -121,7 +121,7 @@
       box-shadow:var(--card-shadow);
       display:inline-block;
     }
-    .copyright{ color:var(--muted); font-size:13px; }
+    .copyright{ color:black; font-size:13px; }
 
     .back-to-top{ border:1px solid rgba(15,23,36,0.06); background:#fff; padding:8px 10px; border-radius:10px; cursor:pointer; box-shadow:var(--card-shadow); }
 
