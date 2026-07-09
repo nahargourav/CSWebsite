@@ -44,6 +44,7 @@ DROP TABLE IF EXISTS public.contact_messages CASCADE;
 DROP TABLE IF EXISTS public.applications CASCADE;
 DROP TABLE IF EXISTS public.roles CASCADE;
 DROP TABLE IF EXISTS public.bestsellers CASCADE;
+DROP TABLE IF EXISTS public.categories CASCADE;
 
 -- Re-create tables (timestamps store India local wall-clock time via DEFAULT (now() AT TIME ZONE 'Asia/Kolkata'))
 -- Note: foreign keys will be added later via idempotent ALTER / DO blocks to avoid ordering issues.

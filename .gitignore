@@ -53,3 +53,5 @@ Thumbs.db
 
 # Node
 node_modules/
+
+tests/

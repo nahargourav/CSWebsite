@@ -14,7 +14,7 @@ def get_db():
     Expects an environment variable named DATABASE_URL (e.g. provided by Render).
     Returns a psycopg2 connection or None on failure.
     """
-    database_url = "postgresql://postgres.pxiezxcknjmkgnpgugmk:XJNAcJvtdoOz5JCo@aws-1-ap-south-1.pooler.supabase.com:5432/postgres"
+    database_url = os.getenv("DATABASE_URL")
     if not database_url:
         print("DATABASE_URL not set; cannot connect.")
         return None
